@@ -1,0 +1,21 @@
+[package]
+
+name = "music"
+version = "0.0.1"
+authors = ["Tibor Gáts <tibor.gats@gmail.com>"]
+description = "A new approach for making music."
+readme = "README.md"
+keywords = ["keyboard", "music", "note", "pitch"]
+license = "MIT"
+repository = ""
+homepage = ""
+
+[dependencies]
+portaudio = "*"
+lazy_static = "*"
+piston = "*"
+pistoncore-glutin_window = "*"
+piston2d-graphics = "*"
+piston2d-glium_graphics = "*"
+glium = "*"
+conrod = "*"

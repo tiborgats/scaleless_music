@@ -1,5 +1,5 @@
 #Music
-:construction: It is an experimental project for making scaleless music.
+It is an experimental project for making scaleless music.
 ##About
 IMHO:
 * Music should only contain [harmonic](https://en.wikipedia.org/wiki/Harmony) relations between notes.
@@ -12,7 +12,9 @@ For comparison: the popular [equal temperament](https://en.wikipedia.org/wiki/Eq
 See also: [just intonation](https://en.wikipedia.org/wiki/Just_intonation)
 
 ##Development
-It is in very early stage yet!
+:construction: It is in very early stage yet!
+
+It compiles with Rust nightly (PortAudio needed). Temporarily generates some sounds if you press some keys on the keyboard (Q..P, A..L).
 
 Tasks:
 - [ ] I need time and money (for living)

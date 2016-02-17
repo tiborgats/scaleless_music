@@ -1,6 +1,7 @@
-#Music
+music [![Build Status](https://travis-ci.org/tiborgats/music.svg?branch=master)](https://travis-ci.org/tiborgats/music)
+=====
 It is an experimental project for making scaleless music.
-##About
+# About
 IMHO:
 * Music should only contain [harmonic](https://en.wikipedia.org/wiki/Harmony) relations between notes.
 * All of the harmonic relation variations should be possible to create.
@@ -11,17 +12,20 @@ For example: the popular [equal temperament](https://en.wikipedia.org/wiki/Equal
 
 See also: [just intonation](https://en.wikipedia.org/wiki/Just_intonation)
 
-##Development
-:construction: It is in very early stage yet!
+# Installation
+**music** is built using cargo, so just type `cargo build` at the root of the **music** repository.
+You can build the documentation (as soon as I will have one) with `cargo doc`.
 
-It compiles with Rust nightly (PortAudio needed). Temporarily generates some sounds if you press some keys on the keyboard (Q..P, A..L).
+# Development
+:construction: It is in very early stage yet! Temporarily generates some sounds if you press some keys on the keyboard (Q..P, A..L).
+As soon as the basic structure of it will become stable, I will convert it to be a crate and some examples.
 
 Tasks:
 - [ ] I need time and money (for living)
-- [ ] :book: proper documentation
-- [ ] effects
-- [ ] low delay input devices
+- [ ] proper documentation :book:
+- [ ] effects, building blocks of music structure
+- [ ] handling some low-delay input devices (eg. midi keyboards)
 - [ ] file format, parser
 - [ ] GUI
-- [ ] 3D effects
+- [ ] 3D audio space, instrument location effects
 - [ ] other stuff

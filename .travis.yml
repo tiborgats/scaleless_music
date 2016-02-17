@@ -1,0 +1,15 @@
+env:
+    - LD_LIBRARY_PATH=/usr/local/lib
+language: rust
+rust:
+    - nightly
+    - beta
+    - stable
+os:
+    - linux
+notifications:
+  email:
+    - tibor.gats@gmail.com
+script:
+    - cargo build --verbose
+    - cargo test --verbose

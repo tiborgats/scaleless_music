@@ -37,7 +37,7 @@ fn main() {
     use sound::interface::*;
     use sound::instrument::*;
 
-    let sound_generator = Box::new(Synthesizer::new(192000.0, 440.0));
+    let sound_generator = Box::new(InstrumentBasic::new(192000.0, 440.0));
     let mut sound = SoundInterface::new(192000, 2, sound_generator).unwrap();
 
     let opengl = OpenGL::V3_2;
@@ -59,7 +59,7 @@ fn main() {
     // Temporary fix for https://github.com/rust-lang/rust/issues/30832.
     while let Some(event) = { let mut b = glutin_window.borrow_mut(); events.next(&mut *b) } {
         if let Some(_args) = event.render_args() {
-            use graphics::*;
+//            use graphics::*;
 
             let mut target = glium_window.draw();
             {
@@ -69,7 +69,7 @@ fn main() {
 
 //                        clear([0.8, 0.8, 0.8, 1.0], g);
 //                        g.clear_stencil(0);
-                Rectangle::new([1.0, 0.0, 0.0, 1.0]);
+//                Rectangle::new([1.0, 0.0, 0.0, 1.0]);
 //                            .draw([0.0, 0.0, 100.0, 100.0], &c.draw_state, c.transform, g);
             }
 

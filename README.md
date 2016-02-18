@@ -28,4 +28,5 @@ Tasks:
 - [ ] file format, parser
 - [ ] GUI
 - [ ] 3D audio space, instrument location effects
+- [ ] supporting other sound interfaces (besides **rust-portaudio**)
 - [ ] other stuff

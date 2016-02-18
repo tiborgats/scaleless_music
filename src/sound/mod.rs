@@ -13,14 +13,14 @@ pub type SampleOutput = f32;
 /// Type definition for the precision of calculations
 pub type SampleCalc = f64;
 
-pub const BUFFER_SIZE: usize = 1 * 1024; // sample count (for calculations)
+pub const BUFFER_SIZE: usize = 2 * 1024; // sample count (for calculations)
 pub const TONE_FREQUENCY_MIN: SampleCalc = 5.0; // lowest hearable (feelable) frequency
 pub const TONE_FREQUENCY_MAX: SampleCalc = 24000.0; // highest hearable (feelable) frequency
 
 pub trait SoundGenerator {
 //    type GeneratorCommand;
-    fn sample_next(&mut self) -> SampleOutput;
-//    fn get_samples(&mut self, count: usize) -> &Vec<SampleOutput>;
+//    fn sample_next(&mut self) -> SampleOutput;
+    fn get_samples(&mut self, count: usize, result: &mut Vec<SampleCalc>);
     fn process_command(&mut self, _command: GeneratorCommand) {}
 }
 
@@ -28,8 +28,9 @@ pub trait SoundGenerator {
 
 #[derive(Debug, Copy, Clone)]
 pub enum Error {
-    BufferSize,
     PortAudio(pa::Error),
+    BufferSize,
+    DenominatorInvalid,
 //    Other,
 }
 
@@ -47,6 +48,7 @@ impl error::Error for Error {
         use self::Error::*;
         match *self {
             BufferSize => "incorrect buffer size",
+            DenominatorInvalid => "invalid denominator",
             PortAudio(ref err) => err.description(),
 //            Other => "other",
         }

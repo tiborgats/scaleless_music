@@ -44,7 +44,7 @@ impl<'a> SoundInterface<'a> {
         // we won't output out of range samples so don't bother clipping them.
         settings.flags = pa::stream_flags::CLIP_OFF;
 
-        // let mut generator = Wave::new(sample_rate as f64, 440.0);
+        let mut generator_buffer: Vec<SampleCalc> = vec![0.0; BUFFER_SIZE];
 
         let (sender, receiver) = ::std::sync::mpsc::channel();
         // This routine will be called by the PortAudio engine when audio is needed. It may called at
@@ -54,11 +54,11 @@ impl<'a> SoundInterface<'a> {
             if let Ok(command) = receiver.try_recv() {
                 generator.process_command(command);
             }
+            generator.get_samples(frames, &mut generator_buffer);
             let mut idx = 0;
-            for _ in 0..frames {
-                let sample = generator.sample_next();
+            for i in 0..frames {
                 for _ in 0..(channel_count as usize) {
-                    buffer[idx] = sample;
+                    buffer[idx] = generator_buffer[i] as SampleOutput;
                     idx += 1;
                     //            for output_frame in buffer.chunks_mut(channel_count) {
                     //                for channel_sample in output_frame {

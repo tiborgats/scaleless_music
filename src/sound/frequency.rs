@@ -22,3 +22,16 @@ impl FrequencyFunction for FrequencyConst {
         self.frequency
     }
 }
+
+/// Vibrato around the base frequency (= frequency modulation)
+#[allow(dead_code)]
+pub struct FrequencyVibrato {
+    frequency: SampleCalc,
+    rhythm: SampleCalc,
+}
+
+#[allow(dead_code)]
+pub struct FrequencyChangeLinear {
+    frequency_begin: SampleCalc,
+    frequency_end: SampleCalc,
+}

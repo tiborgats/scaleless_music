@@ -1,5 +1,8 @@
 use sound::*;
 use sound::wave::*;
+// use sound::frequency::*;
+use sound::amplitude::*;
+use std::rc::Rc;
 use piston::input::*;
 
 ///
@@ -22,74 +25,61 @@ pub type GeneratorCommand = Command;
 
 #[allow(dead_code)]
 pub struct InstrumentBasic {
-    sample_rate: f64,
+    sample_rate: SampleCalc,
+    note1: Note,
+    frequency: SampleCalc,
+    frequency_buffer: Vec<SampleCalc>,
+    time: SampleCalc,
 }
 
 #[allow(dead_code)]
 impl InstrumentBasic {
     /// Custom constructor
-    pub fn new(sample_rate: f64) -> InstrumentBasic {
-        InstrumentBasic { sample_rate: sample_rate }
-    }
-}
-
-
-
-
-pub struct Synthesizer {
-    sample_rate: f64,
-    frequency: f64,
-    amplitude: SampleCalc,
-    sample_index: f64,
-}
-
-impl Synthesizer {
-    /// Custom constructor
-    #[allow(dead_code)]
-    pub fn new(sample_rate: f64, frequency: f64) -> Synthesizer {
-        Synthesizer {
+    pub fn new(sample_rate: SampleCalc, frequency_start: SampleCalc) -> InstrumentBasic {
+        let amplitude_const = AmplitudeConst::new(1.0);
+        let amplitude1 = AmplitudeDecayExp::new(Rc::new(amplitude_const), 1.0);
+        let note1 = Note::new(sample_rate, Rc::new(amplitude1), 1);
+        InstrumentBasic {
             sample_rate: sample_rate,
-            frequency: frequency,
-            amplitude: 1.0,
-            sample_index: 0.0,
+            note1: note1,
+            frequency: frequency_start,
+            frequency_buffer: vec![frequency_start; BUFFER_SIZE],
+            time: 0.0,
         }
     }
 
     /// Change frequency in harmony with the previous value
-    /// # Todo
-    /// error handling is missing
     #[allow(dead_code)]
-    pub fn change_frequency(&mut self, numerator: u16, denominator: u16) {
-        if denominator > 0 {
-            let new_frequency = (440.0 * numerator as f64) / denominator as f64;
-            // self.frequency = (self.frequency * numerator as f64) / denominator as f64;
-            if (new_frequency > TONE_FREQUENCY_MIN) && (new_frequency < TONE_FREQUENCY_MAX) {
-                self.frequency = new_frequency;
-            }
+    pub fn change_frequency(&mut self, numerator: u16, denominator: u16) -> SoundResult<()> {
+        if denominator <= 0 {
+            return Err(Error::DenominatorInvalid);
+        };
+        let new_frequency = (self.frequency * numerator as SampleCalc) / denominator as SampleCalc;
+        if new_frequency < TONE_FREQUENCY_MIN {
+            return Err(Error::DenominatorInvalid);
+        };
+        if new_frequency > TONE_FREQUENCY_MAX {
+            return Err(Error::DenominatorInvalid);
+        };
+        // self.frequency = new_frequency;
+        for i in self.frequency_buffer.iter_mut() {
+            *i = new_frequency;
         }
-        self.amplitude = 1.0;
+        self.time = 0.0;
+        Ok(())
     }
 }
 
-impl SoundGenerator for Synthesizer {
-    fn sample_next(&mut self) -> SampleOutput {
-        self.sample_index += 1.0;
-        //        if self.sample_index >= self.sample_rate {
-        // self.sample_index -= self.sample_rate;
-        // }
-        let mut sample = (((self.sample_index / self.sample_rate) * self.frequency * PI2)
-                              .sin() * self.amplitude) as SampleOutput;
-        sample += (((self.sample_index / self.sample_rate) *
-                    440.0 * PI2)
-                       .sin() * 1.0) as SampleOutput;
-        sample *= 0.5;
-        return sample;
+impl SoundGenerator for InstrumentBasic {
+    fn get_samples(&mut self, count: usize, result: &mut Vec<SampleCalc>) {
+        self.note1.get(count, self.time, &self.frequency_buffer, result).unwrap();
+        self.time += count as SampleCalc / self.sample_rate;
     }
 
     fn process_command(&mut self, command: Command) {
         match command {
             Command::Keypress {key} => {
-                match key {
+                let _ = match key {
                     Key::Q => self.change_frequency(1, 3),
                     Key::W => self.change_frequency(2, 3),
                     Key::E => self.change_frequency(4, 3),
@@ -109,17 +99,14 @@ impl SoundGenerator for Synthesizer {
                     Key::J => self.change_frequency(8, 5),
                     Key::K => self.change_frequency(9, 5),
                     Key::L => self.change_frequency(1, 6),
-                    _ => {
-                        self.amplitude = 0.0;
-                    }
+                    _ => self.change_frequency(1, 1),
                 };
             }
             Command::Mute => {
-                self.amplitude = 0.0;
+                let _ = self.change_frequency(1, 1);
             }
             Command::FrequencyMultiple {numerator, denominator} => {
-                self.change_frequency(numerator, denominator);
-                self.amplitude = 1.0;
+                let _ = self.change_frequency(numerator, denominator);
             }
         }
     }

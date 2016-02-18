@@ -45,15 +45,22 @@ impl Note {
         if result.len() < sample_count {
             return Err(Error::BufferSize);
         }
-        let mut sample: SampleCalc = 0.0;
-        for overtone in 1..self.overtone_max {
+        let mut sample: SampleCalc;
+        for sample_idx in 0..sample_count {
+            let time: SampleCalc = (sample_idx as SampleCalc / self.sample_rate) + time_start;
+            let frequency: SampleCalc = *base_frequency.get(sample_idx).unwrap();
+            sample = (time * frequency * PI2).sin() *
+                     self.amplitude_function.get(time, frequency, 1);
+            *result.get_mut(sample_idx).unwrap() = sample;  // vectors must match sample_count in size
+        }
+
+        for overtone in 2..self.overtone_max {
             for sample_idx in 0..sample_count {
                 let time: SampleCalc = (sample_idx as SampleCalc / self.sample_rate) + time_start;
-                let frequency: SampleCalc = base_frequency.get(sample_idx).unwrap() *
+                let frequency: SampleCalc = *base_frequency.get(sample_idx).unwrap() *
                                             (overtone as SampleCalc);   // vectors must match sample_count in size
-                sample += (time * frequency * PI2).sin() *
-                          self.amplitude_function.get(time, frequency, overtone);
-                *result.get_mut(sample_idx).unwrap() = sample;  // vectors must match sample_count in size
+                sample = (time * frequency * PI2).sin();// * self.amplitude_function.get(time, frequency, overtone);
+                *result.get_mut(sample_idx).unwrap() += sample;  // vectors must match sample_count in size
             }
         }
         // sample

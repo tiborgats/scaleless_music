@@ -2,13 +2,13 @@ music [![Build Status](https://travis-ci.org/tiborgats/music.svg?branch=master)]
 =====
 It is an experimental project for making scaleless music.
 # About
-The aim of this software is to create music according to the following conditions:
-* Music should only contain [harmonic](https://en.wikipedia.org/wiki/Harmony) relations between notes. (No noise, no out of tune notes.)
-* All of the harmonic relation variations should be possible to create. (Including harmonies which are missing from the [chromatic scale](https://en.wikipedia.org/wiki/Chromatic_scale).)
+The aim of this software is to create music according to the following principles:
+* Music should only contain [harmonic](https://en.wikipedia.org/wiki/Harmony) intervals between notes. (No noise, no out of tune notes.)
+* All of the harmonic interval variations should be possible to create. (Including harmonies which are missing from the [chromatic scale](https://en.wikipedia.org/wiki/Chromatic_scale).)
 
-The realization of these conditions is mathematically impossible with any musical [scale](https://en.wikipedia.org/wiki/Scale_(music)), therefore real music creation software should be scaleless. On "scaleless" I mean the frequency of the notes are not chosen from a fixed set (= scale), instead they are calculated dynamically in relation of the previous notes.
+The realization of these conditions is mathematically impossible with any musical [scale](https://en.wikipedia.org/wiki/Scale_(music)), therefore real music creation software should be scaleless. On "scaleless" I mean that the frequency of the notes are not chosen from a fixed set (= scale), instead they are calculated dynamically in relation of the previous notes.
 
-Counterexample: the popular [equal temperament](https://en.wikipedia.org/wiki/Equal_temperament) contains only one type of harmonic relation: the octave, all the other relations are disharmonic ones in it.
+Counterexample: the popular [equal temperament](https://en.wikipedia.org/wiki/Equal_temperament) contains only one type of harmonic interval: the octave, all the other frequency intervals are disharmonic ones in it (multiplies of ¹²√2).
 
 See also: [just intonation](https://en.wikipedia.org/wiki/Just_intonation)
 

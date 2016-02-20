@@ -25,13 +25,14 @@ pub trait SoundGenerator {
 }
 
 
-
+#[allow(dead_code)]
 #[derive(Debug, Copy, Clone)]
 pub enum Error {
     PortAudio(pa::Error),
     BufferSize,
     DenominatorInvalid,
-//    Other,
+    AmplitudeInvalid,
+    AmplitudeRateInvalid,
 }
 
 impl fmt::Display for Error {
@@ -47,15 +48,20 @@ impl error::Error for Error {
     fn description(&self) -> &str {
         use self::Error::*;
         match *self {
+            PortAudio(ref err) => err.description(),
             BufferSize => "incorrect buffer size",
             DenominatorInvalid => "invalid denominator",
-            PortAudio(ref err) => err.description(),
-//            Other => "other",
+            AmplitudeInvalid => "invalid amplitude",
+            AmplitudeRateInvalid => "invalid amplitude decay rate",
         }
     }
 
     fn cause(&self) -> Option<&error::Error> {
-        None
+        use self::Error::*;
+        match *self {
+            PortAudio(ref err) => Some(err),
+            _ => None,
+        }
     }
 }
 

@@ -34,5 +34,6 @@ Tasks:
 - [ ] file format, parser
 - [ ] GUI
 - [ ] 3D audio space, instrument location effects
-- [ ] supporting other sound interfaces (besides **rust-portaudio**)
+- [ ] supporting other sound interfaces (besides [rust-portaudio](https://github.com/RustAudio/rust-portaudio))
+- [ ] converter from chromatic scale (eg. midi file) to scaleless structure
 - [ ] other stuff

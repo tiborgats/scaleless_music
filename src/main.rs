@@ -1,5 +1,5 @@
 //!
-//! Generate a 440hz sine wave with sound_stream's non-blocking output stream.
+//! Create scaleless music.
 //!
 #[cfg(target_os = "android")]
 #[macro_use]

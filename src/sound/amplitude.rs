@@ -57,6 +57,7 @@ impl AmplitudeFunction for AmplitudeDecayExp {
 
 /// Amplitude is decaying exponentially, also for overtones
 /// https://en.wikipedia.org/wiki/Exponential_decay
+/// index: 0 = fundamental tone, 1.. = overtones
 #[allow(dead_code)]
 pub struct AmplitudeDecayExpOvertones {
     amplitude: RefCell<Vec<SampleCalc>>, // starting amplitudes

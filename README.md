@@ -14,12 +14,14 @@ Counterexample: the popular [equal temperament](https://en.wikipedia.org/wiki/Eq
 See also: [just intonation](https://en.wikipedia.org/wiki/Just_intonation)
 
 ## Sound synthesis
+Basically an [additive synthesis](https://en.wikipedia.org/wiki/Additive_synthesis) is used, with an additional rule:
+* Frequency can be time-varying, but the intervals must remain harmonic.
+
+Note: this kind of synthesis is very resource hungry. So, for real-time sound generation smaller sample rate (eg. 48kHz) and lower number of overtones are desirable (to prevent buffer underrun).
+
 [Sample-based synthesis](https://en.wikipedia.org/wiki/Sample-based_synthesis) is not an option. It was ruled out for the following reasons:
 * It can contain noise and disharmonic intervals
 * It can contain echoes, effects of the recording space
-
-Basically an [additive synthesis](https://en.wikipedia.org/wiki/Additive_synthesis) is used, with an additional rule:
-* Frequency can be time-varying, but the intervals must remain harmonic.
 
 # Installation
 **music** is built using cargo, so just type `cargo build` at the root of the **music** repository. Currently only Linux is supported.
@@ -38,7 +40,7 @@ Tasks:
 	- [ ] sequences of notes, rhythm functions
 	- [ ] polyphony
 	- [ ] smooth start and end of sine waves, which are physically possible (no zero time jump in amplitude, or infinite acceleration of speaker membrane)
-- [ ] speed optimization of the playback routine
+- [ ] speed optimization of the playback routine, benchmark application
 - [ ] proper error handling: `.unwrap()` is not acceptable
 - [ ] handling some low-delay input devices
 	- [ ] midi keyboard

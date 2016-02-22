@@ -37,7 +37,7 @@ fn main() {
     use sound::interface::*;
     use sound::instrument::*;
 
-    let sound_generator = Box::new(InstrumentBasic::new(192000.0, 440.0));
+    let sound_generator = Box::new(InstrumentBasic::new(192000.0, 440.0).unwrap());
     let mut sound = SoundInterface::new(192000, 2, sound_generator).unwrap();
 
     let opengl = OpenGL::V3_2;

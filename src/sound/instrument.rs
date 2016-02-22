@@ -35,17 +35,22 @@ pub struct InstrumentBasic {
 #[allow(dead_code)]
 impl InstrumentBasic {
     /// Custom constructor
-    pub fn new(sample_rate: SampleCalc, frequency_start: SampleCalc) -> InstrumentBasic {
-        let amplitude_const = AmplitudeConst::new(1.0);
-        let amplitude1 = AmplitudeDecayExp::new(Rc::new(amplitude_const), 1.0);
-        let note1 = Note::new(sample_rate, Rc::new(amplitude1), 1);
-        InstrumentBasic {
+    pub fn new(sample_rate: SampleCalc,
+               frequency_start: SampleCalc)
+               -> SoundResult<InstrumentBasic> {
+        let overtones_amplitude: Vec<SampleCalc> = vec![0.5, 0.2, 0.1, 0.05, 0.03];
+        let overtones_dec_rate: Vec<SampleCalc> = vec![-0.5, -2.0, -4.0, -8.0, -16.0];
+        let amplitude1 = try!(AmplitudeDecayExpOvertones::new(sample_rate,
+                                                              overtones_amplitude,
+                                                              overtones_dec_rate));
+        let note1 = try!(Note::new(sample_rate, Rc::new(amplitude1), 4));
+        Ok(InstrumentBasic {
             sample_rate: sample_rate,
             note1: note1,
             frequency: frequency_start,
             frequency_buffer: vec![frequency_start; BUFFER_SIZE],
             time: 0.0,
-        }
+        })
     }
 
     /// Change frequency in harmony with the previous value

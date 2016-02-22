@@ -38,12 +38,14 @@ impl InstrumentBasic {
     pub fn new(sample_rate: SampleCalc,
                frequency_start: SampleCalc)
                -> SoundResult<InstrumentBasic> {
-        let overtones_amplitude: Vec<SampleCalc> = vec![0.5, 0.2, 0.1, 0.05, 0.03];
-        let overtones_dec_rate: Vec<SampleCalc> = vec![-0.5, -2.0, -4.0, -8.0, -16.0];
+        let overtones_amplitude: Vec<SampleCalc> = vec![0.5, 0.2, 0.1, 0.05, 0.03, 0.03, 0.03,
+                                                        0.03];
+        let overtones_dec_rate: Vec<SampleCalc> = vec![-0.5, -1.0, -2.0, -4.0, -8.0, -8.0, -8.0,
+                                                       -8.0];
         let amplitude1 = try!(AmplitudeDecayExpOvertones::new(sample_rate,
                                                               overtones_amplitude,
                                                               overtones_dec_rate));
-        let note1 = try!(Note::new(sample_rate, Rc::new(amplitude1), 4));
+        let note1 = try!(Note::new(sample_rate, Rc::new(amplitude1), 8));
         Ok(InstrumentBasic {
             sample_rate: sample_rate,
             note1: note1,

@@ -5,6 +5,7 @@ use std::rc::Rc;
 use std::cell::RefCell;
 
 pub const PI2: SampleCalc = ::std::f64::consts::PI * 2.0;
+// pub const PI2: SampleCalc = ::std::f32::consts::PI * 2.0;
 
 // #![allow(dead_code)]
 

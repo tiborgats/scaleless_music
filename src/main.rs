@@ -37,9 +37,6 @@ fn main() {
     use sound::interface::*;
     use sound::instrument::*;
 
-    let sound_generator = Box::new(InstrumentBasic::new(192000.0, 440.0).unwrap());
-    let mut sound = SoundInterface::new(192000, 2, sound_generator).unwrap();
-
     let opengl = OpenGL::V3_2;
     let size = Size { width: 1024, height: 768 };
     let ref glutin_window: Rc<RefCell<GlutinWindow>> = Rc::new(RefCell::new(WindowSettings::new("Music", size)
@@ -55,6 +52,10 @@ fn main() {
 //    let mut g2d = Glium2d::new(opengl, glium_window);
 
 //    for event in glutin_window.events().ups(120).swap_buffers(false) {
+
+    let sound_generator = Box::new(InstrumentBasic::new(48000.0, 440.0).unwrap());
+    let mut sound = SoundInterface::new(48000, 2, sound_generator).unwrap();
+
     let mut events = glutin_window.borrow().events().swap_buffers(false);
     // Temporary fix for https://github.com/rust-lang/rust/issues/30832.
     while let Some(event) = { let mut b = glutin_window.borrow_mut(); events.next(&mut *b) } {

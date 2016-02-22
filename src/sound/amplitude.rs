@@ -107,8 +107,8 @@ impl AmplitudeFunction for AmplitudeConstOvertones {
 #[allow(dead_code)]
 pub struct AmplitudeDecayExpOvertones {
     sample_rate: SampleCalc,
-    amplitude: RefCell<Vec<SampleCalc>>, // starting amplitudes
-    rate: RefCell<Vec<SampleCalc>>, // rate must be negative!
+    amplitude: Vec<SampleCalc>, // starting amplitudes
+    rate: Vec<SampleCalc>, // rate must be negative!
 }
 
 #[allow(dead_code)]
@@ -135,8 +135,8 @@ impl AmplitudeDecayExpOvertones {
         }
         Ok(AmplitudeDecayExpOvertones {
             sample_rate: sample_rate,
-            amplitude: RefCell::new(amplitude),
-            rate: RefCell::new(rate),
+            amplitude: amplitude,
+            rate: rate,
         })
     }
 }
@@ -156,9 +156,7 @@ impl AmplitudeFunction for AmplitudeDecayExpOvertones {
         if result.len() < sample_count {
             return Err(Error::BufferSize);
         }
-        let amplitude_b = self.amplitude.borrow();
-        let rate_b = self.rate.borrow();
-        if (overtone >= amplitude_b.len()) || (overtone >= rate_b.len()) {
+        if (overtone >= self.amplitude.len()) || (overtone >= self.rate.len()) {
             for sample_idx in 0..sample_count {
                 *result.get_mut(sample_idx).unwrap() = 0.0;
             }
@@ -166,8 +164,8 @@ impl AmplitudeFunction for AmplitudeDecayExpOvertones {
         };
         for sample_idx in 0..sample_count {
             let time: SampleCalc = (sample_idx as SampleCalc / self.sample_rate) + time_start;
-            *result.get_mut(sample_idx).unwrap() = amplitude_b.get(overtone).unwrap() *
-                                                   (time * rate_b.get(overtone).unwrap()).exp();
+            *result.get_mut(sample_idx).unwrap() = self.amplitude.get(overtone).unwrap() *
+                                                   (time * self.rate.get(overtone).unwrap()).exp();
         }
         Ok(())
     }

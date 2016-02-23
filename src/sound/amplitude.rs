@@ -170,3 +170,7 @@ impl AmplitudeFunction for AmplitudeDecayExpOvertones {
         Ok(())
     }
 }
+
+/// [Equal-loudness contour](https://en.wikipedia.org/wiki/Equal-loudness_contour)
+#[allow(dead_code)]
+pub struct AmplitudeEqualLoudness;

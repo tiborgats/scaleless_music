@@ -33,14 +33,22 @@ As soon as the basic structure of it will become stable, I will convert it to be
 
 Tasks:
 - [ ] I need time and money to be able to work on it effectively
-- [ ] proper documentation :book:
+- [ ] documentation :book:
 - [ ] basic effects, building blocks of music structure
+	- [x] note
 	- [ ] amplitude functions
+		- [x] [exponential decay](https://en.wikipedia.org/wiki/Exponential_decay)
+		- [ ] [tremolo](https://en.wikipedia.org/wiki/Tremolo) - as sinusoidal variation of amplitude
+		- [ ] [equal-loudness contour](https://en.wikipedia.org/wiki/Equal-loudness_contour)
 	- [ ] frequency functions
+		- [ ] [vibrato](https://en.wikipedia.org/wiki/Vibrato)
+		- [ ] linearly ascending (or descending) pitch
 	- [ ] sequences of notes, rhythm functions
 	- [ ] polyphony
 	- [ ] smooth start and end of sine waves, which are physically possible (no zero time jump in amplitude, or infinite acceleration of speaker membrane)
 - [ ] speed optimization of the playback routine, benchmark application
+	- [ ] fast `.sin()` algorithm (using lookup table)
+	- [ ] fast `.exp()` algorithm
 - [ ] proper error handling: `.unwrap()` is not acceptable
 - [ ] handling some low-delay input devices
 	- [ ] midi keyboard

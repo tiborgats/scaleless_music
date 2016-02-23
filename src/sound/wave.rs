@@ -7,8 +7,6 @@ use std::cell::RefCell;
 pub const PI2: SampleCalc = ::std::f64::consts::PI * 2.0;
 // pub const PI2: SampleCalc = ::std::f32::consts::PI * 2.0;
 
-// #![allow(dead_code)]
-
 /// A tone with optional overtones and amplitude modulation.
 #[allow(dead_code)]
 pub struct Note {
@@ -17,7 +15,6 @@ pub struct Note {
     frequency_buffer: RefCell<Vec<SampleCalc>>,
     amplitude_function: Rc<AmplitudeFunction>,
     amplitude_buffer: RefCell<Vec<SampleCalc>>,
-    // amplitude_buffer: Vec<SampleCalc>,
     overtone_max: usize,
 }
 
@@ -33,7 +30,6 @@ impl Note {
             frequency_buffer: RefCell::new(vec![0.0; BUFFER_SIZE]),
             amplitude_function: amplitude_function,
             amplitude_buffer: RefCell::new(vec![0.0; BUFFER_SIZE]),
-            // amplitude_buffer: vec![0.0; BUFFER_SIZE],
             overtone_max: overtone_max,
         })
     }
@@ -79,7 +75,6 @@ impl Note {
                 *result.get_mut(sample_idx).unwrap() += sample;  // vectors must match sample_count in size
             }
         }
-        // sample
         Ok(())
     }
 

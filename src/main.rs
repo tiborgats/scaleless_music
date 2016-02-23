@@ -18,8 +18,6 @@ extern crate piston;
 mod sound;
 
 use piston_window::*;
-//use std::thread;
-//use std::time::Duration;
 
 #[cfg(target_os = "android")]
 android_start!(main);
@@ -27,30 +25,25 @@ android_start!(main);
 fn main() {
     use sound::interface::*;
     use sound::instrument::*;
-
-//    let opengl = OpenGL::V3_2;
-    let window: PistonWindow = WindowSettings::new("Music", [320, 200])
-            .exit_on_esc(true)
-            .vsync(true)
-//            .opengl(opengl)
-            .build()
-            .unwrap();
-
     let sound_generator = Box::new(InstrumentBasic::new(48000.0, 440.0).unwrap());
     let mut sound = SoundInterface::new(48000, 2, sound_generator).unwrap();
 
-//    while let Some(event) = { let mut b = glutin_window.borrow_mut(); events.next(&mut *b) } {
-    for event in window.ups(120) {
+    let window: PistonWindow = WindowSettings::new("Music", [320, 200])
+            .exit_on_esc(true)
+            .vsync(true)
+            .build()
+            .unwrap();
+
+    for event in window {
+        if let Some(button) = event.press_args() {
+            if let Button::Keyboard(key) = button {
+                sound.send_command(Command::Keypress{ key: key });
+            } else {
+                println!("Pressed {:?}", button);
+            }
+        }
         event.draw_2d(|_c, g| {
             clear([1.0, 1.0, 1.0, 1.0], g);
         });
-        if let Some(Button::Keyboard(key)) = event.press_args() {
-            sound.send_command(Command::Keypress{ key: key });
-        }
-
-//        thread::sleep(Duration::from_millis(1));
-//        thread::sleep_ms(1);
     }
-
-//    println!("Ready.")
 }

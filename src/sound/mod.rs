@@ -19,7 +19,6 @@ pub const TONE_FREQUENCY_MAX: SampleCalc = 24000.0; // highest hearable (feelabl
 
 pub trait SoundGenerator {
 //    type GeneratorCommand;
-//    fn sample_next(&mut self) -> SampleOutput;
     fn get_samples(&mut self, count: usize, result: &mut Vec<SampleCalc>);
     fn process_command(&mut self, _command: GeneratorCommand) {}
 }

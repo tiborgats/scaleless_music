@@ -1,7 +1,6 @@
 
 // extern crate portaudio;
 // use portaudio as pa;
-// use std::error::Error;
 // use std::thread;
 // use std::sync::mpsc::channel;
 use std::sync::mpsc::Sender;
@@ -105,7 +104,3 @@ impl<'a> Drop for SoundInterface<'a> {
         }
     }
 }
-
-// impl ::std::default::Default for SoundInterface {
-//    fn default() -> SoundInterface { SoundInterface::default() }
-// }

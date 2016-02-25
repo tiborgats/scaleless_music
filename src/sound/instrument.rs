@@ -27,8 +27,11 @@ pub type GeneratorCommand = Command;
 pub struct InstrumentBasic {
     sample_rate: SampleCalc,
     note1: Note,
-    frequency: SampleCalc,
-    frequency_buffer: Vec<SampleCalc>,
+    note2: Note,
+    frequency1: SampleCalc,
+    frequency1_buffer: Vec<SampleCalc>,
+    frequency2: SampleCalc,
+    frequency2_buffer: Vec<SampleCalc>,
     time: SampleCalc,
 }
 
@@ -38,19 +41,30 @@ impl InstrumentBasic {
     pub fn new(sample_rate: SampleCalc,
                frequency_start: SampleCalc)
                -> SoundResult<InstrumentBasic> {
-        let overtones_amplitude: Vec<SampleCalc> = vec![0.5, 0.2, 0.1, 0.05, 0.03, 0.03, 0.03,
-                                                        0.03];
-        let overtones_dec_rate: Vec<SampleCalc> = vec![-0.5, -1.0, -2.0, -4.0, -8.0, -8.0, -8.0,
-                                                       -8.0];
-        let amplitude1 = try!(AmplitudeDecayExpOvertones::new(sample_rate,
-                                                              overtones_amplitude,
-                                                              overtones_dec_rate));
-        let note1 = try!(Note::new(sample_rate, Rc::new(amplitude1), 8));
+        let amplitude = {
+            let overtones_amplitude: Vec<SampleCalc> = vec![0.4, 0.1, 0.1, 0.05, 0.03, 0.03, 0.03,
+                                                            0.03];
+            let overtones_dec_rate: Vec<SampleCalc> = vec![-0.5, -1.0, -2.0, -4.0, -8.0, -8.0,
+                                                           -8.0, -8.0];
+            try!(AmplitudeDecayExpOvertones::new(sample_rate,
+                                                 overtones_amplitude,
+                                                 overtones_dec_rate))
+        };
+        let note1 = try!(Note::new(sample_rate, Rc::new(amplitude), 8));
+        let amplitude = {
+            let overtones_amplitude: Vec<SampleCalc> = vec![0.1, 0.02, 0.01, 0.01, 0.01, 0.01,
+                                                            0.01, 0.01];
+            try!(AmplitudeConstOvertones::new(overtones_amplitude))
+        };
+        let note2 = try!(Note::new(sample_rate, Rc::new(amplitude), 8));
         Ok(InstrumentBasic {
             sample_rate: sample_rate,
             note1: note1,
-            frequency: frequency_start,
-            frequency_buffer: vec![frequency_start; BUFFER_SIZE],
+            note2: note2,
+            frequency1: frequency_start,
+            frequency1_buffer: vec![frequency_start; BUFFER_SIZE],
+            frequency2: frequency_start,
+            frequency2_buffer: vec![frequency_start; BUFFER_SIZE],
             time: 0.0,
         })
     }
@@ -61,7 +75,7 @@ impl InstrumentBasic {
         if denominator <= 0 {
             return Err(Error::DenominatorInvalid);
         };
-        let new_frequency = (self.frequency * numerator as SampleCalc) / denominator as SampleCalc;
+        let new_frequency = (self.frequency1 * numerator as SampleCalc) / denominator as SampleCalc;
         if new_frequency < TONE_FREQUENCY_MIN {
             return Err(Error::DenominatorInvalid);
         };
@@ -69,7 +83,7 @@ impl InstrumentBasic {
             return Err(Error::DenominatorInvalid);
         };
         // self.frequency = new_frequency;
-        for i in self.frequency_buffer.iter_mut() {
+        for i in self.frequency1_buffer.iter_mut() {
             *i = new_frequency;
         }
         self.time = 0.0;
@@ -78,9 +92,13 @@ impl InstrumentBasic {
 }
 
 impl SoundGenerator for InstrumentBasic {
-    fn get_samples(&mut self, count: usize, result: &mut Vec<SampleCalc>) {
-        self.note1.get(count, self.time, &self.frequency_buffer, result).unwrap();
-        self.time += count as SampleCalc / self.sample_rate;
+    fn get_samples(&mut self, sample_count: usize, result: &mut Vec<SampleCalc>) {
+        for sample_idx in 0..sample_count {
+            *result.get_mut(sample_idx).unwrap() = 0.0;
+        }
+        self.note1.get(sample_count, self.time, &self.frequency1_buffer, result).unwrap();
+        self.note2.get(sample_count, self.time, &self.frequency2_buffer, result).unwrap();
+        self.time += sample_count as SampleCalc / self.sample_rate;
     }
 
     fn process_command(&mut self, command: Command) {

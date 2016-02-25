@@ -50,9 +50,9 @@ impl Note {
         if result.len() < sample_count {
             return Err(Error::BufferSize);
         }
-        for sample_idx in 0..sample_count {
-            *result.get_mut(sample_idx).unwrap() = 0.0;
-        }
+        //        for sample_idx in 0..sample_count {
+        // result.get_mut(sample_idx).unwrap() = 0.0;
+        // }
         let time_sample: SampleCalc = 1.0 / self.sample_rate;
         let mut sample: SampleCalc;
         // let frequency_b = self.frequency_buffer.borrow_mut();

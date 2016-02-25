@@ -2,14 +2,14 @@ music [![Build Status](https://travis-ci.org/tiborgats/music.svg?branch=master)]
 =====
 It is an experimental project for making scaleless music.
 
-# About
+# Concept
 The aim of this software is to create music according to the following perfectionist principles:
 * Music should only contain [harmonic](https://en.wikipedia.org/wiki/Harmony) intervals between notes. (No noise, no out of tune notes.)
 * All of the harmonic interval variations should be possible to create. (Including harmonies which are missing from the [chromatic scale](https://en.wikipedia.org/wiki/Chromatic_scale))
 
 The realization of these conditions is mathematically impossible with any musical [scale](https://en.wikipedia.org/wiki/Scale_(music)), therefore a correct precise music creation software should be scaleless. On "scaleless" I mean that the frequency of the notes are not chosen from a fixed set (= scale), instead they are calculated dynamically in relation of the previous notes.
 
-Counterexample: the popular [equal temperament](https://en.wikipedia.org/wiki/Equal_temperament) contains only one type of harmonic interval: the octave, all the other frequency intervals are disharmonic ones in it (multiplies of ¹²√2).
+Counterexample: the popular [equal temperament](https://en.wikipedia.org/wiki/Equal_temperament) contains only one type of harmonic interval: the octave, all the other frequency intervals are disharmonic ones in it (multiplies of ¹²√2). The baby-toy manufacturers even developed it further to achieve the most annoying disharmonies.
 
 See also: [just intonation](https://en.wikipedia.org/wiki/Just_intonation)
 
@@ -17,11 +17,13 @@ See also: [just intonation](https://en.wikipedia.org/wiki/Just_intonation)
 Basically an [additive synthesis](https://en.wikipedia.org/wiki/Additive_synthesis) is used, with an additional rule:
 * Frequency can be time-varying, but the intervals must remain harmonic.
 
-Note: this kind of synthesis is very resource hungry. So, for real-time sound generation smaller sample rate (eg. 48kHz) and lower number of overtones are desirable (to prevent buffer underrun).
+Note: this kind of synthesis is very resource hungry. So, for real-time sound generation smaller sample rate (eg. 48kHz) and lower number of overtones are desirable (to prevent buffer underrun). This can change later, after speed optimiztion of the algorithm.
 
 [Sample-based synthesis](https://en.wikipedia.org/wiki/Sample-based_synthesis) is not an option. It was ruled out for the following reasons:
-* It can contain noise and disharmonic intervals
-* It can contain echoes, effects of the recording space
+* It can contain noise and disharmonic intervals.
+* It can contain echoes, effects of the recording space.
+
+Later I plan to create a tool for building harmonic sound structures from recorded samples.
 
 # Installation
 **music** is built using cargo, so just type `cargo build` at the root of the **music** repository. Currently only Linux is supported.
@@ -42,7 +44,7 @@ Tasks:
 		- [ ] [equal-loudness contour](https://en.wikipedia.org/wiki/Equal-loudness_contour)
 	- [ ] frequency functions
 		- [ ] [vibrato](https://en.wikipedia.org/wiki/Vibrato)
-		- [ ] linearly ascending (or descending) pitch
+		- [ ] linearly changing (ascending or descending) pitch
 	- [ ] sequences of notes, rhythm functions
 	- [ ] polyphony
 	- [ ] smooth start and end of sine waves, which are physically possible (no zero time jump in amplitude, or infinite acceleration of speaker membrane)

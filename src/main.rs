@@ -7,6 +7,7 @@ extern crate android_glue;
 
 extern crate portaudio;
 #[macro_use] extern crate lazy_static;
+extern crate rayon;
 
 #[macro_use] extern crate conrod;
 extern crate piston_window;
@@ -33,6 +34,8 @@ fn main() {
             .vsync(true)
             .build()
             .unwrap();
+
+    sound.start().unwrap();
 
     for event in window {
         if let Some(button) = event.press_args() {

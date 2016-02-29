@@ -70,10 +70,8 @@ impl<'a> SoundInterface<'a> {
 
         // Open a non-blocking stream.
         //        let mut stream = PORTAUDIO.open_non_blocking_stream(settings, callback_fn)?;
-        let mut stream = try!(PORTAUDIO.open_non_blocking_stream(settings, callback_fn));
+        let stream = try!(PORTAUDIO.open_non_blocking_stream(settings, callback_fn));
         println!("Stream is created.");
-        try!(stream.start());
-        println!("Successfully started the stream.");
 
         Ok(SoundInterface {
             sample_rate: sample_rate,
@@ -82,6 +80,12 @@ impl<'a> SoundInterface<'a> {
             // synthesizer: Arc::new(Mutex::new(Wave::default())),
             sender: Some(sender),
         })
+    }
+
+    pub fn start(&mut self) -> SoundResult<()> {
+        try!(self.stream.start());
+        println!("Successfully started the stream.");
+        Ok(())
     }
 
     pub fn send_command(&mut self, command: GeneratorCommand) {

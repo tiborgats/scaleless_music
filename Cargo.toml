@@ -1,11 +1,11 @@
 [package]
 
 name = "music"
-version = "0.0.1"
+version = "0.0.2"
 authors = ["Tibor Gáts <tibor.gats@gmail.com>"]
-description = "A new approach for making music."
+description = "Scaleless music."
 readme = "README.md"
-keywords = ["keyboard", "music", "note", "pitch"]
+keywords = ["music", "sound", "audio"]
 license = "undecided"
 repository = ""
 homepage = ""
@@ -13,6 +13,7 @@ homepage = ""
 [dependencies]
 portaudio = "*"
 lazy_static = "*"
+rayon = "*"
 piston_window = "*"
 piston = "*"
 glium = "*"

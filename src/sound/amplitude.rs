@@ -22,7 +22,7 @@ pub struct AmplitudeConstOvertones {
 
 #[allow(dead_code)]
 impl AmplitudeConstOvertones {
-    pub fn new(amplitude: Vec<SampleCalc>) -> SoundResult<AmplitudeConstOvertones> {
+    pub fn new(mut amplitude: Vec<SampleCalc>) -> SoundResult<AmplitudeConstOvertones> {
         let mut amplitude_sum: SampleCalc = 0.0;
         for amplitude_check in &amplitude {
             if *amplitude_check < 0.0 {
@@ -30,8 +30,9 @@ impl AmplitudeConstOvertones {
             };
             amplitude_sum += *amplitude_check;
         }
-        if amplitude_sum > 1.0 {
-            return Err(Error::AmplitudeInvalid);
+        // normalization
+        for amp in &mut amplitude {
+            *amp = *amp / amplitude_sum;
         }
         Ok(AmplitudeConstOvertones { amplitude: RefCell::new(amplitude) })
     }
@@ -115,7 +116,7 @@ pub struct AmplitudeDecayExpOvertones {
 impl AmplitudeDecayExpOvertones {
     /// rate must be negative!
     pub fn new(sample_rate: SampleCalc,
-               amplitude: Vec<SampleCalc>,
+               mut amplitude: Vec<SampleCalc>,
                rate: Vec<SampleCalc>)
                -> SoundResult<AmplitudeDecayExpOvertones> {
         let mut amplitude_sum: SampleCalc = 0.0;
@@ -125,8 +126,9 @@ impl AmplitudeDecayExpOvertones {
             };
             amplitude_sum += *amplitude_check;
         }
-        if amplitude_sum > 1.0 {
-            return Err(Error::AmplitudeInvalid);
+        // normalization
+        for amp in &mut amplitude {
+            *amp = *amp / amplitude_sum;
         }
         for rate_check in &rate {
             if *rate_check > 0.0 {
@@ -172,5 +174,7 @@ impl AmplitudeFunction for AmplitudeDecayExpOvertones {
 }
 
 /// [Equal-loudness contour](https://en.wikipedia.org/wiki/Equal-loudness_contour)
+/// data used is described by the ISO 226:2003 standard
+/// see also: https://plot.ly/~mrlyule/16/equal-loudness-contours-iso-226-2003/
 #[allow(dead_code)]
 pub struct AmplitudeEqualLoudness;

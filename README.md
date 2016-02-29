@@ -19,11 +19,11 @@ Basically an [additive synthesis](https://en.wikipedia.org/wiki/Additive_synthes
 
 Note: this kind of synthesis is very resource hungry. So, for real-time sound generation smaller sample rate (eg. 48kHz) and lower number of overtones are desirable (to prevent buffer underrun). This can change later, after speed optimiztion of the algorithm.
 
-[Sample-based synthesis](https://en.wikipedia.org/wiki/Sample-based_synthesis) is not an option. It was ruled out for the following reasons:
+[Sample-based synthesis](https://en.wikipedia.org/wiki/Sample-based_synthesis) is not a very good option for the following reasons:
 * It can contain noise and disharmonic intervals.
-* It can contain echoes, effects of the recording space.
+* It can contain echoes, effects of the recording space (which interfere the space we want to add to it).
 
-Later I plan to create a tool for building harmonic sound structures from recorded samples.
+Later I plan to create a tool for analyzing recorded samples, finding closest mathematical representation, and building harmonic sound structures with similar output. In this way we can reduce noise, and we can use precise 3D spacial effects.
 
 # Installation
 **music** is built using cargo, so just type `cargo build` at the root of the **music** repository. Currently only Linux is supported.
@@ -51,6 +51,8 @@ Tasks:
 - [ ] speed optimization of the playback routine, benchmark application
 	- [ ] fast `.sin()` algorithm (using lookup table)
 	- [ ] fast `.exp()` algorithm
+	- [ ] parallel processing
+	- [ ] GPU ?
 - [ ] proper error handling: `.unwrap()` is not acceptable
 - [ ] handling some low-delay input devices
 	- [ ] midi keyboard

@@ -1,8 +1,9 @@
 use sound::*;
 use sound::wave::*;
-// use sound::frequency::*;
+use sound::frequency::*;
 use sound::amplitude::*;
 use std::rc::Rc;
+use rayon::prelude::*;
 use piston::input::*;
 
 ///
@@ -28,9 +29,9 @@ pub struct InstrumentBasic {
     sample_rate: SampleCalc,
     note1: Note,
     note2: Note,
-    frequency1: SampleCalc,
+    frequency1: Rc<FrequencyConst>,
     frequency1_buffer: Vec<SampleCalc>,
-    frequency2: SampleCalc,
+    frequency2: Rc<FrequencyConst>,
     frequency2_buffer: Vec<SampleCalc>,
     time: SampleCalc,
 }
@@ -41,29 +42,32 @@ impl InstrumentBasic {
     pub fn new(sample_rate: SampleCalc,
                frequency_start: SampleCalc)
                -> SoundResult<InstrumentBasic> {
+        let frequency1 = Rc::new(try!(FrequencyConst::new(440.0)));
         let amplitude = {
-            let overtones_amplitude: Vec<SampleCalc> = vec![0.4, 0.1, 0.1, 0.05, 0.03, 0.03, 0.03,
-                                                            0.03];
-            let overtones_dec_rate: Vec<SampleCalc> = vec![-0.5, -1.0, -2.0, -4.0, -8.0, -8.0,
-                                                           -8.0, -8.0];
+            let overtones_amplitude: Vec<SampleCalc> = vec![3.0, 4.5, 1.0, 0.9, 0.7, 0.5, 0.4, 3.5];
+            let overtones_dec_rate: Vec<SampleCalc> = vec![-1.0, -1.4, -1.9, -2.1, -2.4, -3.0,
+                                                           -3.5, -3.7, -3.8, -4.0, -4.2, -4.4,
+                                                           -4.8, -5.3, -6.1, -7.0];
             try!(AmplitudeDecayExpOvertones::new(sample_rate,
                                                  overtones_amplitude,
                                                  overtones_dec_rate))
         };
-        let note1 = try!(Note::new(sample_rate, Rc::new(amplitude), 8));
+        let note1 = try!(Note::new(sample_rate, frequency1.clone(), Rc::new(amplitude), 8));
+        let frequency2 = Rc::new(try!(FrequencyConst::new(440.0)));
         let amplitude = {
-            let overtones_amplitude: Vec<SampleCalc> = vec![0.1, 0.02, 0.01, 0.01, 0.01, 0.01,
-                                                            0.01, 0.01];
+            let overtones_amplitude: Vec<SampleCalc> = vec![0.0, 3.0, 5.0, 2.0, 1.0, 0.5, 0.1,
+                                                            0.1, 0.1, 0.1, 0.1, 0.1, 0.1, 0.1,
+                                                            0.1, 0.1, 0.1, 0.1, 0.1, 0.1];
             try!(AmplitudeConstOvertones::new(overtones_amplitude))
         };
-        let note2 = try!(Note::new(sample_rate, Rc::new(amplitude), 8));
+        let note2 = try!(Note::new(sample_rate, frequency2.clone(), Rc::new(amplitude), 6));
         Ok(InstrumentBasic {
             sample_rate: sample_rate,
             note1: note1,
             note2: note2,
-            frequency1: frequency_start,
+            frequency1: frequency1,
             frequency1_buffer: vec![frequency_start; BUFFER_SIZE],
-            frequency2: frequency_start,
+            frequency2: frequency2,
             frequency2_buffer: vec![frequency_start; BUFFER_SIZE],
             time: 0.0,
         })
@@ -72,20 +76,7 @@ impl InstrumentBasic {
     /// Change frequency in harmony with the previous value
     #[allow(dead_code)]
     pub fn change_frequency(&mut self, numerator: u16, denominator: u16) -> SoundResult<()> {
-        if denominator <= 0 {
-            return Err(Error::DenominatorInvalid);
-        };
-        let new_frequency = (self.frequency1 * numerator as SampleCalc) / denominator as SampleCalc;
-        if new_frequency < TONE_FREQUENCY_MIN {
-            return Err(Error::DenominatorInvalid);
-        };
-        if new_frequency > TONE_FREQUENCY_MAX {
-            return Err(Error::DenominatorInvalid);
-        };
-        // self.frequency = new_frequency;
-        for i in self.frequency1_buffer.iter_mut() {
-            *i = new_frequency;
-        }
+        try!(self.frequency1.change_harmonically(numerator, denominator));
         self.time = 0.0;
         Ok(())
     }
@@ -93,11 +84,16 @@ impl InstrumentBasic {
 
 impl SoundGenerator for InstrumentBasic {
     fn get_samples(&mut self, sample_count: usize, result: &mut Vec<SampleCalc>) {
-        for sample_idx in 0..sample_count {
-            *result.get_mut(sample_idx).unwrap() = 0.0;
-        }
+        result.par_iter_mut()
+              .enumerate()
+              .filter(|&(index, _)| index < sample_count)
+              .for_each(|(_index, value)| {
+                  *value = 0.0;
+              });
+        self.frequency1.get(sample_count, self.time, &mut self.frequency1_buffer).unwrap();
+        // self.frequency2.get(sample_count, self.time, &mut self.frequency2_buffer).unwrap();
         self.note1.get(sample_count, self.time, &self.frequency1_buffer, result).unwrap();
-        self.note2.get(sample_count, self.time, &self.frequency2_buffer, result).unwrap();
+        // self.note2.get(sample_count, self.time, &self.frequency2_buffer, result).unwrap();
         self.time += sample_count as SampleCalc / self.sample_rate;
     }
 

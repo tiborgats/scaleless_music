@@ -1,6 +1,5 @@
 
-// extern crate portaudio;
-// use portaudio as pa;
+use portaudio as pa;
 // use std::thread;
 // use std::sync::mpsc::channel;
 use std::sync::mpsc::Sender;

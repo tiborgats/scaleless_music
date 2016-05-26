@@ -3,10 +3,10 @@ pub mod frequency;
 pub mod amplitude;
 pub mod wave;
 pub mod instrument;
-pub mod interface;
+pub mod backend_portaudio;
 
 use std::{error, fmt};
-pub use portaudio as pa;
+use portaudio as pa;
 use sound::instrument::*;
 
 pub type SampleOutput = f32;

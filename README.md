@@ -1,11 +1,11 @@
-music [![Build Status](https://travis-ci.org/tiborgats/music.svg?branch=master)](https://travis-ci.org/tiborgats/music)
+music [![Build Status](https://travis-ci.org/tiborgats/music.svg?branch=master)](https://travis-ci.org/tiborgats/music) [![License](https://img.shields.io/badge/License-WTFPL-green.svg)](https://github.com/tiborgats/music/blob/master/COPYING)
 =====
-It is an experimental project for making scaleless music.
+It is an experimental project for making scaleless music. :construction: It is in very early stage yet, it will change a lot as soon as I will have some free time.
 
 # Concept
 The aim of this software is to create music according to the following perfectionist principles:
 * Music should only contain [harmonic](https://en.wikipedia.org/wiki/Harmony) intervals between notes. (Not any out of tune notes.)
-* All of the harmonic interval variations should be possible to be created. (Including harmonies which are missing from the [chromatic scale](https://en.wikipedia.org/wiki/Chromatic_scale))
+* All of the harmonic interval variations should be possible to be created. (Including a lot of harmonies which are missing from the [chromatic scale](https://en.wikipedia.org/wiki/Chromatic_scale))
 
 The realization of these conditions is mathematically impossible with the using of any kind of musical [scale](https://en.wikipedia.org/wiki/Scale_(music)). In this new "scaleless" concept, the frequency of the notes are not chosen from a fixed set (or scale), instead they are calculated dynamically in relation of the previous notes.
 
@@ -26,10 +26,8 @@ Henceforward, I plan to create a tool for analyzing recorded samples, finding cl
 # Installation
 **music** is built using cargo, so just type `cargo build` at the root of the **music** repository. Currently the project was tested only under Linux. If for some reason the building of [rust-portaudio](https://github.com/RustAudio/rust-portaudio) fails, you can check it's [README](https://github.com/RustAudio/rust-portaudio/blob/master/README.md) for further instructions.
 
-# Development, plans
-:construction: It is in very early stage yet!
+# Todo
 
-Tasks:
 - [ ] documentation
 - [ ] basic effects, building blocks of music structure
 	- [x] note
@@ -50,9 +48,7 @@ Tasks:
 - [ ] proper error handling: `.unwrap()` is not acceptable
 - [ ] handling some low-delay input devices
 	- [ ] midi keyboard
-	- [ ] developing a custom input device, where keys represent intervals instead of frequencies
 - [ ] file format, parser
-- [ ] GUI
 - [ ] 3D audio space, instrument location effects
 - [x] [rust-portaudio](https://github.com/RustAudio/rust-portaudio) backend
 - [ ] [rsoundio](https://github.com/klingtnet/rsoundio) backend

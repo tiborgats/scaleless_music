@@ -2,11 +2,11 @@
 
 name = "music"
 description = "Scaleless music."
-version = "0.0.2"
+version = "0.0.3"
 authors = ["Tibor Gáts <tibor.gats@gmail.com>"]
 readme = "README.md"
 keywords = ["music", "sound", "audio"]
-license = "undecided"
+license = "WTFPL"
 repository = "https://github.com/tiborgats/music"
 homepage = ""
 documentation = ""

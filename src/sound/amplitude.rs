@@ -7,7 +7,7 @@ pub trait AmplitudeFunction {
     fn get(&self,
            sample_count: usize,
            time_start: SampleCalc,
-           base_frequency: &Vec<SampleCalc>,
+           base_frequency: &[SampleCalc], // &Vec<SampleCalc>,
            overtone: usize,
            result: &mut Vec<SampleCalc>)
            -> SoundResult<()>;
@@ -32,7 +32,7 @@ impl AmplitudeConstOvertones {
         }
         // normalization
         for amp in &mut amplitude {
-            *amp = *amp / amplitude_sum;
+            *amp /= amplitude_sum;
         }
         Ok(AmplitudeConstOvertones { amplitude: RefCell::new(amplitude) })
     }
@@ -42,7 +42,7 @@ impl AmplitudeFunction for AmplitudeConstOvertones {
     fn get(&self,
            sample_count: usize,
            _time_start: SampleCalc,
-           base_frequency: &Vec<SampleCalc>,
+           base_frequency: &[SampleCalc], // &Vec<SampleCalc>,
            overtone: usize,
            result: &mut Vec<SampleCalc>)
            -> SoundResult<()> {
@@ -103,7 +103,7 @@ impl AmplitudeFunction for AmplitudeConstOvertones {
 // }
 
 /// Amplitude is decaying exponentially, also for overtones
-/// https://en.wikipedia.org/wiki/Exponential_decay
+/// [Exponential decay](https://en.wikipedia.org/wiki/Exponential_decay)
 /// index: 0 = fundamental tone, 1.. = overtones
 #[allow(dead_code)]
 pub struct AmplitudeDecayExpOvertones {
@@ -128,7 +128,7 @@ impl AmplitudeDecayExpOvertones {
         }
         // normalization
         for amp in &mut amplitude {
-            *amp = *amp / amplitude_sum;
+            *amp /= amplitude_sum;
         }
         for rate_check in &rate {
             if *rate_check > 0.0 {
@@ -147,7 +147,7 @@ impl AmplitudeFunction for AmplitudeDecayExpOvertones {
     fn get(&self,
            sample_count: usize,
            time_start: SampleCalc,
-           _base_frequency: &Vec<SampleCalc>,
+           _base_frequency: &[SampleCalc], // &Vec<SampleCalc>,
            overtone: usize,
            // result: RefMut<Vec<SampleCalc>>)
            result: &mut Vec<SampleCalc>)

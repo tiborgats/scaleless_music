@@ -27,8 +27,7 @@ Henceforward, I plan to create a tool for analyzing recorded samples, finding cl
 **music** is built using cargo, so just type `cargo build` at the root of the **music** repository. Currently the project was tested only under Linux. If for some reason the building of [rust-portaudio](https://github.com/RustAudio/rust-portaudio) fails, you can check it's [README](https://github.com/RustAudio/rust-portaudio/blob/master/README.md) for further instructions.
 
 # Development, plans
-:construction: It is in very early stage yet! Temporarily generates some sounds if you press some keys on the keyboard (Q..P, A..L).
-As soon as the basic structure of it's core will become stable, I will convert it to be a crate and some examples.
+:construction: It is in very early stage yet!
 
 Tasks:
 - [ ] documentation

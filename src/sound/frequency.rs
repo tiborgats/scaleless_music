@@ -30,7 +30,7 @@ impl FrequencyConst {
                                numerator: u16,
                                denominator: u16)
                                -> SoundResult<(&FrequencyConst)> {
-        if denominator <= 0 {
+        if denominator == 0 {
             return Err(Error::DenominatorInvalid);
         };
         let new_frequency = (self.frequency.get() * numerator as SampleCalc) /
@@ -57,11 +57,11 @@ impl FrequencyFunction for FrequencyConst {
         }
         let frequency = self.frequency.get();
         frequency_buffer.par_iter_mut()
-                        .enumerate()
-                        .filter(|&(index, _)| index < sample_count)
-                        .for_each(|(_index, f)| {
-                            *f = frequency;
-                        });
+            .enumerate()
+            .filter(|&(index, _)| index < sample_count)
+            .for_each(|(_index, f)| {
+                *f = frequency;
+            });
         Ok(())
     }
 

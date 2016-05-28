@@ -5,7 +5,6 @@ use portaudio as pa;
 use std::sync::mpsc::Sender;
 
 use sound::*;
-use sound::instrument::*;
 
 const FRAMES_PER_BUFFER: u32 = 4 * 256;    // optimal = FRAMES_PER_BUFFER_UNSPECIFIED
 
@@ -17,21 +16,23 @@ lazy_static! {
     };
 }
 
+/// this is a wrapper around the sound output backend
 #[allow(dead_code)]
-pub struct SoundInterface<'a> {
+pub struct SoundInterface<'a, T: 'static> {
     sample_rate: u32,
     channel_count: u16,
     stream: pa::Stream<'a, pa::NonBlocking, pa::stream::Output<SampleOutput>>,
     // synthesizer: Arc<Mutex<Wave>>,
-    sender: Option<Sender<GeneratorCommand>>, // receiver: Option<Receiver<GeneratorCommand>,
+    sender: Option<Sender<T>>, // receiver: Option<Receiver<T>,
 }
 
-impl<'a> SoundInterface<'a> {
-    /// Default constructor
+impl<'a, T> SoundInterface<'a, T> {
+    /// Creates a new backend for sound playback.
+    /// At the moment all channels output the same sound.
     pub fn new(sample_rate: u32,
                channel_count: u16,
-               mut generator: Box<SoundGenerator>)
-               -> SoundResult<SoundInterface<'a>> {
+               mut generator: Box<SoundGenerator<T>>)
+               -> SoundResult<SoundInterface<'a, T>> {
         println!("PortAudio version : {}", pa::version());
         println!("PortAudio version text : {:?}", pa::version_text());
         // println!("host count: {}", PORTAUDIO.host_api_count()?);
@@ -45,24 +46,24 @@ impl<'a> SoundInterface<'a> {
         let mut generator_buffer: Vec<SampleCalc> = vec![0.0; BUFFER_SIZE];
 
         let (sender, receiver) = ::std::sync::mpsc::channel();
-        // This routine will be called by the PortAudio engine when audio is needed. It may called at
-        // interrupt level on some machines so don't do anything that could mess up the system like
-        // dynamic resource allocation or IO.
+        // This routine will be called by the PortAudio engine when audio is needed. It may
+        // called at interrupt level on some machines so don't do anything that could mess
+        // up the system like dynamic resource allocation or IO.
         let callback_fn = move |pa::OutputStreamCallbackArgs { buffer, frames, .. }| {
             if let Ok(command) = receiver.try_recv() {
                 generator.process_command(command);
             }
             generator.get_samples(frames, &mut generator_buffer);
             let mut idx = 0;
-            for i in 0..frames {
+            for item in generator_buffer.iter().take(frames) {
                 for _ in 0..(channel_count as usize) {
-                    buffer[idx] = generator_buffer[i] as SampleOutput;
+                    buffer[idx] = *item as SampleOutput;
                     idx += 1;
-                    //            for output_frame in buffer.chunks_mut(channel_count) {
-                    //                for channel_sample in output_frame {
-                    //                    *channel_sample = synthesizer.sample_next();
                 }
             }
+            //            for output_frame in buffer.chunks_mut(channel_count) {
+            //                for channel_sample in output_frame {
+            //                    *channel_sample = synthesizer.sample_next();
             // sender.send(time_start).ok();
             pa::Continue
         };
@@ -87,14 +88,14 @@ impl<'a> SoundInterface<'a> {
         Ok(())
     }
 
-    pub fn send_command(&mut self, command: GeneratorCommand) {
+    pub fn send_command(&mut self, command: T) {
         if let Some(ref sender) = self.sender {
             sender.send(command).ok();
         }
     }
 }
 
-impl<'a> Drop for SoundInterface<'a> {
+impl<'a, T> Drop for SoundInterface<'a, T> {
     fn drop(&mut self) {
         use std::error::Error;
         if self.stream.is_active() == Ok(true) {

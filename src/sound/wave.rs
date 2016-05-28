@@ -50,7 +50,7 @@ impl SoundStructure for Note {
     fn get(&self,
            sample_count: usize,
            time_start: SampleCalc,
-           base_frequency: &Vec<SampleCalc>,
+           base_frequency: &[SampleCalc], // &Vec<SampleCalc>,
            result: &mut Vec<SampleCalc>)
            -> SoundResult<()> {
         use rayon::prelude::*;
@@ -92,12 +92,13 @@ impl SoundStructure for Note {
                 });
 
             for sample_idx in 0..sample_count {
-                //                let time: SampleCalc = (sample_idx as SampleCalc * time_sample) + time_start;
-                //                let frequency: SampleCalc = *base_frequency.get(sample_idx).unwrap();
-                //                let sample: SampleCalc = (time * frequency * freq_multiplier).sin() *
+                // let time: SampleCalc = (sample_idx as SampleCalc * time_sample) + time_start;
+                // let frequency: SampleCalc = *base_frequency.get(sample_idx).unwrap();
+                // let sample: SampleCalc = (time * frequency * freq_multiplier).sin() *
                 let sample = self.wave_buffer.borrow().get(sample_idx).unwrap() *
                              self.amplitude_buffer.borrow().get(sample_idx).unwrap();
-                *result.get_mut(sample_idx).unwrap() += sample * 0.4;  // vectors must match sample_count in size
+                *result.get_mut(sample_idx).unwrap() += sample * 0.4;
+                // vectors must match sample_count in size
             }
 
         }
@@ -147,7 +148,7 @@ impl SoundStructure for Mixer {
     fn get(&self,
            sample_count: usize,
            _time_start: SampleCalc,
-           base_frequency: &Vec<SampleCalc>,
+           base_frequency: &[SampleCalc], // &Vec<SampleCalc>,
            result: &mut Vec<SampleCalc>)
            -> SoundResult<()> {
         if sample_count > BUFFER_SIZE {

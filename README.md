@@ -7,7 +7,7 @@ The aim of this software is to create music according to the following perfectio
 * Music should only contain [harmonic](https://en.wikipedia.org/wiki/Harmony) intervals between notes. (Not any out of tune notes.)
 * All of the harmonic interval variations should be possible to be created. (Including harmonies which are missing from the [chromatic scale](https://en.wikipedia.org/wiki/Chromatic_scale))
 
-The realization of these conditions is mathematically impossible with the using of any kind of musical [scale](https://en.wikipedia.org/wiki/Scale_(music). In this new "scaleless" concept, the frequency of the notes are not chosen from a fixed set (or scale), instead they are calculated dynamically in relation of the previous notes.
+The realization of these conditions is mathematically impossible with the using of any kind of musical [scale](https://en.wikipedia.org/wiki/Scale_(music)). In this new "scaleless" concept, the frequency of the notes are not chosen from a fixed set (or scale), instead they are calculated dynamically in relation of the previous notes.
 
 Counterexample: the popular [equal temperament](https://en.wikipedia.org/wiki/Equal_temperament) contains only one type of harmonic interval: the octave, all the other frequency intervals are disharmonic ones in it (multiplies of ¹²√2). For a more detailed understandig of the problem of equal temperament and musical scales in general, you can read about the [just intonation](https://en.wikipedia.org/wiki/Just_intonation) approach.
 

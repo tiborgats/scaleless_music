@@ -4,11 +4,11 @@ use sound::amplitude::*;
 use std::rc::Rc;
 use std::cell::RefCell;
 
+/// = π x 2
 pub const PI2: SampleCalc = ::std::f64::consts::PI * 2.0;
 // pub const PI2: SampleCalc = ::std::f32::consts::PI * 2.0;
 
 /// A tone with optional overtones and amplitude modulation.
-#[allow(dead_code)]
 pub struct Note {
     sample_rate: SampleCalc,
     frequency_function: Rc<FrequencyFunction>,
@@ -21,7 +21,6 @@ pub struct Note {
 
 impl Note {
     /// Custom constructor
-    #[allow(dead_code)]
     pub fn new(sample_rate: SampleCalc,
                frequency_function: Rc<FrequencyFunction>,
                amplitude_function: Rc<AmplitudeFunction>,
@@ -37,8 +36,7 @@ impl Note {
             overtone_max: overtone_max,
         })
     }
-
-    #[allow(dead_code)]
+    /// Set a new amplitude function
     pub fn set_amplitude(&mut self, amplitude_function: Rc<AmplitudeFunction>) -> &mut Note {
         self.amplitude_function = amplitude_function;
         self
@@ -46,7 +44,6 @@ impl Note {
 }
 
 impl SoundStructure for Note {
-    #[allow(dead_code)]
     fn get(&self,
            sample_count: usize,
            time_start: SampleCalc,
@@ -113,7 +110,6 @@ struct MixerChannel {
 }
 
 /// Mixing sound structures
-#[allow(dead_code)]
 pub struct Mixer {
     sample_rate: SampleCalc,
     channels: Vec<MixerChannel>,
@@ -121,15 +117,13 @@ pub struct Mixer {
 
 impl Mixer {
     /// Custom constructor
-    #[allow(dead_code)]
     pub fn new(sample_rate: SampleCalc) -> SoundResult<Mixer> {
         Ok(Mixer {
             sample_rate: sample_rate,
             channels: Vec::new(),
         })
     }
-
-    #[allow(dead_code)]
+    /// Add a new channel to the mixer.
     pub fn add(&mut self,
                sound: Rc<SoundStructure>,
                amplitude: Rc<AmplitudeFunction>)
@@ -144,7 +138,6 @@ impl Mixer {
 }
 
 impl SoundStructure for Mixer {
-    #[allow(dead_code)]
     fn get(&self,
            sample_count: usize,
            _time_start: SampleCalc,

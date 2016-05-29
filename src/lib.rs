@@ -9,12 +9,20 @@
 //! music = { git = "https://github.com/tiborgats/music" }
 //! ```
 
-//#![warn(missing_docs)]
+#![warn(missing_docs)]
 
-
+#[cfg(feature = "be-portaudio")]
 extern crate portaudio;
+#[cfg(feature = "be-portaudio")]
 #[macro_use]
 extern crate lazy_static;
+
+#[cfg(feature = "be-rsoundio")]
+extern crate rsoundio;
+#[cfg(feature = "be-rsoundio")]
+extern crate rb;
+
 extern crate rayon;
 
+/// Contains the basic sound synthesizer routines
 pub mod sound;

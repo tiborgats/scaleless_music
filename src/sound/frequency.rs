@@ -2,17 +2,19 @@ use sound::*;
 use rayon::prelude::*;
 use std::cell::Cell;
 
+/// Input and output definition for the frequency functions.
 pub trait FrequencyFunction {
+    /// Provides the results of the frequency calculations.
     fn get(&self,
            sample_count: usize,
            time_begin: SampleCalc,
            frequency_buffer: &mut Vec<SampleCalc>)
            -> SoundResult<()>;
-
+    ///
     fn set_time(&self, time: SampleCalc) -> SoundResult<()>;
 }
 
-/// Frequency is not changing by time
+/// Frequency is not changing by time.
 #[allow(dead_code)]
 pub struct FrequencyConst {
     frequency: Cell<SampleCalc>,
@@ -20,12 +22,12 @@ pub struct FrequencyConst {
 
 #[allow(dead_code)]
 impl FrequencyConst {
+    /// custom constructor
     pub fn new(frequency: SampleCalc) -> SoundResult<FrequencyConst> {
         Ok(FrequencyConst { frequency: Cell::new(frequency) })
     }
 
     /// Change frequency in harmony with it's previous value
-    #[allow(dead_code)]
     pub fn change_harmonically(&self,
                                numerator: u16,
                                denominator: u16)

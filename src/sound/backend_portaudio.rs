@@ -3,7 +3,7 @@ use portaudio as pa;
 // use std::thread;
 // use std::sync::mpsc::channel;
 use std::sync::mpsc::Sender;
-
+use std::{error, fmt};
 use sound::*;
 
 const FRAMES_PER_BUFFER: u32 = 4 * 256;    // optimal = FRAMES_PER_BUFFER_UNSPECIFIED
@@ -16,8 +16,7 @@ lazy_static! {
     };
 }
 
-/// this is a wrapper around the sound output backend
-#[allow(dead_code)]
+/// This is a wrapper around the sound output backend
 pub struct SoundInterface<'a, T: 'static> {
     sample_rate: u32,
     channel_count: u16,
@@ -32,7 +31,7 @@ impl<'a, T> SoundInterface<'a, T> {
     pub fn new(sample_rate: u32,
                channel_count: u16,
                mut generator: Box<SoundGenerator<T>>)
-               -> SoundResult<SoundInterface<'a, T>> {
+               -> BackendResult<SoundInterface<'a, T>> {
         println!("PortAudio version : {}", pa::version());
         println!("PortAudio version text : {:?}", pa::version_text());
         // println!("host count: {}", PORTAUDIO.host_api_count()?);
@@ -81,17 +80,26 @@ impl<'a, T> SoundInterface<'a, T> {
             sender: Some(sender),
         })
     }
-
-    pub fn start(&mut self) -> SoundResult<()> {
+    /// Starts the sound output stream.
+    pub fn start(&mut self) -> BackendResult<()> {
         try!(self.stream.start());
         println!("Successfully started the stream.");
         Ok(())
     }
-
+    /// Sends a command to the sound generator.
     pub fn send_command(&mut self, command: T) {
         if let Some(ref sender) = self.sender {
             sender.send(command).ok();
         }
+    }
+
+    /// Returns the sample rate of the sond output
+    pub fn get_sample_rate(&self) -> u32 {
+        self.sample_rate
+    }
+    /// Returns the channel count of the sond output
+    pub fn get_channel_count(&self) -> u16 {
+        self.channel_count
     }
 }
 
@@ -108,3 +116,42 @@ impl<'a, T> Drop for SoundInterface<'a, T> {
         }
     }
 }
+
+/// Wrapper for the propagation of backend specific errors.
+#[derive(Debug, Copy, Clone)]
+pub enum BackendError {
+    /// Errors of the PortAudio backend.
+    PortAudio(pa::Error),
+}
+
+impl fmt::Display for BackendError {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        use std::error::Error;
+        f.write_str(self.description())
+    }
+}
+
+impl error::Error for BackendError {
+    fn description(&self) -> &str {
+        use self::BackendError::*;
+        match *self {
+            PortAudio(ref err) => err.description(),
+        }
+    }
+
+    fn cause(&self) -> Option<&error::Error> {
+        use self::BackendError::*;
+        match *self {
+            PortAudio(ref err) => Some(err),
+            // _ => None,
+        }
+    }
+}
+
+impl From<pa::Error> for BackendError {
+    fn from(e: pa::Error) -> Self {
+        BackendError::PortAudio(e)
+    }
+}
+/// Return type for the backend functions.
+pub type BackendResult<T> = Result<T, BackendError>;

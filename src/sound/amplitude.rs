@@ -3,11 +3,13 @@ use sound::*;
 use std::cell::RefCell;
 // use std::cell::{RefCell, RefMut};
 
+/// Input and output definition for the amplitude functions.
 pub trait AmplitudeFunction {
+    /// Provides the results of the amplitude calculations.
     fn get(&self,
            sample_count: usize,
            time_start: SampleCalc,
-           base_frequency: &[SampleCalc], // &Vec<SampleCalc>,
+           base_frequency: &[SampleCalc],
            overtone: usize,
            result: &mut Vec<SampleCalc>)
            -> SoundResult<()>;
@@ -15,13 +17,12 @@ pub trait AmplitudeFunction {
 
 
 /// Amplitude is not changing by time
-#[allow(dead_code)]
 pub struct AmplitudeConstOvertones {
     amplitude: RefCell<Vec<SampleCalc>>,
 }
 
-#[allow(dead_code)]
 impl AmplitudeConstOvertones {
+    /// custom constructor
     pub fn new(mut amplitude: Vec<SampleCalc>) -> SoundResult<AmplitudeConstOvertones> {
         let mut amplitude_sum: SampleCalc = 0.0;
         for amplitude_check in &amplitude {
@@ -105,14 +106,12 @@ impl AmplitudeFunction for AmplitudeConstOvertones {
 /// Amplitude is decaying exponentially, also for overtones
 /// [Exponential decay](https://en.wikipedia.org/wiki/Exponential_decay)
 /// index: 0 = fundamental tone, 1.. = overtones
-#[allow(dead_code)]
 pub struct AmplitudeDecayExpOvertones {
     sample_rate: SampleCalc,
     amplitude: Vec<SampleCalc>, // starting amplitudes
     rate: Vec<SampleCalc>, // rate must be negative!
 }
 
-#[allow(dead_code)]
 impl AmplitudeDecayExpOvertones {
     /// rate must be negative!
     pub fn new(sample_rate: SampleCalc,
@@ -176,5 +175,4 @@ impl AmplitudeFunction for AmplitudeDecayExpOvertones {
 /// [Equal-loudness contour](https://en.wikipedia.org/wiki/Equal-loudness_contour)
 /// data used is described by the ISO 226:2003 standard
 /// see also: https://plot.ly/~mrlyule/16/equal-loudness-contours-iso-226-2003/
-#[allow(dead_code)]
 pub struct AmplitudeEqualLoudness;

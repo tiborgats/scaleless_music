@@ -1,27 +1,34 @@
 music [![Build Status](https://travis-ci.org/tiborgats/music.svg?branch=master)](https://travis-ci.org/tiborgats/music) [![License](https://img.shields.io/badge/License-WTFPL-green.svg)](https://github.com/tiborgats/music/blob/master/COPYING)
 =====
-It is an experimental project for making scaleless music. :construction: It is in very early stage yet, will change a lot as soon as I will have some free time. It is still not published in crates.io, I'm not even sure what should be the name of this crate ("music" is too general).
+I was always annoyed by the slightly false notes that came out from electronic musical instruments. When I wanted to compose some overtone flute music I also realized, that music composing software (MIDI editors) are limited to the western chromatic music scale. They miss not only some harmonies of the overtone flute, but also many of those, which are present in other types of music (e.g. Arabic). And so this project was born...
+
+:construction: It is in a very early stage, but will change a lot as soon as I have some free time. It is still not published in crates.io, I'm not even sure what should be the name of this crate ("music" is too general).
 
 # Overview
 The aim of this software is to create music according to the following perfectionist principles:
-* Music should only contain [harmonic](https://en.wikipedia.org/wiki/Harmony) intervals between notes. (Not any out of tune notes.)
-* All of the harmonic interval variations should be possible to be created. (Including a lot of harmonies which are missing from the [chromatic scale](https://en.wikipedia.org/wiki/Chromatic_scale))
+1. Music shall contain only [harmonic](https://en.wikipedia.org/wiki/Harmony) intervals between notes.
+2. All harmonic interval variations shall have the possibility to be created.
 
-The realization of these conditions is mathematically impossible with the using of any kind of musical [scale](https://en.wikipedia.org/wiki/Scale_(music)). In this new "scaleless" concept, the frequency of the notes are not chosen from a fixed set (or scale), instead they are calculated dynamically in relation of the previous notes.
+The first rule means that the music shall not contain false sounds.
+> Pure intervals are important in music because they naturally tend to be perceived by humans as "consonant": pleasing or satisfying. Intervals not satisfying this criterion, conversely, tend to be perceived as unpleasant or as creating dissatisfaction or tension. ([Wikipedia](https://en.wikipedia.org/wiki/Just_intonation))
 
-Counterexample: the popular [equal temperament](https://en.wikipedia.org/wiki/Equal_temperament) contains only one type of harmonic interval: the octave, all the other frequency intervals are disharmonic ones in it (multiplies of ¹²√2). It is also limited to a small set of harmonies. For a more detailed understandig of the problem of equal temperament and musical scales in general, you can read about the [just intonation](https://en.wikipedia.org/wiki/Just_intonation) approach.
+The second rule provides the freedom to use harmonies which are missing from the [chromatic scale](https://en.wikipedia.org/wiki/Chromatic_scale).
+
+The realization of these conditions is mathematically impossible when using musical [scales](https://en.wikipedia.org/wiki/Scale_(music)). In this new "scaleless" concept, the frequencies of the notes are not chosen from a fixed set (or scale), they are calculated dynamically, based on the relation of the previous notes to achieve pure intervals.
+
+Counterexample: the popular [equal temperament](https://en.wikipedia.org/wiki/Equal_temperament) (used by [MIDI](https://en.wikipedia.org/wiki/MIDI)) contains only one type of pure harmonic interval: the octave, all the other frequency intervals are slightly disharmonic in it (multiplies of ¹²√2). It is also limited to a small set of intervals. For a deeper understanding of the problem of equal temperament and musical scales in general, you can read about the [just intonation](https://en.wikipedia.org/wiki/Just_intonation) approach.
 
 ## Sound synthesis
-Basically an [additive synthesis](https://en.wikipedia.org/wiki/Additive_synthesis) is used, with an additional rule:
+**music** uses [additive synthesis](https://en.wikipedia.org/wiki/Additive_synthesis), with an additional rule:
 * Frequency can be time-varying, but the intervals must remain harmonic.
 
-Note: this kind of synthesis is very resource hungry. So, for real-time sound generation smaller sample rate (eg. 48kHz) and lower number of overtones are desirable (to prevent buffer underrun). This can change later, after speed optimization of the algorithm.
+Note: this kind of synthesis is very resource demanding. So, for real-time sound generation smaller sample rate (eg. 48kHz) and lower number of overtones are desirable (to prevent buffer underrun). This can change after the speed optimization of the algorithm.
 
-Another planned option will be the [sample-based synthesis](https://en.wikipedia.org/wiki/Sample-based_synthesis). But it must be used carefully:
+Later on I would like to complement it with [sample-based synthesis](https://en.wikipedia.org/wiki/Sample-based_synthesis). But it must be used carefully, because of the following possible problems:
 * It can contain noise and disharmonic intervals.
-* It can contain echoes, effects of the recording space (which interfere the space we want to add to it).
+* It can contain echoes, effects of the recording space (which interfere with the space we want to add to it).
 
-Henceforward, I plan to create a tool for analyzing recorded samples, finding closest mathematical representation, and building harmonic sound structures with similar output. This way we can eliminate noise and we have the option to use precise 3D spacial effects.
+Henceforward, I plan to create a tool for analyzing recorded samples, finding closest mathematical representation, and building harmonic sound structures with similar output. This way we can eliminate noise and have the option to use precise 3D spacial effects.
 
 # Installation
 **music** can be built with different sound output backends:

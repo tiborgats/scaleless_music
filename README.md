@@ -6,6 +6,7 @@ I was always annoyed by the slightly false notes that came out from electronic m
 
 # Overview
 The aim of this software is to create music according to the following perfectionist principles:
+
 1. Music shall contain only [harmonic](https://en.wikipedia.org/wiki/Harmony) intervals between notes.
 2. All harmonic interval variations shall have the possibility to be created.
 

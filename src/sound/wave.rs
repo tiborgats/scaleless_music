@@ -1,5 +1,5 @@
 use sound::*;
-use sound::frequency::*;
+// use sound::frequency::*;
 use sound::amplitude::*;
 use std::rc::Rc;
 use std::cell::RefCell;
@@ -11,7 +11,7 @@ pub const PI2: SampleCalc = ::std::f64::consts::PI * 2.0;
 /// A tone with optional overtones and amplitude modulation.
 pub struct Note {
     sample_rate: SampleCalc,
-    frequency_function: Rc<FrequencyFunction>,
+    //    frequency_function: Rc<FrequencyFunction>,
     frequency_buffer: RefCell<Vec<SampleCalc>>,
     amplitude_function: Rc<AmplitudeFunction>,
     amplitude_buffer: RefCell<Vec<SampleCalc>>,
@@ -22,13 +22,12 @@ pub struct Note {
 impl Note {
     /// Custom constructor
     pub fn new(sample_rate: SampleCalc,
-               frequency_function: Rc<FrequencyFunction>,
                amplitude_function: Rc<AmplitudeFunction>,
                overtone_max: usize)
                -> SoundResult<Note> {
         Ok(Note {
             sample_rate: sample_rate,
-            frequency_function: frequency_function,
+            //            frequency_function: frequency_function,
             frequency_buffer: RefCell::new(vec![0.0; BUFFER_SIZE]),
             amplitude_function: amplitude_function,
             amplitude_buffer: RefCell::new(vec![0.0; BUFFER_SIZE]),
@@ -48,7 +47,7 @@ impl SoundStructure for Note {
            sample_count: usize,
            time_start: SampleCalc,
            base_frequency: &[SampleCalc], // &Vec<SampleCalc>,
-           result: &mut Vec<SampleCalc>)
+           result: &mut [SampleCalc])
            -> SoundResult<()> {
         use rayon::prelude::*;
         if sample_count > BUFFER_SIZE {
@@ -65,15 +64,16 @@ impl SoundStructure for Note {
         // }
         let time_sample: SampleCalc = 1.0 / self.sample_rate;
         // let frequency_b = self.frequency_buffer.borrow_mut();
+        for item in result.iter_mut() {
+            *item = 0.0;
+        }
         for overtone in 0..self.overtone_max {
             let freq_multiplier = (overtone as SampleCalc + 1.0) * PI2;
             for sample_idx in 0..sample_count {
                 *self.frequency_buffer.borrow_mut().get_mut(sample_idx).unwrap() =
                     *base_frequency.get(sample_idx).unwrap();
             }
-            try!(self.amplitude_function.get(sample_count,
-                                             time_start,
-                                             base_frequency,
+            try!(self.amplitude_function.get(time_start,
                                              overtone,
                                              &mut self.amplitude_buffer.borrow_mut()));
 
@@ -82,7 +82,7 @@ impl SoundStructure for Note {
                 .par_iter_mut()
                 .zip(base_frequency.par_iter())
                 .enumerate()
-                .filter(|&(i, _)| i < sample_count)
+//                .filter(|&(i, _)| i < sample_count)
                 .for_each(|(i, (w, f))| {
                     let time = (i as SampleCalc * time_sample) + time_start;
                     *w = (time * f * freq_multiplier).sin();
@@ -94,8 +94,7 @@ impl SoundStructure for Note {
                 // let sample: SampleCalc = (time * frequency * freq_multiplier).sin() *
                 let sample = self.wave_buffer.borrow().get(sample_idx).unwrap() *
                              self.amplitude_buffer.borrow().get(sample_idx).unwrap();
-                *result.get_mut(sample_idx).unwrap() += sample * 0.4;
-                // vectors must match sample_count in size
+                *result.get_mut(sample_idx).unwrap() += sample;
             }
 
         }
@@ -110,6 +109,7 @@ struct MixerChannel {
 }
 
 /// Mixing sound structures
+#[allow(dead_code)]
 pub struct Mixer {
     sample_rate: SampleCalc,
     channels: Vec<MixerChannel>,
@@ -142,7 +142,7 @@ impl SoundStructure for Mixer {
            sample_count: usize,
            _time_start: SampleCalc,
            base_frequency: &[SampleCalc], // &Vec<SampleCalc>,
-           result: &mut Vec<SampleCalc>)
+           result: &mut [SampleCalc])
            -> SoundResult<()> {
         if sample_count > BUFFER_SIZE {
             return Err(Error::BufferSize);

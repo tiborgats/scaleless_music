@@ -6,7 +6,7 @@ use std::sync::mpsc::Sender;
 use std::{error, fmt};
 use sound::*;
 
-const FRAMES_PER_BUFFER: u32 = 4 * 256;    // optimal = FRAMES_PER_BUFFER_UNSPECIFIED
+const FRAMES_PER_BUFFER: u32 = BUFFER_SIZE as u32;    // optimal = FRAMES_PER_BUFFER_UNSPECIFIED
 
 lazy_static! {
     static ref PORTAUDIO: pa::PortAudio = {
@@ -68,7 +68,7 @@ impl<'a, T> SoundInterface<'a, T> {
         };
 
         // Open a non-blocking stream.
-        //        let mut stream = PORTAUDIO.open_non_blocking_stream(settings, callback_fn)?;
+        // let stream = PORTAUDIO.open_non_blocking_stream(settings, callback_fn)?;
         let stream = try!(PORTAUDIO.open_non_blocking_stream(settings, callback_fn));
         println!("Stream is created.");
 

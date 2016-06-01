@@ -1,26 +1,20 @@
 use sound::*;
-use rayon::prelude::*;
+// use rayon::prelude::*;
 use std::cell::Cell;
 
 /// Input and output definition for the frequency functions.
 pub trait FrequencyFunction {
     /// Provides the results of the frequency calculations.
-    fn get(&self,
-           sample_count: usize,
-           time_begin: SampleCalc,
-           frequency_buffer: &mut Vec<SampleCalc>)
-           -> SoundResult<()>;
+    fn get(&self, time_begin: SampleCalc, result: &mut [SampleCalc]) -> SoundResult<()>;
     ///
     fn set_time(&self, time: SampleCalc) -> SoundResult<()>;
 }
 
 /// Frequency is not changing by time.
-#[allow(dead_code)]
 pub struct FrequencyConst {
     frequency: Cell<SampleCalc>,
 }
 
-#[allow(dead_code)]
 impl FrequencyConst {
     /// custom constructor
     pub fn new(frequency: SampleCalc) -> SoundResult<FrequencyConst> {
@@ -49,21 +43,11 @@ impl FrequencyConst {
 }
 
 impl FrequencyFunction for FrequencyConst {
-    fn get(&self,
-           sample_count: usize,
-           _time_begin: SampleCalc,
-           frequency_buffer: &mut Vec<SampleCalc>)
-           -> SoundResult<()> {
-        if frequency_buffer.len() < sample_count {
-            return Err(Error::BufferSize);
-        }
+    fn get(&self, _time_begin: SampleCalc, result: &mut [SampleCalc]) -> SoundResult<()> {
         let frequency = self.frequency.get();
-        frequency_buffer.par_iter_mut()
-            .enumerate()
-            .filter(|&(index, _)| index < sample_count)
-            .for_each(|(_index, f)| {
-                *f = frequency;
-            });
+        for item in result.iter_mut() {
+            *item = frequency;
+        }
         Ok(())
     }
 

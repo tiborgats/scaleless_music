@@ -10,6 +10,7 @@
 //! ```
 
 #![warn(missing_docs)]
+//#![feature(question_mark)]
 
 #[cfg(feature = "be-portaudio")]
 extern crate portaudio;

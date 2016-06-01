@@ -1,28 +1,25 @@
 use sound::*;
-// use std::rc::Rc;
-use std::cell::RefCell;
-// use std::cell::{RefCell, RefMut};
+use rayon::prelude::*;
 
 /// Input and output definition for the amplitude functions.
 pub trait AmplitudeFunction {
     /// Provides the results of the amplitude calculations.
     fn get(&self,
-           sample_count: usize,
            time_start: SampleCalc,
-           base_frequency: &[SampleCalc],
            overtone: usize,
-           result: &mut Vec<SampleCalc>)
+           result: &mut [SampleCalc])
            -> SoundResult<()>;
 }
 
 
-/// Amplitude is not changing by time
+/// Amplitude is not changing by time, this function gives the overtone amplitudes too.
 pub struct AmplitudeConstOvertones {
-    amplitude: RefCell<Vec<SampleCalc>>,
+    amplitude: Vec<SampleCalc>,
 }
 
 impl AmplitudeConstOvertones {
     /// custom constructor
+    /// It normalizes the amplitudes, so the sum of them will be 1.0.
     pub fn new(mut amplitude: Vec<SampleCalc>) -> SoundResult<AmplitudeConstOvertones> {
         let mut amplitude_sum: SampleCalc = 0.0;
         for amplitude_check in &amplitude {
@@ -31,77 +28,36 @@ impl AmplitudeConstOvertones {
             };
             amplitude_sum += *amplitude_check;
         }
+        if amplitude_sum == 0.0 {
+            return Err(Error::AmplitudeInvalid);
+        };
         // normalization
-        for amp in &mut amplitude {
-            *amp /= amplitude_sum;
+        for item in &mut amplitude {
+            *item /= amplitude_sum;
         }
-        Ok(AmplitudeConstOvertones { amplitude: RefCell::new(amplitude) })
+
+        Ok(AmplitudeConstOvertones { amplitude: amplitude })
     }
 }
 
 impl AmplitudeFunction for AmplitudeConstOvertones {
     fn get(&self,
-           sample_count: usize,
            _time_start: SampleCalc,
-           base_frequency: &[SampleCalc], // &Vec<SampleCalc>,
            overtone: usize,
-           result: &mut Vec<SampleCalc>)
+           result: &mut [SampleCalc])
            -> SoundResult<()> {
-        // self.amplitude
-        if base_frequency.len() < sample_count {
-            return Err(Error::BufferSize);
-        }
-        if result.len() < sample_count {
-            return Err(Error::BufferSize);
-        }
-        let amplitude_b = self.amplitude.borrow();
-        if overtone >= amplitude_b.len() {
-            for sample_idx in 0..sample_count {
-                *result.get_mut(sample_idx).unwrap() = 0.0;
+        if overtone >= self.amplitude.len() {
+            for item in result.iter_mut() {
+                *item = 0.0;
             }
             return Ok(());
         };
-        for sample_idx in 0..sample_count {
-            *result.get_mut(sample_idx).unwrap() = *amplitude_b.get(overtone).unwrap();
+        for item in result.iter_mut() {
+            *item = self.amplitude[overtone];
         }
         Ok(())
     }
 }
-// Amplitude is decaying exponentially
-// See also: [Exponential decay](https://en.wikipedia.org/wiki/Exponential_decay)
-// #[allow(dead_code)]
-// pub struct AmplitudeDecayExp {
-// amplitude_function: Rc<AmplitudeFunction>,
-// rate: SampleCalc,
-// }
-//
-// #[allow(dead_code)]
-// impl AmplitudeDecayExp {
-// rate must be negative!
-// pub fn new(amplitude_function: Rc<AmplitudeFunction>, rate: SampleCalc) -> AmplitudeDecayExp {
-// let mut rate_neg = rate;
-// if rate_neg > 0.0 {
-// rate_neg = -rate;
-// }
-// AmplitudeDecayExp {
-// amplitude_function: amplitude_function,
-// rate: rate_neg,
-// }
-// }
-// }
-//
-// impl AmplitudeFunction for AmplitudeDecayExp {
-// fn get(&self,
-// _sample_count: usize,
-// _time_start: SampleCalc,
-// _base_frequency: &Vec<SampleCalc>,
-// _overtone: usize,
-// _result: &mut Vec<SampleCalc>)
-// -> SoundResult<()> {
-// self.amplitude_function.get(time, frequency, overtone) * (time * self.rate).exp()
-// Ok(())
-// }
-// }
 
 /// Amplitude is decaying exponentially, also for overtones
 /// [Exponential decay](https://en.wikipedia.org/wiki/Exponential_decay)
@@ -113,11 +69,16 @@ pub struct AmplitudeDecayExpOvertones {
 }
 
 impl AmplitudeDecayExpOvertones {
-    /// rate must be negative!
+    /// custom constructor
+    /// It normalizes the amplitudes, so the sum of the starting amplitudes will be 1.0.
+    /// Rate must be negative!
     pub fn new(sample_rate: SampleCalc,
                mut amplitude: Vec<SampleCalc>,
                rate: Vec<SampleCalc>)
                -> SoundResult<AmplitudeDecayExpOvertones> {
+        if sample_rate <= 0.0 {
+            return Err(Error::SampleRateInvalid);
+        };
         let mut amplitude_sum: SampleCalc = 0.0;
         for amplitude_check in &amplitude {
             if *amplitude_check < 0.0 {
@@ -125,9 +86,12 @@ impl AmplitudeDecayExpOvertones {
             };
             amplitude_sum += *amplitude_check;
         }
+        if amplitude_sum == 0.0 {
+            return Err(Error::AmplitudeInvalid);
+        };
         // normalization
-        for amp in &mut amplitude {
-            *amp /= amplitude_sum;
+        for item in &mut amplitude {
+            *item /= amplitude_sum;
         }
         for rate_check in &rate {
             if *rate_check > 0.0 {
@@ -144,30 +108,29 @@ impl AmplitudeDecayExpOvertones {
 
 impl AmplitudeFunction for AmplitudeDecayExpOvertones {
     fn get(&self,
-           sample_count: usize,
            time_start: SampleCalc,
-           _base_frequency: &[SampleCalc], // &Vec<SampleCalc>,
            overtone: usize,
-           // result: RefMut<Vec<SampleCalc>>)
-           result: &mut Vec<SampleCalc>)
+           result: &mut [SampleCalc])
            -> SoundResult<()> {
-        //        if base_frequency.len() < sample_count {
-        // return Err(Error::BufferSize);
-        // }
-        if result.len() < sample_count {
-            return Err(Error::BufferSize);
-        }
         if (overtone >= self.amplitude.len()) || (overtone >= self.rate.len()) {
-            for sample_idx in 0..sample_count {
-                *result.get_mut(sample_idx).unwrap() = 0.0;
+            for item in result.iter_mut() {
+                *item = 0.0;
             }
             return Ok(());
         };
-        for sample_idx in 0..sample_count {
-            let time: SampleCalc = (sample_idx as SampleCalc / self.sample_rate) + time_start;
-            *result.get_mut(sample_idx).unwrap() = self.amplitude.get(overtone).unwrap() *
-                                                   (time * self.rate.get(overtone).unwrap()).exp();
-        }
+        // sample_time: a variable for speed optimization: multiplication is faster than
+        // division, so division is done out of the loop
+        let sample_time: SampleCalc = 1.0 / self.sample_rate;
+
+        // for (index, item) in result.iter_mut().enumerate() {
+        result.par_iter_mut()
+//            .weight(20.0)
+            .enumerate()
+            .for_each(|(index, item)| {
+                let time: SampleCalc = (index as SampleCalc * sample_time) + time_start;
+                // TODO: speed optimization, .exp() is very slow
+                *item = self.amplitude[overtone] * (time * self.rate[overtone]).exp();
+            });
         Ok(())
     }
 }

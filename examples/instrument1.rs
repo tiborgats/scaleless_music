@@ -6,8 +6,6 @@
 //! the keys from 'A' to 'L' changes the frequency to be lower. Other keys play the previous
 /// frequency. To quit press 'Esc'.
 
-// #![feature(question_mark)]
-
 extern crate music;
 extern crate rayon;
 
@@ -21,7 +19,6 @@ use music::sound::wave::*;
 use music::sound::frequency::*;
 use music::sound::amplitude::*;
 use std::rc::Rc;
-use rayon::prelude::*;
 use piston_window::*;
 
 /// Commands of the messages from the UI thread to the playback thread.
@@ -32,7 +29,7 @@ pub enum Command {
     Keypress {
         key: keyboard::Key,
     },
-    /// Multiply frequency by value1
+    /// Multiply frequency by a rational number
     FrequencyMultiple {
         numerator: u16,
         denominator: u16,
@@ -52,9 +49,11 @@ impl InstrumentBasic {
     pub fn new(sample_rate: SampleCalc,
                frequency_start: SampleCalc)
                -> SoundResult<InstrumentBasic> {
-        let frequency1 = Rc::new(try!(FrequencyConst::new(440.0)));
+        let frequency1 = Rc::new(try!(FrequencyConst::new(220.0)));
         let amplitude = {
-            let overtones_amplitude: Vec<SampleCalc> = vec![3.0, 4.5, 1.0, 0.9, 0.7, 0.5, 0.4, 3.5];
+            let overtones_amplitude: Vec<SampleCalc> = vec![10.0, 1.0, 1.0, 0.95, 0.9, 0.9, 0.86,
+                                                            0.83, 0.80, 0.78, 0.76, 0.74, 0.73,
+                                                            0.72, 0.71, 0.70];
             let overtones_dec_rate: Vec<SampleCalc> = vec![-1.0, -1.4, -1.9, -2.1, -2.4, -3.0,
                                                            -3.5, -3.7, -3.8, -4.0, -4.2, -4.4,
                                                            -4.8, -5.3, -6.1, -7.0];
@@ -62,7 +61,7 @@ impl InstrumentBasic {
                                                  overtones_amplitude,
                                                  overtones_dec_rate))
         };
-        let note1 = try!(Note::new(sample_rate, frequency1.clone(), Rc::new(amplitude), 8));
+        let note1 = try!(Note::new(sample_rate, Rc::new(amplitude), 8));
         Ok(InstrumentBasic {
             sample_rate: sample_rate,
             note1: note1,
@@ -83,13 +82,7 @@ impl InstrumentBasic {
 
 impl SoundGenerator<Command> for InstrumentBasic {
     fn get_samples(&mut self, sample_count: usize, result: &mut Vec<SampleCalc>) {
-        result.par_iter_mut()
-            .enumerate()
-            .filter(|&(index, _)| index < sample_count)
-            .for_each(|(_index, value)| {
-                *value = 0.0;
-            });
-        self.frequency1.get(sample_count, self.time, &mut self.frequency1_buffer).unwrap();
+        self.frequency1.get(self.time, &mut self.frequency1_buffer).unwrap();
         self.note1.get(sample_count, self.time, &self.frequency1_buffer, result).unwrap();
         self.time += sample_count as SampleCalc / self.sample_rate;
     }

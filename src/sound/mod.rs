@@ -21,7 +21,7 @@ pub type SampleCalc = f64;
 
 /// Sample count for calculations. It affects both latency and computation performance.
 /// Latency perception for musical instruments: over ~12ms is already disturbing for some players.
-pub const BUFFER_SIZE: usize = 1024;
+pub const BUFFER_SIZE: usize = 512;
 /// The lowest hearable (feelable) frequency. Tones below it will not be calculated.
 pub const TONE_FREQUENCY_MIN: SampleCalc = 5.0;
 /// The highest hearable (feelable) frequency. Overtones above this frequency are filtered out
@@ -43,7 +43,7 @@ pub trait SoundStructure {
            sample_count: usize,
            time_start: SampleCalc,
            base_frequency: &[SampleCalc], // &Vec<SampleCalc>,
-           result: &mut Vec<SampleCalc>)
+           result: &mut [SampleCalc])
            -> SoundResult<()>;
 }
 
@@ -57,6 +57,8 @@ use sound::backend_rsoundio::*;
 pub enum Error {
     /// Sound output backend error.
     Backend(BackendError),
+    /// Invalid sample rate
+    SampleRateInvalid,
     /// Invalid buffer size for the given sample count
     BufferSize,
     /// Denominator cannot be 0 (division by zero error)
@@ -79,6 +81,7 @@ impl error::Error for Error {
         use self::Error::*;
         match *self {
             Backend(ref err) => err.description(),
+            SampleRateInvalid => "invalid sample rate",
             BufferSize => "incorrect buffer size",
             DenominatorInvalid => "invalid denominator",
             AmplitudeInvalid => "invalid amplitude",

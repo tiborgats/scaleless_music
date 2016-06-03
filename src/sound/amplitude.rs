@@ -13,6 +13,7 @@ pub trait AmplitudeFunction {
 
 
 /// Amplitude is not changing by time, this function gives the overtone amplitudes too.
+#[derive(Debug, Clone)]
 pub struct AmplitudeConstOvertones {
     amplitude: Vec<SampleCalc>,
 }
@@ -61,7 +62,8 @@ impl AmplitudeFunction for AmplitudeConstOvertones {
 
 /// Amplitude is decaying exponentially, also for overtones
 /// [Exponential decay](https://en.wikipedia.org/wiki/Exponential_decay)
-/// index: 0 = fundamental tone, 1.. = overtones
+/// index: 0 = fundamental tone, 1.. = overtones.
+#[derive(Debug, Clone)]
 pub struct AmplitudeDecayExpOvertones {
     sample_rate: SampleCalc,
     amplitude: Vec<SampleCalc>, // starting amplitudes

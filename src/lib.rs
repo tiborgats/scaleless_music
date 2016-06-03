@@ -25,5 +25,5 @@ extern crate rb;
 
 extern crate rayon;
 
-/// Contains the basic sound synthesizer routines
+/// Basic sound synthesizer routines.
 pub mod sound;

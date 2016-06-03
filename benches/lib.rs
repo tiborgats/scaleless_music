@@ -14,6 +14,7 @@ const BENCH_SAMPLE_RATE: SampleCalc = 192_000.0;
 const BENCH_BUFFER_SIZE: usize = 256;
 const SAMPLETIME: SampleCalc = BENCH_BUFFER_SIZE as SampleCalc / BENCH_SAMPLE_RATE;
 
+
 // FrequencyConst
 #[bench]
 fn freqconst(bencher: &mut Bencher) {
@@ -76,15 +77,11 @@ fn note_freqconst_ampdec_overtones16(bencher: &mut Bencher) {
         AmplitudeDecayExpOvertones::new(BENCH_SAMPLE_RATE, overtones_amplitude, overtones_dec_rate)
             .unwrap()
     };
-    let note = Note::new(BENCH_SAMPLE_RATE, Rc::new(amplitude), 16).unwrap();
+    let note = Note::new(BENCH_SAMPLE_RATE, BENCH_BUFFER_SIZE, Rc::new(amplitude), 16).unwrap();
 
     bencher.iter(|| {
         frequency.get(time, &mut frequency_buffer).unwrap();
-        note.get(BENCH_BUFFER_SIZE,
-                 time,
-                 &frequency_buffer,
-                 &mut generator_buffer)
-            .unwrap();
+        note.get(time, &frequency_buffer, &mut generator_buffer).unwrap();
         time += SAMPLETIME;
         // test::black_box(&mut generator_buffer);
     });

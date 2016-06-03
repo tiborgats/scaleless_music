@@ -2,9 +2,9 @@
 //! The tone is a very simple function (nothing like a real instrument). It's purpose is
 //! only the testing of some intervals.
 //!
-//! The keys from 'Q' to 'O' changes the frequency to be higher,
-//! the keys from 'A' to 'L' changes the frequency to be lower. Other keys play the previous
-/// frequency. To quit press 'Esc'.
+//! The keys from [Q] to [O] changes the frequency to be higher,
+//! the keys from [A] to [L] changes the frequency to be lower.
+/// Other keys play the previous frequency. To quit press [Esc].
 
 extern crate music;
 extern crate rayon;
@@ -61,7 +61,7 @@ impl InstrumentBasic {
                                                  overtones_amplitude,
                                                  overtones_dec_rate))
         };
-        let note1 = try!(Note::new(sample_rate, Rc::new(amplitude), 8));
+        let note1 = try!(Note::new(sample_rate, BUFFER_SIZE, Rc::new(amplitude), 8));
         Ok(InstrumentBasic {
             sample_rate: sample_rate,
             note1: note1,
@@ -74,16 +74,18 @@ impl InstrumentBasic {
     /// Change frequency in harmony with the previous value
     #[allow(dead_code)]
     pub fn change_frequency(&mut self, numerator: u16, denominator: u16) -> SoundResult<()> {
-        try!(self.frequency1.change_harmonically(numerator, denominator));
+        let interval = try!(Interval::new(numerator, denominator));
+        try!(self.frequency1.change(interval));
         self.time = 0.0;
+        println!("{}  {}", interval, interval.get_name());
         Ok(())
     }
 }
-
+// TODO: -unwrap()
 impl SoundGenerator<Command> for InstrumentBasic {
     fn get_samples(&mut self, sample_count: usize, result: &mut Vec<SampleCalc>) {
         self.frequency1.get(self.time, &mut self.frequency1_buffer).unwrap();
-        self.note1.get(sample_count, self.time, &self.frequency1_buffer, result).unwrap();
+        self.note1.get(self.time, &self.frequency1_buffer, result).unwrap();
         self.time += sample_count as SampleCalc / self.sample_rate;
     }
 
@@ -135,7 +137,9 @@ fn main() {
         .unwrap();
 
     sound.start().unwrap();
-
+    println!("\n\nThe keys from [Q] to [O] changes the frequency to be higher,");
+    println!("the keys from [A] to [L] changes the frequency to be lower.");
+    println!("Other keys play the previous frequency. To quit press [Esc].");
     while let Some(event) = window.next() {
         if let Some(button) = event.press_args() {
             if let Button::Keyboard(key) = button {

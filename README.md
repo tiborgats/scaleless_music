@@ -38,6 +38,8 @@ Henceforward, I plan to create a tool for analyzing recorded samples, finding cl
 
 ## Examples
 `cargo run --example instrument1`
+## Documentation
+`cargo doc --no-deps --features "be-portaudio be-rsoundio"`
 
 # Todo Items
 - [ ] basic effects, building blocks of music structure

@@ -55,10 +55,10 @@ Henceforward, I plan to create a tool for analyzing recorded samples, finding cl
 	- [ ] polyphony
 	- [ ] smooth start and end of sine waves, which are physically possible (no zero time jumps in amplitude, to avoid infinite acceleration of the speaker membrane)
 - [ ] speed optimization of the playback routines
-	- [ ] benchmark routines both for speed and latency measurements
-	- [ ] parallel processing everywhere
+	- [x] benchmark routines
+	- [ ] parallel processing
 	- [ ] GPU (I did some benchmarks using the [ArrayFire](https://github.com/arrayfire/arrayfire-rust) library, it is very promising, but there is a long latency due to the buffer copying from GPU to CPU memory)
-	- [ ] fast `.sin()` algorithm (using lookup table) - but I am not sure if it is necessary at all, as GPU is fast enough
+	- [ ] fast `.sin()` algorithm (using lookup table) for real-time instruments
 - [ ] proper error handling everywhere: `.unwrap()` is not acceptable
 - [ ] backends for sound output
 	- [x] [rust-portaudio](https://github.com/RustAudio/rust-portaudio)

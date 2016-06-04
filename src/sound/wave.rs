@@ -2,7 +2,7 @@ use sound::*;
 use sound::amplitude::*;
 use std::rc::Rc;
 use std::cell::RefCell;
-use rayon::prelude::*;
+// use rayon::prelude::*;
 // use std::fmt::Debug;
 
 /// = π x 2
@@ -53,7 +53,10 @@ impl SoundStructure for Note {
            result: &mut [SampleCalc])
            -> SoundResult<()> {
         let buffer_size = self.wave_buffer.borrow().len();
-        if base_frequency.len() != result.len() {
+        // if self.amplitude_buffer.borrow().len() != buffer_size {
+        // return Err(Error::BufferSize);
+        // }
+        if base_frequency.len() != buffer_size {
             return Err(Error::BufferSize);
         }
         if result.len() != buffer_size {
@@ -74,7 +77,14 @@ impl SoundStructure for Note {
                                              overtone,
                                              &mut self.amplitude_buffer.borrow_mut()));
 
-            self.wave_buffer
+            for (((index, item), frequency), amplitude) in result.iter_mut()
+                .enumerate()
+                .zip(base_frequency.iter())
+                .zip(self.amplitude_buffer.borrow().iter()) {
+                    let time = (index as SampleCalc * time_sample) + time_start;
+                    *item += (time * frequency * freq_multiplier).sin() * *amplitude;
+                }
+/*            self.wave_buffer
                 .borrow_mut()
                 .par_iter_mut()
                 .zip(base_frequency.par_iter())
@@ -82,17 +92,12 @@ impl SoundStructure for Note {
                 .for_each(|(i, (w, f))| {
                     let time = (i as SampleCalc * time_sample) + time_start;
                     *w = (time * f * freq_multiplier).sin();
-                });
-
-            for sample_idx in 0..buffer_size {
-                // let time: SampleCalc = (sample_idx as SampleCalc * time_sample) + time_start;
-                // let frequency: SampleCalc = *base_frequency.get(sample_idx).unwrap();
-                // let sample: SampleCalc = (time * frequency * freq_multiplier).sin() *
-                let sample = self.wave_buffer.borrow().get(sample_idx).unwrap() *
-                             self.amplitude_buffer.borrow().get(sample_idx).unwrap();
-                *result.get_mut(sample_idx).unwrap() += sample;
-            }
-
+                });*/
+/*            for ((item, wave), amplitude) in result.iter_mut()
+                .zip(self.wave_buffer.borrow().iter())
+                .zip(self.amplitude_buffer.borrow().iter()) {
+                *item += *wave * *amplitude;
+            }*/
         }
         Ok(())
     }

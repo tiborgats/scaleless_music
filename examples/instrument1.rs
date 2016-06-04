@@ -61,7 +61,7 @@ impl InstrumentBasic {
                                                  overtones_amplitude,
                                                  overtones_dec_rate))
         };
-        let note1 = try!(Note::new(sample_rate, BUFFER_SIZE, Rc::new(amplitude), 8));
+        let note1 = try!(Note::new(sample_rate, BUFFER_SIZE, Rc::new(amplitude), 4));
         Ok(InstrumentBasic {
             sample_rate: sample_rate,
             note1: note1,
@@ -127,23 +127,27 @@ impl SoundGenerator<Command> for InstrumentBasic {
 
 fn main() {
     use music::sound::backend_portaudio::*;
-    let sound_generator = Box::new(InstrumentBasic::new(48000.0, 440.0).unwrap());
-    let mut sound = SoundInterface::new(48000, 2, sound_generator).unwrap();
+    println!("scaleless_music v{}", env!("CARGO_PKG_VERSION"));
+    let sound_generator = Box::new(InstrumentBasic::new(48000.0, 440.0)
+        .expect("InstrumentBasic construction shouldn't fail."));
+    let mut sound = SoundInterface::new(48000, 2, sound_generator)
+        .expect("SoundInterface construction shouldn't fail.");
 
     let mut window: PistonWindow = WindowSettings::new("Music", [320, 200])
         .exit_on_esc(true)
         .vsync(true)
         .build()
-        .unwrap();
+        .expect("PistonWindow construction shouldn't fail.");
 
-    sound.start().unwrap();
+    sound.start().expect("sound.start() shouldn't fail.");
     println!("\n\nThe keys from [Q] to [O] changes the frequency to be higher,");
     println!("the keys from [A] to [L] changes the frequency to be lower.");
     println!("Other keys play the previous frequency. To quit press [Esc].");
     while let Some(event) = window.next() {
         if let Some(button) = event.press_args() {
             if let Button::Keyboard(key) = button {
-                sound.send_command(Command::Keypress { key: key });
+                sound.send_command(Command::Keypress { key: key })
+                    .expect("send_command failed.");
             } else {
                 println!("Pressed {:?}", button);
             }

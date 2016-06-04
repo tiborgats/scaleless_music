@@ -1,4 +1,3 @@
-
 use portaudio as pa;
 // use std::thread;
 // use std::sync::mpsc::channel;
@@ -10,7 +9,8 @@ const FRAMES_PER_BUFFER: u32 = BUFFER_SIZE as u32;    // optimal = FRAMES_PER_BU
 
 lazy_static! {
     static ref PORTAUDIO: pa::PortAudio = {
-        let pa = pa::PortAudio::new().unwrap();
+        let pa = pa::PortAudio::new()
+            .expect("PortAudio construction shouldn't fail.");
         println!("PortAudio is initialized.");
         pa
     };
@@ -87,9 +87,14 @@ impl<'a, T> SoundInterface<'a, T> {
         Ok(())
     }
     /// Sends a command to the sound generator.
-    pub fn send_command(&mut self, command: T) {
+    pub fn send_command(&mut self, command: T) -> BackendResult<()> {
         if let Some(ref sender) = self.sender {
-            sender.send(command).ok();
+            match sender.send(command) {
+                Ok(_) => Ok(()),
+                Err(_) => Err(BackendError::Disconnected),
+            }
+        } else {
+            return Err(BackendError::Disconnected);
         }
     }
 
@@ -122,6 +127,8 @@ impl<'a, T> Drop for SoundInterface<'a, T> {
 pub enum BackendError {
     /// Errors of the PortAudio backend.
     PortAudio(pa::Error),
+    /// The SoundGenerator is disconnected, could not recieve the command
+    Disconnected,
 }
 
 impl fmt::Display for BackendError {
@@ -136,6 +143,7 @@ impl error::Error for BackendError {
         use self::BackendError::*;
         match *self {
             PortAudio(ref err) => err.description(),
+            Disconnected => "SoundGenerator is disconnected",
         }
     }
 
@@ -143,7 +151,7 @@ impl error::Error for BackendError {
         use self::BackendError::*;
         match *self {
             PortAudio(ref err) => Some(err),
-            // _ => None,
+            _ => None,
         }
     }
 }
@@ -153,5 +161,6 @@ impl From<pa::Error> for BackendError {
         BackendError::PortAudio(e)
     }
 }
+
 /// Return type for the backend functions.
 pub type BackendResult<T> = Result<T, BackendError>;

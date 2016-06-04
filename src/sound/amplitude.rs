@@ -124,9 +124,10 @@ impl AmplitudeFunction for AmplitudeDecayExpOvertones {
         // division, so division is done out of the loop
         let sample_time: SampleCalc = 1.0 / self.sample_rate;
 
-        // for (index, item) in result.iter_mut().enumerate() {
+        // for (index, item) in result.iter_mut().enumerate()
+
         result.par_iter_mut()
-//            .weight(20.0)
+            .weight(32.0)
             .enumerate()
             .for_each(|(index, item)| {
                 let time: SampleCalc = (index as SampleCalc * sample_time) + time_start;

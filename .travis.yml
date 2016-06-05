@@ -14,6 +14,7 @@ rust:
 matrix:
   allow_failures:
   - rust: nightly
+
 os:
 - linux
 notifications:
@@ -40,8 +41,7 @@ after_success:
 env:
   matrix:
   - LD_LIBRARY_PATH=/usr/local/lib
+  - TRAVIS_CARGO_NIGHTLY_FEATURE=""
   global:
-    # override the default `--features unstable` used for the nightly branch (optional)
-    - TRAVIS_CARGO_NIGHTLY_FEATURE=""
     # encrypted github token for doc upload
     secure: UBbf7Sw139UXIf7DzQRiDYFv/kLINjXNAZom8v3ZqzyVVUXem9UCOup+bIk3V/5W2EAnYg+N5CpZtkeeuvaTLtiF8+6pjf+0BXsW1HjihbPmFxQN1rznR9Mhl303v4lOYgK/Kb6K59uisFzRN1eO2OXdyxJCznkZuuNM3w69C3nU3nvg0AavMZPP+8NR9L+s9rNpM2NimB9pJjRSJmUhiP/eehbyuWQgFbsANiUX5v9ZaYb9FFb9ayTxqfUA4W0L+pwIO2ZBoCzAlsbQXbwE7UxXZ+VcTjCHhFKRqb5cl1Wxc1Vzu5wPF+K8qhlkOdKRIKDkzBz2vgMDqEsS2G5Jr6wJzwuOYY4B7X93tSyBCf1s0zTd4um2KPbADA6Pk6MsPppHKjgbXi71C7bbvJ3udXmSkRjsX/YCFQL/dPjMVHUG/omFZnL8VkA6StjAgRiC5pYvOtIP9SePxnB8UADoORZXt69+kbafUKRzCIbiPmwf+/9hkMSszr3w0oHzJ2ZXHo66SNxBw2TzMDAH5M3tgOvmM1wnKMqN7Y8IgZsjqAKu7zO6oM5jARzi/n7VPpY3p0XShV+iwydouzdWDlxWLAPjIpmI14QQDvt7lGLzWtwR9WmpMT8qFe1BmYnPukVrAtHem/KIM9XaXN3uZB93lYvqYTk4YHW4peLMtVBf72A=

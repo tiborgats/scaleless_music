@@ -8,12 +8,49 @@ use music::sound::*;
 use music::sound::wave::*;
 use music::sound::frequency::*;
 use music::sound::amplitude::*;
+use music::math::*;
 use std::rc::Rc;
 
 const BENCH_SAMPLE_RATE: SampleCalc = 192_000.0;
 const BENCH_BUFFER_SIZE: usize = 256;
 const SAMPLETIME: SampleCalc = BENCH_BUFFER_SIZE as SampleCalc / BENCH_SAMPLE_RATE;
 
+
+#[bench]
+fn sine_fast_b(bencher: &mut Bencher) {
+    let mut rad: f32 = 0.0;
+    let mut s: f32 = 0.0;
+
+    bencher.iter(|| {
+        rad += 0.001;
+        s = rad.sin_fast();
+        test::black_box(s);
+    });
+}
+
+#[bench]
+fn sine_b(bencher: &mut Bencher) {
+    let mut rad: f32 = 0.0;
+    let mut s: f32 = 0.0;
+
+    bencher.iter(|| {
+        rad += 0.001;
+        s = rad.sin();
+        test::black_box(s);
+    });
+}
+
+#[bench]
+fn exp_b(bencher: &mut Bencher) {
+    let mut x: f32 = 0.0;
+    let mut y: f32 = 0.0;
+
+    bencher.iter(|| {
+        x += 0.001;
+        y = x.exp();
+        test::black_box(y);
+    });
+}
 
 // FrequencyConst
 #[bench]

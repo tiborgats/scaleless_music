@@ -127,7 +127,7 @@ impl SoundGenerator<Command> for InstrumentBasic {
 
 fn main() {
     use music::sound::backend_portaudio::*;
-    println!("scaleless_music v{}", env!("CARGO_PKG_VERSION"));
+    println!("scaleless_music v{} example", env!("CARGO_PKG_VERSION"));
     let sound_generator = Box::new(InstrumentBasic::new(48000.0, 440.0)
         .expect("InstrumentBasic construction shouldn't fail."));
     let mut sound = SoundInterface::new(48000, 2, sound_generator)

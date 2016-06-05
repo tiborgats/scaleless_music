@@ -12,7 +12,7 @@
 //!
 //! Building the documentation:
 //!
-//! ```
+//! ```bash
 //! cargo doc --no-deps --features "be-portaudio be-rsoundio"
 //! ```
 //!

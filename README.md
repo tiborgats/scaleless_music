@@ -38,8 +38,7 @@ Henceforward, I plan to create a tool for analyzing recorded samples, finding cl
 
 ## Examples
 `cargo run --example instrument1`
-## Documentation
-`cargo doc --no-deps --features "be-portaudio be-rsoundio"`
+## [Documentation](https://tiborgats.github.io/music/)
 
 # Todo Items
 - [ ] basic effects, building blocks of music structure
@@ -56,10 +55,8 @@ Henceforward, I plan to create a tool for analyzing recorded samples, finding cl
 	- [ ] smooth start and end of sine waves, which are physically possible (no zero time jumps in amplitude, to avoid infinite acceleration of the speaker membrane)
 - [ ] speed optimization of the playback routines
 	- [x] benchmark routines
-	- [ ] parallel processing
-	- [ ] GPU (I did some benchmarks using the [ArrayFire](https://github.com/arrayfire/arrayfire-rust) library, it is very promising, but there is a long latency due to the buffer copying from GPU to CPU memory)
-	- [ ] fast `.sin()` algorithm (using lookup table) for real-time instruments
-- [ ] proper error handling everywhere: `.unwrap()` is not acceptable
+	- [ ] parallel processing, SIMD
+	- [ ] GPU (I did some benchmarks using the [ArrayFire](https://github.com/arrayfire/arrayfire-rust) library, it is promising, but there is a long latency due to the buffer copying from GPU to CPU memory)
 - [ ] backends for sound output
 	- [x] [rust-portaudio](https://github.com/RustAudio/rust-portaudio)
 	- [ ] [rsoundio](https://github.com/klingtnet/rsoundio)

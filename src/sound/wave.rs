@@ -5,10 +5,6 @@ use std::cell::RefCell;
 // use rayon::prelude::*;
 // use std::fmt::Debug;
 
-/// = π x 2
-pub const PI2: SampleCalc = ::std::f64::consts::PI * 2.0;
-// pub const PI2: SampleCalc = ::std::f32::consts::PI * 2.0;
-
 /// A tone with optional overtones and amplitude modulation.
 #[derive(Clone)]
 pub struct Note {
@@ -79,7 +75,7 @@ impl SoundStructure for Note {
 
             for (((index, item), frequency), amplitude) in result.iter_mut()
                 .enumerate()
-                .zip(base_frequency.iter())
+                .zip(base_frequency)
                 .zip(self.amplitude_buffer.borrow().iter()) {
                     let time = (index as SampleCalc * time_sample) + time_start;
                     *item += (time * frequency * freq_multiplier).sin() * *amplitude;

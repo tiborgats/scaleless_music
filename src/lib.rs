@@ -16,7 +16,7 @@
 //! cargo doc --no-deps --features "be-portaudio be-rsoundio"
 //! ```
 //!
-#![doc(html_root_url = "https://travis-ci.org/tiborgats/music/")]
+#![doc(html_root_url = "https://tiborgats.github.io/music/")]
 
 #![forbid(exceeding_bitshifts, mutable_transmutes, no_mangle_const_items,
           unknown_crate_types, warnings)]

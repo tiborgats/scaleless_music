@@ -56,7 +56,7 @@ impl<'a, T> SoundInterface<'a, T> {
             let mut idx = 0;
             for item in generator_buffer.iter().take(frames) {
                 for _ in 0..(channel_count as usize) {
-                    buffer[idx] = *item as SampleOutput;
+                    buffer[idx] = *item;// as SampleOutput;
                     idx += 1;
                 }
             }

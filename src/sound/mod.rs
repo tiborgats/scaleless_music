@@ -16,8 +16,12 @@ use std::{error, fmt};
 
 /// Precision of the finally produced samples.
 pub type SampleOutput = f32;
-/// Precision of calculations.
-pub type SampleCalc = f64;
+/// Precision of calculations. Changing it to `f64` can slow down some calculations 4 times.
+pub type SampleCalc = f32;
+/// = π x 2
+// pub const PI2: SampleCalc = ::std::f64::consts::PI * 2.0;
+pub const PI2: SampleCalc = ::std::f32::consts::PI * 2.0;
+
 
 /// Sample count for calculations. It affects both latency and computation performance.
 /// Latency perception for musical instruments: over ~12ms is already disturbing for some players.

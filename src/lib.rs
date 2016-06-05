@@ -2,12 +2,21 @@
 //!
 //! # Usage
 //!
-//! Add `music` to your project by adding the dependency to your Cargo.toml as follows:
+//! Add **music** to your project by adding the dependency to your Cargo.toml as follows:
 //!
 //! ```toml
 //! [dependencies]
 //! music = { git = "https://github.com/tiborgats/music" }
 //! ```
+//!
+//!
+//! Building the documentation:
+//!
+//! ```
+//! cargo doc --no-deps --features "be-portaudio be-rsoundio"
+//! ```
+//!
+#![doc(html_root_url = "https://travis-ci.org/tiborgats/music/")]
 
 #![forbid(exceeding_bitshifts, mutable_transmutes, no_mangle_const_items,
           unknown_crate_types, warnings)]
@@ -32,7 +41,11 @@ extern crate rsoundio;
 #[cfg(feature = "be-rsoundio")]
 extern crate rb;
 
-extern crate rayon;
+//extern crate rayon;
 
 /// Basic sound synthesizer routines.
 pub mod sound;
+
+/// Fast, but less precise mathematical algorithms.
+#[doc(hidden)]
+pub mod math;

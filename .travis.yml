@@ -19,7 +19,6 @@ os:
 notifications:
   email:
   - tibor.gats@gmail.com
-    on_success: never
 before_script:
 - |
   pip install 'travis-cargo<0.2' --user &&

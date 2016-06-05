@@ -34,12 +34,11 @@ impl Interval {
     }
     /// Gives the common name of the interval (if there is any).
     pub fn get_name(&self) -> &str {
-        let ratio: (u16, u16);
-        if self.numerator > self.denominator {
-            ratio = (self.numerator, self.denominator);
+        let ratio = if self.numerator > self.denominator {
+            (self.numerator, self.denominator)
         } else {
-            ratio = (self.denominator, self.numerator);
-        }
+            (self.denominator, self.numerator)
+        };
         // https://en.wikipedia.org/wiki/List_of_pitch_intervals
         // https://gist.github.com/endolith/3098720
         match ratio {

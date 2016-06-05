@@ -1,5 +1,5 @@
 use sound::*;
-use rayon::prelude::*;
+// use rayon::prelude::*;
 
 /// Input and output definition for the amplitude functions.
 pub trait AmplitudeFunction {
@@ -120,20 +120,17 @@ impl AmplitudeFunction for AmplitudeDecayExpOvertones {
             }
             return Ok(());
         };
+        let amplitude_overtone = self.amplitude[overtone];
+        let rate_overtone = self.rate[overtone];
         // sample_time: a variable for speed optimization: multiplication is faster than
         // division, so division is done out of the loop
         let sample_time: SampleCalc = 1.0 / self.sample_rate;
 
-        // for (index, item) in result.iter_mut().enumerate()
-
-        result.par_iter_mut()
-            .weight(32.0)
-            .enumerate()
-            .for_each(|(index, item)| {
-                let time: SampleCalc = (index as SampleCalc * sample_time) + time_start;
-                // TODO: speed optimization, .exp() is very slow
-                *item = self.amplitude[overtone] * (time * self.rate[overtone]).exp();
-            });
+        for (index, item) in result.iter_mut().enumerate() {
+            let time: SampleCalc = (index as SampleCalc * sample_time) + time_start;
+            // TODO: speed optimization, .exp() is very slow
+            *item = amplitude_overtone * (time * rate_overtone).exp();
+        }
         Ok(())
     }
 }

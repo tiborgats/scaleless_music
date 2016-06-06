@@ -45,7 +45,3 @@ extern crate rb;
 
 /// Basic sound synthesizer routines.
 pub mod sound;
-
-/// Fast, but less precise mathematical algorithms.
-#[doc(hidden)]
-pub mod math;

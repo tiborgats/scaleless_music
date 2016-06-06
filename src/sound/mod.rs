@@ -1,3 +1,5 @@
+/// Frequency interval.
+pub mod interval;
 /// Fuctions which output frequency changes.
 pub mod frequency;
 /// Fuctions which output amplitude changes.
@@ -38,7 +40,7 @@ pub const TONE_FREQUENCY_MAX: SampleCalc = 28000.0;
 /// [5 microseconds](http://boson.physics.sc.edu/~kunchur/papers/gradual.pdf).
 /// Humans can hear < 1° difference in the location of the sound source, when it is in front of
 /// them. See also:
-/// `[interaural time difference](https://en.wikipedia.org/wiki/Interaural_time_difference)`
+/// [interaural time difference](https://en.wikipedia.org/wiki/Interaural_time_difference)
 pub const SAMPLE_RATE_DEFAULT: u32 = 192_000;
 
 /// Sound sample generator for output (playback). It can also take real-time input (commands),
@@ -81,6 +83,8 @@ pub enum Error {
     FrequencyTooLow,
     /// The frequency exceeds the hearing range
     FrequencyTooHigh,
+    /// This frequency function is a source, it can not use an input frequency buffer
+    FrequencySource,
     /// Amplitude cannot be negative
     AmplitudeInvalid,
     /// Amplitude change rate is out of the range allowed for the given function
@@ -105,6 +109,7 @@ impl error::Error for Error {
             DenominatorInvalid => "invalid denominator",
             FrequencyTooLow => "frequency is below the hearing range",
             FrequencyTooHigh => "frequency exceeds the hearing range",
+            FrequencySource => "input frequency buffer can not be used",
             AmplitudeInvalid => "invalid amplitude",
             AmplitudeRateInvalid => "invalid amplitude decay rate",
         }

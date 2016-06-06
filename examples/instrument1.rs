@@ -16,6 +16,7 @@ extern crate piston;
 
 use music::sound::*;
 use music::sound::wave::*;
+use music::sound::interval::*;
 use music::sound::frequency::*;
 use music::sound::amplitude::*;
 use std::rc::Rc;
@@ -84,7 +85,7 @@ impl InstrumentBasic {
 // TODO: -unwrap()
 impl SoundGenerator<Command> for InstrumentBasic {
     fn get_samples(&mut self, sample_count: usize, result: &mut Vec<SampleCalc>) {
-        self.frequency1.get(self.time, &mut self.frequency1_buffer).unwrap();
+        self.frequency1.get(self.time, None, &mut self.frequency1_buffer).unwrap();
         self.note1.get(self.time, &self.frequency1_buffer, result).unwrap();
         self.time += sample_count as SampleCalc / self.sample_rate;
     }

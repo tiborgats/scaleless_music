@@ -59,7 +59,7 @@ fn freqconst(bencher: &mut Bencher) {
     let frequency = FrequencyConst::new(440.0).unwrap();
 
     bencher.iter(|| {
-        frequency.get(0.0, &mut frequency_buffer).unwrap();
+        frequency.get(0.0, None, &mut frequency_buffer).unwrap();
     });
 }
 
@@ -117,7 +117,7 @@ fn note_freqconst_ampdec_overtones16(bencher: &mut Bencher) {
     let note = Note::new(BENCH_SAMPLE_RATE, BENCH_BUFFER_SIZE, Rc::new(amplitude), 16).unwrap();
 
     bencher.iter(|| {
-        frequency.get(time, &mut frequency_buffer).unwrap();
+        frequency.get(time, None, &mut frequency_buffer).unwrap();
         note.get(time, &frequency_buffer, &mut generator_buffer).unwrap();
         time += SAMPLETIME;
         // test::black_box(&mut generator_buffer);

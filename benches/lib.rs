@@ -6,8 +6,6 @@ extern crate music;
 use test::Bencher;
 use music::sound::*;
 use music::sound::wave::*;
-use music::sound::frequency::*;
-use music::sound::amplitude::*;
 use std::rc::Rc;
 
 const BENCH_SAMPLE_RATE: SampleCalc = 192_000.0;
@@ -15,7 +13,7 @@ const BENCH_BUFFER_SIZE: usize = 256;
 const SAMPLETIME: SampleCalc = BENCH_BUFFER_SIZE as SampleCalc / BENCH_SAMPLE_RATE;
 
 #[bench]
-fn sine_b(bencher: &mut Bencher) {
+fn sin(bencher: &mut Bencher) {
     let mut rad: f32 = 0.0;
     let mut s: f32 = 0.0;
 
@@ -27,7 +25,7 @@ fn sine_b(bencher: &mut Bencher) {
 }
 
 #[bench]
-fn exp_b(bencher: &mut Bencher) {
+fn exp(bencher: &mut Bencher) {
     let mut x: f32 = 0.0;
     let mut y: f32 = 0.0;
 
@@ -105,6 +103,58 @@ fn note_freqconst_ampdec_overtones16(bencher: &mut Bencher) {
     bencher.iter(|| {
         frequency.get(time, None, &mut frequency_buffer).unwrap();
         note.get(time, &frequency_buffer, &mut generator_buffer).unwrap();
+        time += SAMPLETIME;
+        // test::black_box(&mut generator_buffer);
+    });
+}
+
+// FrequencyConst, Note{ AmplitudeDecayExpOvertones with 4 overtones }
+#[bench]
+fn note_freqconst_ampdec_overtones4(bencher: &mut Bencher) {
+    let mut generator_buffer: Vec<SampleCalc> = vec![0.0; BENCH_BUFFER_SIZE];
+    let mut frequency_buffer: Vec<SampleCalc> = vec![440.0; BENCH_BUFFER_SIZE];
+    let mut time: SampleCalc = 0.0;
+    let frequency = FrequencyConst::new(440.0).unwrap();
+    let amplitude = {
+        let overtones_amplitude: Vec<SampleCalc> = vec![10.0, 1.0, 1.0, 0.95];
+        let overtones_dec_rate: Vec<SampleCalc> = vec![-1.0, -1.4, -1.9, -2.1];
+        AmplitudeDecayExpOvertones::new(BENCH_SAMPLE_RATE, overtones_amplitude, overtones_dec_rate)
+            .unwrap()
+    };
+    let note = Note::new(BENCH_SAMPLE_RATE, BENCH_BUFFER_SIZE, Rc::new(amplitude), 4).unwrap();
+
+    bencher.iter(|| {
+        frequency.get(time, None, &mut frequency_buffer).unwrap();
+        note.get(time, &frequency_buffer, &mut generator_buffer).unwrap();
+        time += SAMPLETIME;
+        // test::black_box(&mut generator_buffer);
+    });
+}
+
+// FrequencyConst, Mixer{4 x Note{ AmplitudeDecayExpOvertones with 4 overtones }}
+#[bench]
+fn mixer4_note_freqconst_ampdec_overtones4(bencher: &mut Bencher) {
+    let mut generator_buffer: Vec<SampleCalc> = vec![0.0; BENCH_BUFFER_SIZE];
+    let mut frequency_buffer: Vec<SampleCalc> = vec![440.0; BENCH_BUFFER_SIZE];
+    let mut time: SampleCalc = 0.0;
+    let frequency = FrequencyConst::new(440.0).unwrap();
+    let amplitude = Rc::new({
+        let overtones_amplitude: Vec<SampleCalc> = vec![10.0, 1.0, 1.0, 0.95];
+        let overtones_dec_rate: Vec<SampleCalc> = vec![-1.0, -1.4, -1.9, -2.1];
+        AmplitudeDecayExpOvertones::new(BENCH_SAMPLE_RATE, overtones_amplitude, overtones_dec_rate)
+            .unwrap()
+    });
+    let note1 = Rc::new(Note::new(BENCH_SAMPLE_RATE, BENCH_BUFFER_SIZE, amplitude.clone(), 4)
+        .unwrap());
+    let mut mixer = Mixer::new(BENCH_SAMPLE_RATE, BENCH_BUFFER_SIZE).unwrap();
+    mixer.add(Interval::new(1, 1).unwrap(), note1.clone(), 2.0)
+        .unwrap()
+        .add(Interval::new(1, 2).unwrap(), note1.clone(), 3.0)
+        .unwrap();
+
+    bencher.iter(|| {
+        frequency.get(time, None, &mut frequency_buffer).unwrap();
+        mixer.get(time, &frequency_buffer, &mut generator_buffer).unwrap();
         time += SAMPLETIME;
         // test::black_box(&mut generator_buffer);
     });

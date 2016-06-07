@@ -20,12 +20,21 @@ impl Interval {
         if denominator == 0 {
             return Err(Error::DenominatorInvalid);
         };
-        Ok(Interval {
+        let mut i = Interval {
             numerator: numerator,
             denominator: denominator,
             ratio: (numerator as SampleCalc / denominator as SampleCalc),
             reciprocal: (denominator as SampleCalc / numerator as SampleCalc),
-        })
+        };
+        i.simplify();
+        Ok(i)
+    }
+    /// Simplifies the ratio with dividing by the greatest common divisor.
+    fn simplify(&mut self) {
+        use num::*;
+        let d = self.numerator.gcd(&self.denominator);
+        self.numerator /= d;
+        self.denominator /= d;
     }
     /// Returns the ratio of the frequency interval.
     pub fn get(&self) -> SampleCalc {

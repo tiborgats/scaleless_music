@@ -26,6 +26,8 @@ pub enum Error {
     FrequencySource,
     /// Amplitude cannot be negative
     AmplitudeInvalid,
+    /// Amplitude change time is not positive
+    AmplitudeTimeInvalid,
     /// Amplitude change rate is out of the range allowed for the given function
     AmplitudeRateInvalid,
 }
@@ -50,6 +52,7 @@ impl error::Error for Error {
             FrequencyTooHigh => "frequency exceeds the hearing range",
             FrequencySource => "input frequency buffer can not be used",
             AmplitudeInvalid => "invalid amplitude",
+            AmplitudeTimeInvalid => "invalid amplitude change time",
             AmplitudeRateInvalid => "invalid amplitude decay rate",
         }
     }

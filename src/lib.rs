@@ -41,6 +41,7 @@ extern crate rsoundio;
 #[cfg(feature = "be-rsoundio")]
 extern crate rb;
 
+extern crate num;
 //extern crate rayon;
 
 /// Basic sound synthesizer routines.

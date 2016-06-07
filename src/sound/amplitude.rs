@@ -5,26 +5,28 @@ use sound::*;
 pub trait AmplitudeFunction {
     /// Provides the results of the amplitude calculations.
     fn get(&self, time_start: SampleCalc, result: &mut [SampleCalc]) -> SoundResult<()>;
+    /// Applies the amplitude function over an existing sample.
+    fn apply(&self, time_start: SampleCalc, samples: &mut [SampleCalc]) -> SoundResult<()>;
 }
 
 /// Linearly increasing amplitude.
 pub struct FadeInLinear {
     sample_time: SampleCalc,
-    fade_time: SampleCalc,
+    duration: SampleCalc,
     fade_rate: SampleCalc,
 }
 
 impl FadeInLinear {
     /// custom constructor
-    pub fn new(sample_rate: SampleCalc, fade_time: SampleCalc) -> SoundResult<FadeInLinear> {
+    pub fn new(sample_rate: SampleCalc, duration: SampleCalc) -> SoundResult<FadeInLinear> {
         let sample_time = try!(get_sample_time(sample_rate));
-        if fade_time <= 0.0 {
+        if duration <= 0.0 {
             return Err(Error::AmplitudeTimeInvalid);
         }
-        let fade_rate = 1.0 / fade_time;
+        let fade_rate = 1.0 / duration;
         Ok(FadeInLinear {
             sample_time: sample_time,
-            fade_time: fade_time,
+            duration: duration,
             fade_rate: fade_rate,
         })
     }
@@ -34,7 +36,18 @@ impl AmplitudeFunction for FadeInLinear {
     fn get(&self, time_start: SampleCalc, result: &mut [SampleCalc]) -> SoundResult<()> {
         for (index, item) in result.iter_mut().enumerate() {
             let time = (index as SampleCalc * self.sample_time) + time_start;
-            *item = if time < self.fade_time {
+            *item = if time < self.duration {
+                time * self.fade_rate
+            } else {
+                1.0
+            }
+        }
+        Ok(())
+    }
+    fn apply(&self, time_start: SampleCalc, samples: &mut [SampleCalc]) -> SoundResult<()> {
+        for (index, item) in samples.iter_mut().enumerate() {
+            let time = (index as SampleCalc * self.sample_time) + time_start;
+            *item *= if time < self.duration {
                 time * self.fade_rate
             } else {
                 1.0
@@ -47,21 +60,21 @@ impl AmplitudeFunction for FadeInLinear {
 /// Linearly decreasing amplitude.
 pub struct FadeOutLinear {
     sample_time: SampleCalc,
-    fade_time: SampleCalc,
+    duration: SampleCalc,
     fade_rate: SampleCalc,
 }
 
 impl FadeOutLinear {
     /// custom constructor
-    pub fn new(sample_rate: SampleCalc, fade_time: SampleCalc) -> SoundResult<FadeOutLinear> {
+    pub fn new(sample_rate: SampleCalc, duration: SampleCalc) -> SoundResult<FadeOutLinear> {
         let sample_time = try!(get_sample_time(sample_rate));
-        if fade_time <= 0.0 {
+        if duration <= 0.0 {
             return Err(Error::AmplitudeTimeInvalid);
         }
-        let fade_rate = 1.0 / fade_time;
+        let fade_rate = 1.0 / duration;
         Ok(FadeOutLinear {
             sample_time: sample_time,
-            fade_time: fade_time,
+            duration: duration,
             fade_rate: fade_rate,
         })
     }
@@ -70,9 +83,19 @@ impl FadeOutLinear {
 impl AmplitudeFunction for FadeOutLinear {
     fn get(&self, time_start: SampleCalc, result: &mut [SampleCalc]) -> SoundResult<()> {
         for (index, item) in result.iter_mut().enumerate() {
-            let time_left = self.fade_time -
-                            ((index as SampleCalc * self.sample_time) + time_start);
+            let time_left = self.duration - ((index as SampleCalc * self.sample_time) + time_start);
             *item = if time_left > 0.0 {
+                time_left * self.fade_rate
+            } else {
+                0.0
+            }
+        }
+        Ok(())
+    }
+    fn apply(&self, time_start: SampleCalc, samples: &mut [SampleCalc]) -> SoundResult<()> {
+        for (index, item) in samples.iter_mut().enumerate() {
+            let time_left = self.duration - ((index as SampleCalc * self.sample_time) + time_start);
+            *item *= if time_left > 0.0 {
                 time_left * self.fade_rate
             } else {
                 0.0

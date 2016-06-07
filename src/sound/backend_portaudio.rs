@@ -1,11 +1,8 @@
 use portaudio as pa;
+use sound::*;
 // use std::thread;
 // use std::sync::mpsc::channel;
 use std::sync::mpsc::Sender;
-use std::{error, fmt};
-use sound::*;
-
-const FRAMES_PER_BUFFER: u32 = BUFFER_SIZE as u32;    // optimal = FRAMES_PER_BUFFER_UNSPECIFIED
 
 lazy_static! {
     static ref PORTAUDIO: pa::PortAudio = {
@@ -29,6 +26,7 @@ impl<'a, T> SoundInterface<'a, T> {
     /// Creates a new backend for sound playback.
     /// At the moment all channels output the same sound.
     pub fn new(sample_rate: u32,
+               buffer_size: usize,
                channel_count: u16,
                mut generator: Box<SoundGenerator<T>>)
                -> BackendResult<SoundInterface<'a, T>> {
@@ -38,11 +36,11 @@ impl<'a, T> SoundInterface<'a, T> {
         println!("host count: {}", try!(PORTAUDIO.host_api_count()));
         let mut settings = try!(PORTAUDIO.default_output_stream_settings(channel_count as i32,
                                                                          sample_rate as f64,
-                                                                         FRAMES_PER_BUFFER));
+                                                                         buffer_size as u32));
         // we won't output out of range samples so don't bother clipping them.
         settings.flags = pa::stream_flags::CLIP_OFF;
 
-        let mut generator_buffer: Vec<SampleCalc> = vec![0.0; BUFFER_SIZE];
+        let mut generator_buffer: Vec<SampleCalc> = vec![0.0; buffer_size];
 
         let (sender, receiver) = ::std::sync::mpsc::channel();
         // This routine will be called by the PortAudio engine when audio is needed. It may
@@ -130,6 +128,8 @@ pub enum BackendError {
     /// The SoundGenerator is disconnected, could not recieve the command
     Disconnected,
 }
+
+use std::{error, fmt};
 
 impl fmt::Display for BackendError {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {

@@ -16,9 +16,6 @@ extern crate piston;
 
 use music::sound::*;
 use music::sound::wave::*;
-use music::sound::interval::*;
-use music::sound::frequency::*;
-use music::sound::amplitude::*;
 use std::rc::Rc;
 use piston_window::*;
 
@@ -62,12 +59,12 @@ impl InstrumentBasic {
                                                  overtones_amplitude,
                                                  overtones_dec_rate))
         };
-        let note1 = try!(Note::new(sample_rate, BUFFER_SIZE, Rc::new(amplitude), 4));
+        let note1 = try!(Note::new(sample_rate, BUFFER_SIZE_DEFAULT, Rc::new(amplitude), 4));
         Ok(InstrumentBasic {
             sample_rate: sample_rate,
             note1: note1,
             frequency1: frequency1,
-            frequency1_buffer: vec![frequency_start; BUFFER_SIZE],
+            frequency1_buffer: vec![frequency_start; BUFFER_SIZE_DEFAULT],
             time: 0.0,
         })
     }
@@ -131,7 +128,7 @@ fn main() {
     println!("scaleless_music v{} example", env!("CARGO_PKG_VERSION"));
     let sound_generator = Box::new(InstrumentBasic::new(48000.0, 440.0)
         .expect("InstrumentBasic construction shouldn't fail."));
-    let mut sound = SoundInterface::new(48000, 2, sound_generator)
+    let mut sound = SoundInterface::new(48000, BUFFER_SIZE_DEFAULT, 2, sound_generator)
         .expect("SoundInterface construction shouldn't fail.");
 
     let mut window: PistonWindow = WindowSettings::new("Music", [320, 200])

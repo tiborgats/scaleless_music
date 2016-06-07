@@ -1,5 +1,4 @@
 use sound::*;
-use sound::interval::*;
 use std::cell::Cell;
 // use std::fmt;
 // use rayon::prelude::*;

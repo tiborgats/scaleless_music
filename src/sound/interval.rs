@@ -40,6 +40,10 @@ impl Interval {
     pub fn get(&self) -> SampleCalc {
         self.ratio
     }
+    /// True, if the interval is `1:1`, aka. unison.
+    pub fn is_unison(&self) -> bool {
+        self.numerator == self.denominator
+    }
     /// Gives the common name of the interval (if there is any).
     pub fn get_name(&self) -> &str {
         let ratio = if self.numerator > self.denominator {
@@ -123,6 +127,12 @@ impl Interval {
             };
         }
         Ok(())
+    }
+}
+
+impl From<Interval> for SampleCalc {
+    fn from(interval: Interval) -> Self {
+        interval.ratio
     }
 }
 

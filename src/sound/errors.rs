@@ -10,26 +10,30 @@ use sound::backend_rsoundio::*;
 pub enum Error {
     /// Sound output backend error.
     Backend(BackendError),
-    /// Invalid sample rate
+    /// Invalid sample rate.
     SampleRateInvalid,
-    /// Invalid buffer size for the given sample count
+    /// Invalid buffer size for the given sample count.
     BufferSize,
-    /// Numerator cannot be 0, because frequencies can not be 0
+    /// Numerator cannot be 0, because frequencies can not be 0.
     NumeratorInvalid,
-    /// Denominator cannot be 0 (division by zero error)
+    /// Denominator cannot be 0 (division by zero error).
     DenominatorInvalid,
-    /// The frequency is below the hearing range
+    /// The frequency is below the hearing range.
     FrequencyTooLow,
-    /// The frequency exceeds the hearing range
+    /// The frequency exceeds the hearing range.
     FrequencyTooHigh,
-    /// This frequency function is a source, it can not use an input frequency buffer
+    /// This frequency function is a source, it can not use an input frequency buffer.
     FrequencySource,
-    /// Amplitude cannot be negative
+    /// A rate must be positive.
+    RateInvalid,
+    /// Amplitude cannot be negative.
     AmplitudeInvalid,
-    /// Amplitude change time is not positive
+    /// Amplitude change time is not positive.
     AmplitudeTimeInvalid,
-    /// Amplitude change rate is out of the range allowed for the given function
+    /// Amplitude change rate is out of the range allowed for the given function.
     AmplitudeRateInvalid,
+    /// A time period must be positive.
+    PeriodInvalid,
 }
 
 impl fmt::Display for Error {
@@ -51,9 +55,11 @@ impl error::Error for Error {
             FrequencyTooLow => "frequency is below the hearing range",
             FrequencyTooHigh => "frequency exceeds the hearing range",
             FrequencySource => "input frequency buffer can not be used",
+            RateInvalid => "invalid rate",
             AmplitudeInvalid => "invalid amplitude",
             AmplitudeTimeInvalid => "invalid amplitude change time",
             AmplitudeRateInvalid => "invalid amplitude decay rate",
+            PeriodInvalid => "invalid period",
         }
     }
 

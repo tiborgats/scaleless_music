@@ -45,13 +45,14 @@ Henceforward, I plan to create a tool for analyzing recorded samples, finding cl
 	- [x] note
 	- [ ] amplitude functions
 		- [x] [exponential decay](https://en.wikipedia.org/wiki/Exponential_decay)
+		- [x] faders
 		- [ ] [tremolo](https://en.wikipedia.org/wiki/Tremolo) - as sinusoidal variation of amplitude
 		- [ ] [equal-loudness contour](https://en.wikipedia.org/wiki/Equal-loudness_contour)
 	- [ ] frequency functions
-		- [ ] [vibrato](https://en.wikipedia.org/wiki/Vibrato)
+		- [x] [vibrato](https://en.wikipedia.org/wiki/Vibrato)
 		- [ ] linearly changing (ascending or descending) pitch
 	- [ ] sequences of notes, rhythm functions
-	- [ ] polyphony
+	- [x] polyphony (mixer)
 	- [ ] smooth start and end of sine waves, which are physically possible (no zero time jumps in amplitude, to avoid infinite acceleration of the speaker membrane)
 - [ ] speed optimization of the playback routines
 	- [x] benchmark routines

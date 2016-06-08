@@ -13,7 +13,7 @@ const BENCH_BUFFER_SIZE: usize = 256;
 const SAMPLETIME: SampleCalc = BENCH_BUFFER_SIZE as SampleCalc / BENCH_SAMPLE_RATE;
 
 #[bench]
-fn sin(bencher: &mut Bencher) {
+fn math_sin(bencher: &mut Bencher) {
     let mut rad: f32 = 0.0;
     let mut s: f32 = 0.0;
 
@@ -25,7 +25,7 @@ fn sin(bencher: &mut Bencher) {
 }
 
 #[bench]
-fn exp(bencher: &mut Bencher) {
+fn math_exp(bencher: &mut Bencher) {
     let mut x: f32 = 0.0;
     let mut y: f32 = 0.0;
 
@@ -44,6 +44,21 @@ fn freqconst(bencher: &mut Bencher) {
 
     bencher.iter(|| {
         frequency.get(0.0, None, &mut frequency_buffer).unwrap();
+    });
+}
+
+// FrequencyConst + Vibrato
+#[bench]
+fn freqconst_vibrato(bencher: &mut Bencher) {
+    let mut frequency_buffer: Vec<SampleCalc> = vec![440.0; BENCH_BUFFER_SIZE];
+    let mut time: SampleCalc = 0.0;
+    let frequency = FrequencyConst::new(440.0).unwrap();
+    let vibrato = Vibrato::new(BENCH_SAMPLE_RATE, 4.0, 1.125).unwrap();
+
+    bencher.iter(|| {
+        frequency.get(0.0, None, &mut frequency_buffer).unwrap();
+        vibrato.apply(time, &mut frequency_buffer).unwrap();
+        time += SAMPLETIME;
     });
 }
 

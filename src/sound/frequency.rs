@@ -51,7 +51,7 @@ impl FrequencyFunction for FrequencyConst {
 /// Changing frequency linearly. Linearity means constant multiplication over time slices.
 #[allow(dead_code)]
 pub struct FrequencyChangeLinear {
-    sample_rate: SampleCalc,
+    sample_time: SampleCalc,
     frequency_begin: SampleCalc,
     frequency_end: SampleCalc,
     timeframe: SampleCalc,
@@ -71,7 +71,6 @@ pub trait FrequencyModulator {
 }
 
 /// Vibrato: sinusoidal modulation of the base frequency.
-#[allow(dead_code)]
 pub struct Vibrato {
     sample_time: SampleCalc,
     /// The speed with which the pitch is varied.

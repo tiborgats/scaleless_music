@@ -46,7 +46,7 @@ Henceforward, I plan to create a tool for analyzing recorded samples, finding cl
 	- [ ] amplitude functions
 		- [x] [exponential decay](https://en.wikipedia.org/wiki/Exponential_decay)
 		- [x] faders
-		- [ ] [tremolo](https://en.wikipedia.org/wiki/Tremolo) - as sinusoidal variation of amplitude
+		- [x] [tremolo](https://en.wikipedia.org/wiki/Tremolo) - as sinusoidal variation of amplitude
 		- [ ] [equal-loudness contour](https://en.wikipedia.org/wiki/Equal-loudness_contour)
 	- [ ] frequency functions
 		- [x] [vibrato](https://en.wikipedia.org/wiki/Vibrato)
@@ -68,7 +68,7 @@ Henceforward, I plan to create a tool for analyzing recorded samples, finding cl
 	- [ ] Android
 	- [ ] iOS
 - [ ] test coverages
-- [ ] examples
+- [ ] more examples
 
 # Future work
 - [ ] file format, parser

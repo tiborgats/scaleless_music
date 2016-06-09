@@ -10,6 +10,7 @@ pub trait AmplitudeFunction {
 }
 
 /// Linearly increasing amplitude.
+#[derive(Debug, Copy, Clone)]
 pub struct FadeInLinear {
     sample_time: SampleCalc,
     duration: SampleCalc,
@@ -58,6 +59,7 @@ impl AmplitudeFunction for FadeInLinear {
 }
 
 /// Linearly decreasing amplitude.
+#[derive(Debug, Copy, Clone)]
 pub struct FadeOutLinear {
     sample_time: SampleCalc,
     duration: SampleCalc,
@@ -105,9 +107,63 @@ impl AmplitudeFunction for FadeOutLinear {
     }
 }
 
-/// Sinusoidal variation in amplitude
-pub struct Tremolo;
+/// Sinusoidal variation in amplitude.
+#[derive(Debug, Copy, Clone)]
+pub struct Tremolo {
+    sample_time: SampleCalc,
+    /// The speed with which the amplitude is varied.
+    rate: SampleCalc,
+    /// The ratio of maximum shift away from the base amplitude (must be > 0.0).
+    extent_ratio: SampleCalc,
+    amplitude_normalized: SampleCalc,
+}
 
+impl Tremolo {
+    /// custom constructor
+    pub fn new(sample_rate: SampleCalc,
+               rate: SampleCalc,
+               extent_ratio: SampleCalc)
+               -> SoundResult<Tremolo> {
+        let sample_time = try!(get_sample_time(sample_rate));
+        if rate <= 0.0 {
+            return Err(Error::PeriodInvalid);
+        }
+        if extent_ratio <= 0.0 {
+            return Err(Error::AmplitudeInvalid);
+        }
+        let amplitude_normalized = extent_ratio.min(1.0 / extent_ratio);
+        Ok(Tremolo {
+            sample_time: sample_time,
+            rate: rate,
+            extent_ratio: extent_ratio,
+            amplitude_normalized: amplitude_normalized,
+        })
+    }
+}
+
+impl AmplitudeFunction for Tremolo {
+    fn get(&self, time_start: SampleCalc, result: &mut [SampleCalc]) -> SoundResult<()> {
+        let rate_in_rad = self.rate * PI2;
+        let phase_start = time_start * rate_in_rad;
+        let phase_change = self.sample_time * rate_in_rad;
+        for (index, item) in result.iter_mut().enumerate() {
+            let phase = (index as SampleCalc * phase_change) + phase_start;
+            *item = self.amplitude_normalized * (self.extent_ratio.powf(phase.sin()));
+        }
+        Ok(())
+    }
+
+    fn apply(&self, time_start: SampleCalc, samples: &mut [SampleCalc]) -> SoundResult<()> {
+        let rate_in_rad = self.rate * PI2;
+        let phase_start = time_start * rate_in_rad;
+        let phase_change = self.sample_time * rate_in_rad;
+        for (index, item) in samples.iter_mut().enumerate() {
+            let phase = (index as SampleCalc * phase_change) + phase_start;
+            *item *= self.amplitude_normalized * (self.extent_ratio.powf(phase.sin()));
+        }
+        Ok(())
+    }
+}
 
 
 /// Input and output definition for the amplitude functions with overtones.
@@ -252,11 +308,12 @@ impl AmplitudeFunctionOvertones for AmplitudeDecayExpOvertones {
             return Ok(());
         };
         let amplitude_overtone = self.amplitude[overtone];
-        let rate_overtone = self.rate[overtone];
+        let position_start = time_start * self.rate[overtone];
+        let position_change = self.sample_time * self.rate[overtone];
         for (index, item) in result.iter_mut().enumerate() {
-            let time: SampleCalc = (index as SampleCalc * self.sample_time) + time_start;
+            let position: SampleCalc = (index as SampleCalc * position_change) + position_start;
             // TODO: speed optimization, .exp() is very slow
-            *item = amplitude_overtone * (time * rate_overtone).exp();
+            *item = amplitude_overtone * position.exp();
         }
         Ok(())
     }
@@ -273,11 +330,12 @@ impl AmplitudeFunctionOvertones for AmplitudeDecayExpOvertones {
             return Ok(());
         };
         let amplitude_overtone = self.amplitude[overtone];
-        let rate_overtone = self.rate[overtone];
+        let position_start = time_start * self.rate[overtone];
+        let position_change = self.sample_time * self.rate[overtone];
         for (index, item) in samples.iter_mut().enumerate() {
-            let time: SampleCalc = (index as SampleCalc * self.sample_time) + time_start;
+            let position: SampleCalc = (index as SampleCalc * position_change) + position_start;
             // TODO: speed optimization, .exp() is very slow
-            *item *= amplitude_overtone * (time * rate_overtone).exp();
+            *item *= amplitude_overtone * position.exp();
         }
         Ok(())
     }

@@ -10,7 +10,7 @@ use std::rc::Rc;
 
 const BENCH_SAMPLE_RATE: SampleCalc = 192_000.0;
 const BENCH_BUFFER_SIZE: usize = 256;
-const SAMPLETIME: SampleCalc = BENCH_BUFFER_SIZE as SampleCalc / BENCH_SAMPLE_RATE;
+const BENCH_BUFFER_TIME: SampleCalc = BENCH_BUFFER_SIZE as SampleCalc / BENCH_SAMPLE_RATE;
 
 #[bench]
 fn math_sin(bencher: &mut Bencher) {
@@ -21,18 +21,6 @@ fn math_sin(bencher: &mut Bencher) {
         rad += 0.001;
         s = rad.sin();
         test::black_box(s);
-    });
-}
-
-#[bench]
-fn math_exp(bencher: &mut Bencher) {
-    let mut x: f32 = 0.0;
-    let mut y: f32 = 0.0;
-
-    bencher.iter(|| {
-        x += 0.001;
-        y = x.exp();
-        test::black_box(y);
     });
 }
 
@@ -58,7 +46,19 @@ fn freqconst_vibrato(bencher: &mut Bencher) {
     bencher.iter(|| {
         frequency.get(0.0, None, &mut frequency_buffer).unwrap();
         vibrato.apply(time, &mut frequency_buffer).unwrap();
-        time += SAMPLETIME;
+        time += BENCH_BUFFER_TIME;
+    });
+}
+
+#[bench]
+fn tremolo(bencher: &mut Bencher) {
+    let mut amplitude_buffer: Vec<SampleCalc> = vec![0.0; BENCH_BUFFER_SIZE];
+    let mut time: SampleCalc = 0.0;
+    let amplitude = Tremolo::new(BENCH_SAMPLE_RATE, 8.0, 1.1).unwrap();
+
+    bencher.iter(|| {
+        amplitude.get(time, &mut amplitude_buffer).unwrap();
+        time += BENCH_BUFFER_TIME;
     });
 }
 
@@ -74,7 +74,7 @@ fn ampconst_overtone(bencher: &mut Bencher) {
 
     bencher.iter(|| {
         amplitude.get(time, 0, &mut amplitude_buffer).unwrap();
-        time += SAMPLETIME;
+        time += BENCH_BUFFER_TIME;
     });
 }
 
@@ -92,7 +92,7 @@ fn ampdec_overtone(bencher: &mut Bencher) {
 
     bencher.iter(|| {
         amplitude.get(time, 0, &mut amplitude_buffer).unwrap();
-        time += SAMPLETIME;
+        time += BENCH_BUFFER_TIME;
     });
 }
 
@@ -118,7 +118,7 @@ fn note_freqconst_ampdec_overtones16(bencher: &mut Bencher) {
     bencher.iter(|| {
         frequency.get(time, None, &mut frequency_buffer).unwrap();
         note.get(time, &frequency_buffer, &mut generator_buffer).unwrap();
-        time += SAMPLETIME;
+        time += BENCH_BUFFER_TIME;
         // test::black_box(&mut generator_buffer);
     });
 }
@@ -141,7 +141,7 @@ fn note_freqconst_ampdec_overtones4(bencher: &mut Bencher) {
     bencher.iter(|| {
         frequency.get(time, None, &mut frequency_buffer).unwrap();
         note.get(time, &frequency_buffer, &mut generator_buffer).unwrap();
-        time += SAMPLETIME;
+        time += BENCH_BUFFER_TIME;
         // test::black_box(&mut generator_buffer);
     });
 }
@@ -161,7 +161,7 @@ fn mixer4_note_freqconst_ampdec_overtones4(bencher: &mut Bencher) {
     });
     let note1 = Rc::new(Note::new(BENCH_SAMPLE_RATE, BENCH_BUFFER_SIZE, amplitude.clone(), 4)
         .unwrap());
-    let mut mixer = Mixer::new(BENCH_SAMPLE_RATE, BENCH_BUFFER_SIZE).unwrap();
+    let mut mixer = Mixer::new(BENCH_BUFFER_SIZE).unwrap();
     mixer.add(Interval::new(1, 1).unwrap(), note1.clone(), 2.0)
         .unwrap()
         .add(Interval::new(1, 2).unwrap(), note1.clone(), 3.0)
@@ -170,7 +170,7 @@ fn mixer4_note_freqconst_ampdec_overtones4(bencher: &mut Bencher) {
     bencher.iter(|| {
         frequency.get(time, None, &mut frequency_buffer).unwrap();
         mixer.get(time, &frequency_buffer, &mut generator_buffer).unwrap();
-        time += SAMPLETIME;
+        time += BENCH_BUFFER_TIME;
         // test::black_box(&mut generator_buffer);
     });
 }

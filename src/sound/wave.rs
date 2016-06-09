@@ -2,16 +2,48 @@ use sound::*;
 use std::rc::Rc;
 use std::cell::RefCell;
 // use rayon::prelude::*;
-// use std::fmt::Debug;
+
+/// A sinusoidal wave generator, with variable frequency.
+#[derive(Copy, Clone)]
+pub struct Wave {
+    frequency_multiplier: SampleCalc,
+    /// The phase value is always kept close to zero for maximizing the floating point precision.
+    phase: SampleCalc,
+}
+
+impl Wave {
+    /// custom constructor
+    pub fn new(sample_rate: SampleCalc, overtone: usize) -> SoundResult<Wave> {
+        let sample_time = try!(get_sample_time(sample_rate));
+        Ok(Wave {
+            frequency_multiplier: (overtone as SampleCalc + 1.0) * PI2 * sample_time,
+            phase: 0.0,
+        })
+    }
+    /// Gets the next samples of the wave.
+    pub fn get(&mut self,
+               base_frequency: &[SampleCalc],
+               result: &mut [SampleCalc])
+               -> SoundResult<()> {
+        for (item, frequency) in result.iter_mut().zip(base_frequency) {
+            self.phase += frequency * self.frequency_multiplier;
+            *item = (self.phase).sin();
+        }
+        self.phase %= PI2;
+        Ok(())
+    }
+    /// Sets a new phase value.
+    pub fn set_phase(&mut self, phase: SampleCalc) -> SoundResult<()> {
+        self.phase = phase % PI2;
+        Ok(())
+    }
+}
 
 /// A tone with optional overtones and amplitude modulation.
 #[derive(Clone)]
 pub struct Note {
-    sample_rate: SampleCalc,
-    //    frequency_function: Rc<FrequencyFunction>,
-    //    frequency_buffer: RefCell<Vec<SampleCalc>>,
+    waves: RefCell<Vec<Wave>>,
     amplitude_function: Rc<AmplitudeFunctionOvertones>,
-    amplitude_buffer: RefCell<Vec<SampleCalc>>,
     wave_buffer: RefCell<Vec<SampleCalc>>,
     overtone_max: usize,
 }
@@ -23,12 +55,13 @@ impl Note {
                amplitude_function: Rc<AmplitudeFunctionOvertones>,
                overtone_max: usize)
                -> SoundResult<Note> {
+        let mut wave_vec = Vec::with_capacity(overtone_max + 1);
+        for overtone in 0..overtone_max {
+            wave_vec.push(try!(Wave::new(sample_rate, overtone)));
+        }
         Ok(Note {
-            sample_rate: sample_rate,
-            //            frequency_function: frequency_function,
-            //            frequency_buffer: RefCell::new(vec![0.0; buffer_size]),
+            waves: RefCell::new(wave_vec),
             amplitude_function: amplitude_function,
-            amplitude_buffer: RefCell::new(vec![0.0; buffer_size]),
             wave_buffer: RefCell::new(vec![0.0; buffer_size]),
             overtone_max: overtone_max,
         })
@@ -49,51 +82,23 @@ impl SoundStructure for Note {
            result: &mut [SampleCalc])
            -> SoundResult<()> {
         let buffer_size = self.wave_buffer.borrow().len();
-        // if self.amplitude_buffer.borrow().len() != buffer_size {
-        // return Err(Error::BufferSize);
-        // }
         if base_frequency.len() != buffer_size {
             return Err(Error::BufferSize);
         }
         if result.len() != buffer_size {
             return Err(Error::BufferSize);
         }
-        let time_sample: SampleCalc = 1.0 / self.sample_rate;
-        // let frequency_b = self.frequency_buffer.borrow_mut();
         for item in result.iter_mut() {
             *item = 0.0;
         }
-        for overtone in 0..self.overtone_max {
-            let freq_multiplier = (overtone as SampleCalc + 1.0) * PI2;
-            //            for sample_idx in 0..buffer_size {
-            // self.frequency_buffer.borrow_mut().get_mut(sample_idx).unwrap() =
-            // base_frequency.get(sample_idx).unwrap();
-            // }
-            try!(self.amplitude_function.get(time_start,
-                                             overtone,
-                                             &mut self.amplitude_buffer.borrow_mut()));
-
-            for (((index, item), frequency), amplitude) in result.iter_mut()
-                .enumerate()
-                .zip(base_frequency)
-                .zip(self.amplitude_buffer.borrow().iter()) {
-                    let time = (index as SampleCalc * time_sample) + time_start;
-                    *item += (time * frequency * freq_multiplier).sin() * *amplitude;
-                }
-/*            self.wave_buffer
-                .borrow_mut()
-                .par_iter_mut()
-                .zip(base_frequency.par_iter())
-                .enumerate()
-                .for_each(|(i, (w, f))| {
-                    let time = (i as SampleCalc * time_sample) + time_start;
-                    *w = (time * f * freq_multiplier).sin();
-                });*/
-/*            for ((item, wave), amplitude) in result.iter_mut()
-                .zip(self.wave_buffer.borrow().iter())
-                .zip(self.amplitude_buffer.borrow().iter()) {
-                *item += *wave * *amplitude;
-            }*/
+        for (overtone, wave) in self.waves.borrow_mut().iter_mut().enumerate() {
+            try!(wave.get(base_frequency, &mut self.wave_buffer.borrow_mut()));
+            try!(self.amplitude_function
+                .apply(time_start, overtone, &mut self.wave_buffer.borrow_mut()));
+            for (item, wave) in result.iter_mut()
+                .zip(self.wave_buffer.borrow().iter()) {
+                *item += *wave;
+            }
         }
         Ok(())
     }

@@ -113,12 +113,19 @@ pub struct Tremolo;
 /// Input and output definition for the amplitude functions with overtones.
 pub trait AmplitudeFunctionOvertones {
     /// Provides the results of the amplitude calculations for a given overtone.
-    /// For the fundamental tone overtone = 0.
+    /// For the fundamental tone `overtone = 0`.
     fn get(&self,
            time_start: SampleCalc,
            overtone: usize,
            result: &mut [SampleCalc])
            -> SoundResult<()>;
+    /// Applies the amplitude function over an existing sample for a given overtone.
+    /// For the fundamental tone `overtone = 0`.
+    fn apply(&self,
+             time_start: SampleCalc,
+             overtone: usize,
+             samples: &mut [SampleCalc])
+             -> SoundResult<()>;
 }
 
 /// Amplitude is not changing by time, this function gives the overtone amplitudes too.
@@ -167,6 +174,23 @@ impl AmplitudeFunctionOvertones for AmplitudeConstOvertones {
         }
         Ok(())
     }
+
+    fn apply(&self,
+             _time_start: SampleCalc,
+             overtone: usize,
+             samples: &mut [SampleCalc])
+             -> SoundResult<()> {
+        if overtone >= self.amplitude.len() {
+            for item in samples.iter_mut() {
+                *item = 0.0;
+            }
+            return Ok(());
+        };
+        for item in samples.iter_mut() {
+            *item *= self.amplitude[overtone];
+        }
+        Ok(())
+    }
 }
 
 /// Amplitude is decaying exponentially, also for overtones
@@ -174,7 +198,7 @@ impl AmplitudeFunctionOvertones for AmplitudeConstOvertones {
 /// index: 0 = fundamental tone, 1.. = overtones.
 #[derive(Debug, Clone)]
 pub struct AmplitudeDecayExpOvertones {
-    sample_rate: SampleCalc,
+    sample_time: SampleCalc,
     amplitude: Vec<SampleCalc>, // starting amplitudes
     rate: Vec<SampleCalc>, // rate must be negative!
 }
@@ -187,9 +211,7 @@ impl AmplitudeDecayExpOvertones {
                mut amplitude: Vec<SampleCalc>,
                rate: Vec<SampleCalc>)
                -> SoundResult<AmplitudeDecayExpOvertones> {
-        if sample_rate <= 0.0 {
-            return Err(Error::SampleRateInvalid);
-        };
+        let sample_time = try!(get_sample_time(sample_rate));
         let mut amplitude_sum: SampleCalc = 0.0;
         for amplitude_check in &amplitude {
             if *amplitude_check < 0.0 {
@@ -210,7 +232,7 @@ impl AmplitudeDecayExpOvertones {
             }
         }
         Ok(AmplitudeDecayExpOvertones {
-            sample_rate: sample_rate,
+            sample_time: sample_time,
             amplitude: amplitude,
             rate: rate,
         })
@@ -231,14 +253,31 @@ impl AmplitudeFunctionOvertones for AmplitudeDecayExpOvertones {
         };
         let amplitude_overtone = self.amplitude[overtone];
         let rate_overtone = self.rate[overtone];
-        // sample_time: a variable for speed optimization: multiplication is faster than
-        // division, so division is done out of the loop
-        let sample_time: SampleCalc = 1.0 / self.sample_rate;
-
         for (index, item) in result.iter_mut().enumerate() {
-            let time: SampleCalc = (index as SampleCalc * sample_time) + time_start;
+            let time: SampleCalc = (index as SampleCalc * self.sample_time) + time_start;
             // TODO: speed optimization, .exp() is very slow
             *item = amplitude_overtone * (time * rate_overtone).exp();
+        }
+        Ok(())
+    }
+
+    fn apply(&self,
+             time_start: SampleCalc,
+             overtone: usize,
+             samples: &mut [SampleCalc])
+             -> SoundResult<()> {
+        if (overtone >= self.amplitude.len()) || (overtone >= self.rate.len()) {
+            for item in samples.iter_mut() {
+                *item = 0.0;
+            }
+            return Ok(());
+        };
+        let amplitude_overtone = self.amplitude[overtone];
+        let rate_overtone = self.rate[overtone];
+        for (index, item) in samples.iter_mut().enumerate() {
+            let time: SampleCalc = (index as SampleCalc * self.sample_time) + time_start;
+            // TODO: speed optimization, .exp() is very slow
+            *item *= amplitude_overtone * (time * rate_overtone).exp();
         }
         Ok(())
     }

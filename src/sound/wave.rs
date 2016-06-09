@@ -4,7 +4,7 @@ use std::cell::RefCell;
 // use rayon::prelude::*;
 
 /// A sinusoidal wave generator, with variable frequency.
-#[derive(Copy, Clone)]
+#[derive(Debug, Copy, Clone)]
 pub struct Wave {
     frequency_multiplier: SampleCalc,
     /// The phase value is always kept close to zero for maximizing the floating point precision.
@@ -105,6 +105,7 @@ impl SoundStructure for Note {
 }
 
 /// Channel structure used for mixing sound structures.
+#[derive(Clone)]
 struct MixerChannel {
     /// The interval of the channel's frequency relative to the mixer's input frequency.
     interval: Interval,
@@ -117,18 +118,16 @@ struct MixerChannel {
 }
 
 /// Mixes sound channels (structures).
-#[allow(dead_code)]
+#[derive(Clone)]
 pub struct Mixer {
-    sample_rate: SampleCalc,
     buffer_size: usize,
     channels: RefCell<Vec<MixerChannel>>,
 }
 
 impl Mixer {
     /// custom constructor
-    pub fn new(sample_rate: SampleCalc, buffer_size: usize) -> SoundResult<Mixer> {
+    pub fn new(buffer_size: usize) -> SoundResult<Mixer> {
         Ok(Mixer {
-            sample_rate: sample_rate,
             buffer_size: buffer_size,
             channels: RefCell::new(Vec::new()),
         })
@@ -200,10 +199,7 @@ impl SoundStructure for Mixer {
 
 // https://en.wikipedia.org/wiki/Fade_(audio_engineering)#Crossfading
 /// Mixes two sound structures. While one fades out, another fades in.
-#[allow(dead_code)]
 pub struct Crossfader {
-    sample_rate: SampleCalc,
-    buffer_size: usize,
     duration: SampleCalc,
     sound_fade_out: Rc<SoundStructure>,
     sound_fade_in: Rc<SoundStructure>,
@@ -226,8 +222,6 @@ impl Crossfader {
         let amplitude_fade_out = try!(FadeOutLinear::new(sample_rate, duration));
         let amplitude_fade_in = try!(FadeInLinear::new(sample_rate, duration));
         Ok(Crossfader {
-            sample_rate: sample_rate,
-            buffer_size: buffer_size,
             duration: duration,
             interval: try!(Interval::new(1, 1)),
             sound_fade_out: sound_fade_out,
@@ -244,6 +238,11 @@ impl Crossfader {
     pub fn set_interval(&mut self, interval: Interval) -> &mut Crossfader {
         self.interval = interval;
         self
+    }
+
+    /// Returns the duration of the crossfade.
+    pub fn get_duration(&self) -> SampleCalc {
+        self.duration
     }
 }
 

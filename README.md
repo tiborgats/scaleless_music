@@ -67,6 +67,7 @@ Henceforward, I plan to create a tool for analyzing recorded samples, finding cl
 	- [ ] OS X
 	- [ ] Android
 	- [ ] iOS
+- [ ] test coverages
 - [ ] examples
 
 # Future work

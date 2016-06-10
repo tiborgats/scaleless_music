@@ -20,6 +20,7 @@ pub use self::errors::Error;
 pub use self::interval::Interval;
 pub use self::frequency::*;
 pub use self::amplitude::*;
+pub use self::wave::*;
 
 /// Precision of the finally produced samples.
 pub type SampleOutput = f32;

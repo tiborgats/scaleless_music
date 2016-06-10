@@ -132,12 +132,13 @@ impl Mixer {
             channels: RefCell::new(Vec::new()),
         })
     }
+
     /// Add a new channel to the mixer.
-    pub fn add(&mut self,
+    pub fn add(&self,
                interval: Interval,
                sound: Rc<SoundStructure>,
                volume: SampleCalc)
-               -> SoundResult<&mut Mixer> {
+               -> SoundResult<&Mixer> {
         if volume < 0.0 {
             return Err(Error::AmplitudeInvalid);
         }
@@ -146,13 +147,14 @@ impl Mixer {
             sound: sound,
             volume_relative: volume,
             volume_normalized: 0.0,
-            frequency_buffer: RefCell::new(vec![0.0; self.buffer_size]),
+            frequency_buffer: RefCell::new(vec![1.0; self.buffer_size]),
             wave_buffer: RefCell::new(vec![0.0; self.buffer_size]),
         };
         self.channels.borrow_mut().push(channel);
         self.normalize();
         Ok(self)
     }
+
     /// Generates the normalized volumes for the channels. Only normalizes if the sum of volumes
     /// is greater than 1.0
     fn normalize(&self) {
@@ -168,6 +170,30 @@ impl Mixer {
         for channel in self.channels.borrow_mut().iter_mut() {
             channel.volume_normalized = channel.volume_relative * volume_multiplier;
         }
+    }
+
+    /// Sets a new interval for the channel, relative to the base frequency of the mixer.
+    pub fn set_interval(&self, channel: usize, interval: Interval) -> SoundResult<()> {
+        if let Some(ch) = self.channels.borrow_mut().get_mut(channel) {
+            ch.interval = interval;
+        } else {
+            return Err(Error::ChannelInvalid);
+        }
+        Ok(())
+    }
+
+    /// Sets the relative volume of the channel.
+    pub fn set_volume(&self, channel: usize, volume: SampleCalc) -> SoundResult<()> {
+        if let Some(ch) = self.channels.borrow_mut().get_mut(channel) {
+            if volume < 0.0 {
+                return Err(Error::AmplitudeInvalid);
+            }
+            ch.volume_relative = volume;
+            self.normalize();
+        } else {
+            return Err(Error::ChannelInvalid);
+        }
+        Ok(())
     }
 }
 
@@ -190,7 +216,7 @@ impl SoundStructure for Mixer {
                                    &channel.frequency_buffer.borrow(),
                                    &mut channel.wave_buffer.borrow_mut()));
             for (item, wave) in result.iter_mut().zip(channel.wave_buffer.borrow().iter()) {
-                *item = *wave * channel.volume_normalized;
+                *item += *wave * channel.volume_normalized;
             }
         }
         Ok(())

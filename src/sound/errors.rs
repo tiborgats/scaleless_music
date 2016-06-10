@@ -34,6 +34,8 @@ pub enum Error {
     AmplitudeRateInvalid,
     /// A time period must be positive.
     PeriodInvalid,
+    /// Channel of the given number does not exist.
+    ChannelInvalid,
 }
 
 impl fmt::Display for Error {
@@ -60,6 +62,7 @@ impl error::Error for Error {
             AmplitudeTimeInvalid => "invalid amplitude change time",
             AmplitudeRateInvalid => "invalid amplitude decay rate",
             PeriodInvalid => "invalid period",
+            ChannelInvalid => "invalid channel",
         }
     }
 

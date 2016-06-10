@@ -11,23 +11,23 @@ pub struct Interval {
     reciprocal: SampleCalc,
 }
 
+impl Default for Interval {
+    fn default() -> Interval {
+        Interval {
+            numerator: 1,
+            denominator: 1,
+            ratio: 1.0,
+            reciprocal: 1.0,
+        }
+    }
+}
+
 impl Interval {
     /// custom constructor
     pub fn new(numerator: u16, denominator: u16) -> SoundResult<Interval> {
-        if numerator == 0 {
-            return Err(Error::NumeratorInvalid);
-        };
-        if denominator == 0 {
-            return Err(Error::DenominatorInvalid);
-        };
-        let mut i = Interval {
-            numerator: numerator,
-            denominator: denominator,
-            ratio: (numerator as SampleCalc / denominator as SampleCalc),
-            reciprocal: (denominator as SampleCalc / numerator as SampleCalc),
-        };
-        i.simplify();
-        Ok(i)
+        let mut interval = Interval::default();
+        try!(interval.set(numerator, denominator));
+        Ok(interval)
     }
     /// Simplifies the ratio with dividing by the greatest common divisor.
     fn simplify(&mut self) {
@@ -35,6 +35,21 @@ impl Interval {
         let d = self.numerator.gcd(&self.denominator);
         self.numerator /= d;
         self.denominator /= d;
+    }
+    /// Changes the interval.
+    pub fn set(&mut self, numerator: u16, denominator: u16) -> SoundResult<()> {
+        if numerator == 0 {
+            return Err(Error::NumeratorInvalid);
+        };
+        if denominator == 0 {
+            return Err(Error::DenominatorInvalid);
+        };
+        self.numerator = numerator;
+        self.denominator = denominator;
+        self.ratio = numerator as SampleCalc / denominator as SampleCalc;
+        self.reciprocal = denominator as SampleCalc / numerator as SampleCalc;
+        self.simplify();
+        Ok(())
     }
     /// Returns the ratio of the frequency interval.
     pub fn get(&self) -> SampleCalc {

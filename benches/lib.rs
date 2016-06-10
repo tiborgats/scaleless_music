@@ -5,7 +5,6 @@ extern crate music;
 
 use test::Bencher;
 use music::sound::*;
-use music::sound::wave::*;
 use std::rc::Rc;
 
 const BENCH_SAMPLE_RATE: SampleCalc = 192_000.0;
@@ -161,7 +160,7 @@ fn mixer4_note_freqconst_ampdec_overtones4(bencher: &mut Bencher) {
     });
     let note1 = Rc::new(Note::new(BENCH_SAMPLE_RATE, BENCH_BUFFER_SIZE, amplitude.clone(), 4)
         .unwrap());
-    let mut mixer = Mixer::new(BENCH_BUFFER_SIZE).unwrap();
+    let mixer = Mixer::new(BENCH_BUFFER_SIZE).unwrap();
     mixer.add(Interval::new(1, 1).unwrap(), note1.clone(), 2.0)
         .unwrap()
         .add(Interval::new(1, 2).unwrap(), note1.clone(), 3.0)

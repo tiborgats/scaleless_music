@@ -71,6 +71,7 @@ pub trait FrequencyModulator {
 }
 
 /// Vibrato: sinusoidal modulation of the base frequency.
+#[derive(Debug, Copy, Clone)]
 pub struct Vibrato {
     sample_time: SampleCalc,
     /// The speed with which the pitch is varied.

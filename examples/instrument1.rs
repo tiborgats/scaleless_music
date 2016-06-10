@@ -15,7 +15,6 @@ extern crate piston_window;
 extern crate piston;
 
 use music::sound::*;
-use music::sound::wave::*;
 use std::rc::Rc;
 use piston_window::*;
 
@@ -44,9 +43,7 @@ pub struct InstrumentBasic {
 
 impl InstrumentBasic {
     /// Custom constructor
-    pub fn new(sample_rate: SampleCalc,
-               frequency_start: SampleCalc)
-               -> SoundResult<InstrumentBasic> {
+    pub fn new(sample_rate: SampleCalc) -> SoundResult<InstrumentBasic> {
         let frequency1 = Rc::new(try!(FrequencyConst::new(220.0)));
         let amplitude = {
             let overtones_amplitude: Vec<SampleCalc> = vec![10.0, 1.0, 1.0, 0.95, 0.9, 0.9, 0.86,
@@ -64,7 +61,7 @@ impl InstrumentBasic {
             sample_rate: sample_rate,
             note1: note1,
             frequency1: frequency1,
-            frequency1_buffer: vec![frequency_start; BUFFER_SIZE_DEFAULT],
+            frequency1_buffer: vec![1.0; BUFFER_SIZE_DEFAULT],
             time: 0.0,
         })
     }
@@ -126,7 +123,7 @@ impl SoundGenerator<Command> for InstrumentBasic {
 fn main() {
     use music::sound::backend_portaudio::*;
     println!("scaleless_music v{} example", env!("CARGO_PKG_VERSION"));
-    let sound_generator = Box::new(InstrumentBasic::new(48000.0, 440.0)
+    let sound_generator = Box::new(InstrumentBasic::new(48000.0)
         .expect("InstrumentBasic construction shouldn't fail."));
     let mut sound = SoundInterface::new(48000, BUFFER_SIZE_DEFAULT, 2, sound_generator)
         .expect("SoundInterface construction shouldn't fail.");

@@ -2,7 +2,7 @@
 
 name = "music"
 description = "Scaleless music."
-version = "0.0.3"
+version = "0.0.4"
 authors = ["Tibor Gáts <tibor.gats@gmail.com>"]
 readme = "README.md"
 keywords = ["music", "sound", "audio"]

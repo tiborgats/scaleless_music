@@ -8,6 +8,11 @@ pub mod frequency;
 pub mod amplitude;
 /// Fuctions which output complete waveforms.
 pub mod wave;
+/// Rhythm section.
+pub mod rhythm;
+/// Musical note structures.
+pub mod note;
+
 /// [`PortAudio`](https://github.com/RustAudio/rust-portaudio) backend for sound playback.
 #[cfg(feature = "be-portaudio")]
 pub mod backend_portaudio;
@@ -21,6 +26,8 @@ pub use self::interval::Interval;
 pub use self::frequency::*;
 pub use self::amplitude::*;
 pub use self::wave::*;
+pub use self::rhythm::*;
+pub use self::note::*;
 
 /// Precision of the finally produced samples.
 pub type SampleOutput = f32;
@@ -54,18 +61,32 @@ pub const PI2: SampleCalc = ::std::f32::consts::PI * 2.0;
 
 /// Sound sample generator for output (playback). It can also take real-time input (commands),
 /// thus musical instruments can be realized with it.
-pub trait SoundGenerator<T: 'static> {
+pub trait SoundGenerator {
+/// Message type.
+    type Command;
 /// Get the next `sample_count` amount of samples, put them in `result`
     fn get_samples(&mut self, sample_count: usize, result: &mut Vec<SampleCalc>);
 /// Send a message to the `SoundGenerator`.
-    fn process_command(&mut self, _command: T);
+    fn process_command(&mut self, command: Self::Command);
 }
+
 /// A sound component. Can be a simple wave or a complex structure of waves.
 pub trait SoundStructure {
     /// Returns the calculated samples in the `result` buffer.
     fn get(&self,
            time_start: SampleCalc,
-           base_frequency: &[SampleCalc], // &Vec<SampleCalc>,
+           base_frequency: &[SampleCalc],
+           result: &mut [SampleCalc])
+           -> SoundResult<()>;
+}
+
+/// A structure of music.
+pub trait MusicStructure {
+    /// Returns the calculated samples in the `result` buffer.
+    fn get(&self,
+           time_start: SampleCalc,
+           base_frequency: &[SampleCalc],
+           tempo: &[SampleCalc],
            result: &mut [SampleCalc])
            -> SoundResult<()>;
 }

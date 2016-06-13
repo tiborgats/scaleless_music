@@ -40,26 +40,27 @@ impl Wave {
 }
 
 /// A tone with optional overtones and amplitude modulation.
+/// Some examples: https://youtu.be/VRAXK4QKJ1Q?t=25s
 #[derive(Clone)]
-pub struct Note {
+pub struct Timbre {
     waves: RefCell<Vec<Wave>>,
     amplitude_function: Rc<AmplitudeFunctionOvertones>,
     wave_buffer: RefCell<Vec<SampleCalc>>,
     overtone_max: usize,
 }
 
-impl Note {
+impl Timbre {
     /// Custom constructor
     pub fn new(sample_rate: SampleCalc,
                buffer_size: usize,
                amplitude_function: Rc<AmplitudeFunctionOvertones>,
                overtone_max: usize)
-               -> SoundResult<Note> {
+               -> SoundResult<Timbre> {
         let mut wave_vec = Vec::with_capacity(overtone_max + 1);
         for overtone in 0..overtone_max {
             wave_vec.push(try!(Wave::new(sample_rate, overtone)));
         }
-        Ok(Note {
+        Ok(Timbre {
             waves: RefCell::new(wave_vec),
             amplitude_function: amplitude_function,
             wave_buffer: RefCell::new(vec![0.0; buffer_size]),
@@ -69,19 +70,20 @@ impl Note {
     /// Set a new amplitude function
     pub fn set_amplitude(&mut self,
                          amplitude_function: Rc<AmplitudeFunctionOvertones>)
-                         -> &mut Note {
+                         -> &mut Timbre {
         self.amplitude_function = amplitude_function;
         self
     }
 }
 
-impl SoundStructure for Note {
+impl SoundStructure for Timbre {
     fn get(&self,
            time_start: SampleCalc,
            base_frequency: &[SampleCalc],
            result: &mut [SampleCalc])
            -> SoundResult<()> {
-        let buffer_size = self.wave_buffer.borrow().len();
+        let mut wave_buffer = self.wave_buffer.borrow_mut();
+        let buffer_size = wave_buffer.len();
         if base_frequency.len() != buffer_size {
             return Err(Error::BufferSize);
         }
@@ -92,11 +94,11 @@ impl SoundStructure for Note {
             *item = 0.0;
         }
         for (overtone, wave) in self.waves.borrow_mut().iter_mut().enumerate() {
-            try!(wave.get(base_frequency, &mut self.wave_buffer.borrow_mut()));
+            try!(wave.get(base_frequency, &mut wave_buffer));
             try!(self.amplitude_function
-                .apply(time_start, overtone, &mut self.wave_buffer.borrow_mut()));
+                .apply(time_start, overtone, &mut wave_buffer));
             for (item, wave) in result.iter_mut()
-                .zip(self.wave_buffer.borrow().iter()) {
+                .zip(wave_buffer.iter()) {
                 *item += *wave;
             }
         }
@@ -113,8 +115,8 @@ struct MixerChannel {
     sound: Rc<SoundStructure>,
     volume_relative: SampleCalc,
     volume_normalized: SampleCalc,
-    frequency_buffer: RefCell<Vec<SampleCalc>>,
-    wave_buffer: RefCell<Vec<SampleCalc>>,
+    frequency_buffer: Vec<SampleCalc>,
+    wave_buffer: Vec<SampleCalc>,
 }
 
 /// Mixes sound channels (structures).
@@ -147,8 +149,8 @@ impl Mixer {
             sound: sound,
             volume_relative: volume,
             volume_normalized: 0.0,
-            frequency_buffer: RefCell::new(vec![1.0; self.buffer_size]),
-            wave_buffer: RefCell::new(vec![0.0; self.buffer_size]),
+            frequency_buffer: vec![1.0; self.buffer_size],
+            wave_buffer: vec![0.0; self.buffer_size],
         };
         self.channels.borrow_mut().push(channel);
         self.normalize();
@@ -159,7 +161,8 @@ impl Mixer {
     /// is greater than 1.0
     fn normalize(&self) {
         let mut volume_sum: SampleCalc = 0.0;
-        for channel in self.channels.borrow().iter() {
+        let mut channels = self.channels.borrow_mut();
+        for channel in channels.iter() {
             volume_sum += channel.volume_relative;
         }
         let volume_multiplier = if volume_sum < 1.0 {
@@ -167,7 +170,7 @@ impl Mixer {
         } else {
             1.0 / volume_sum
         };
-        for channel in self.channels.borrow_mut().iter_mut() {
+        for channel in channels.iter_mut() {
             channel.volume_normalized = channel.volume_relative * volume_multiplier;
         }
     }
@@ -209,13 +212,13 @@ impl SoundStructure for Mixer {
         for item in result.iter_mut() {
             *item = 0.0;
         }
-        for channel in self.channels.borrow().iter() {
+        for channel in self.channels.borrow_mut().iter_mut() {
             try!(channel.interval
-                .transpose(base_frequency, &mut channel.frequency_buffer.borrow_mut()));
+                .transpose(base_frequency, &mut channel.frequency_buffer));
             try!(channel.sound.get(time_start,
-                                   &channel.frequency_buffer.borrow(),
-                                   &mut channel.wave_buffer.borrow_mut()));
-            for (item, wave) in result.iter_mut().zip(channel.wave_buffer.borrow().iter()) {
+                                   &channel.frequency_buffer,
+                                   &mut channel.wave_buffer));
+            for (item, wave) in result.iter_mut().zip(channel.wave_buffer.iter()) {
                 *item += *wave * channel.volume_normalized;
             }
         }

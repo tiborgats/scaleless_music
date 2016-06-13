@@ -2,9 +2,9 @@
 //! The tone is a very simple function (nothing like a real instrument). It's purpose is
 //! only the testing of some intervals.
 //!
-//! The keys from [Q] to [O] changes the frequency to be higher,
-//! the keys from [A] to [L] changes the frequency to be lower.
-/// Other keys play the previous frequency. To quit press [Esc].
+//! The keys from <kbd>Q</kbd> to <kbd>O</kbd> changes the frequency to be higher,
+//! the keys from <kbd>A</kbd> to <kbd>L</kbd> changes the frequency to be lower.
+/// Other keys play the previous frequency. To quit press <kbd>Esc</kbd>.
 
 extern crate music;
 extern crate rayon;
@@ -19,7 +19,7 @@ use std::rc::Rc;
 use piston_window::*;
 
 /// Commands of the messages from the UI thread to the playback thread.
-pub enum Command {
+pub enum GeneratorCommand {
     /// Mute
     Mute,
     /// Keyboard event
@@ -35,7 +35,7 @@ pub enum Command {
 
 pub struct InstrumentBasic {
     sample_rate: SampleCalc,
-    note1: Note,
+    timbre1: Timbre,
     frequency1: Rc<FrequencyConst>,
     frequency1_buffer: Vec<SampleCalc>,
     time: SampleCalc,
@@ -56,10 +56,10 @@ impl InstrumentBasic {
                                                  overtones_amplitude,
                                                  overtones_dec_rate))
         };
-        let note1 = try!(Note::new(sample_rate, BUFFER_SIZE_DEFAULT, Rc::new(amplitude), 4));
+        let timbre1 = try!(Timbre::new(sample_rate, BUFFER_SIZE_DEFAULT, Rc::new(amplitude), 4));
         Ok(InstrumentBasic {
             sample_rate: sample_rate,
-            note1: note1,
+            timbre1: timbre1,
             frequency1: frequency1,
             frequency1_buffer: vec![1.0; BUFFER_SIZE_DEFAULT],
             time: 0.0,
@@ -77,16 +77,18 @@ impl InstrumentBasic {
     }
 }
 // TODO: -unwrap()
-impl SoundGenerator<Command> for InstrumentBasic {
+impl SoundGenerator for InstrumentBasic {
+    type Command = GeneratorCommand;
+
     fn get_samples(&mut self, sample_count: usize, result: &mut Vec<SampleCalc>) {
         self.frequency1.get(self.time, None, &mut self.frequency1_buffer).unwrap();
-        self.note1.get(self.time, &self.frequency1_buffer, result).unwrap();
+        self.timbre1.get(self.time, &self.frequency1_buffer, result).unwrap();
         self.time += sample_count as SampleCalc / self.sample_rate;
     }
 
-    fn process_command(&mut self, command: Command) {
+    fn process_command(&mut self, command: GeneratorCommand) {
         match command {
-            Command::Keypress { key } => {
+            GeneratorCommand::Keypress { key } => {
                 let _ = match key {
                     Key::Q => self.change_frequency(7, 6),
                     Key::W => self.change_frequency(6, 5),
@@ -110,10 +112,10 @@ impl SoundGenerator<Command> for InstrumentBasic {
                     _ => self.change_frequency(1, 1),
                 };
             }
-            Command::Mute => {
+            GeneratorCommand::Mute => {
                 let _ = self.change_frequency(1, 1);
             }
-            Command::FrequencyMultiple { numerator, denominator } => {
+            GeneratorCommand::FrequencyMultiple { numerator, denominator } => {
                 let _ = self.change_frequency(numerator, denominator);
             }
         }
@@ -141,7 +143,7 @@ fn main() {
     while let Some(event) = window.next() {
         if let Some(button) = event.press_args() {
             if let Button::Keyboard(key) = button {
-                sound.send_command(Command::Keypress { key: key })
+                sound.send_command(GeneratorCommand::Keypress { key: key })
                     .expect("send_command failed.");
             } else {
                 println!("Pressed {:?}", button);

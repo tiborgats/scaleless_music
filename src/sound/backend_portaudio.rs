@@ -28,7 +28,7 @@ impl<'a, T> SoundInterface<'a, T> {
     pub fn new(sample_rate: u32,
                buffer_size: usize,
                channel_count: u16,
-               mut generator: Box<SoundGenerator<T>>)
+               mut generator: Box<SoundGenerator<Command = T>>)
                -> BackendResult<SoundInterface<'a, T>> {
         println!("PortAudio version : {}", pa::version());
         println!("PortAudio version text : {:?}", pa::version_text());

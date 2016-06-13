@@ -15,7 +15,7 @@ use std::rc::Rc;
 use piston_window::*;
 
 /// Commands of the messages from the UI thread to the playback thread.
-pub enum Command {
+pub enum GeneratorCommand {
     /// Mute
     Mute,
     /// Keyboard event
@@ -52,19 +52,19 @@ impl InstrumentBasic {
                                                  overtones_amplitude,
                                                  overtones_dec_rate))
         };
-        let note1 =
-            Rc::new(try!(Note::new(sample_rate, BUFFER_SIZE_DEFAULT, Rc::new(amplitude), 4)));
+        let timbre1 =
+            Rc::new(try!(Timbre::new(sample_rate, BUFFER_SIZE_DEFAULT, Rc::new(amplitude), 4)));
         let amplitude = {
             let overtones_amplitude: Vec<SampleCalc> = vec![1.0, 0.1, 0.1, 0.1, 0.2, 0.5, 0.1,
                                                             0.1, 0.1, 0.1, 0.1, 0.1, 0.1, 0.1,
                                                             0.1, 0.1, 0.1, 0.1, 0.1, 0.1];
             try!(AmplitudeConstOvertones::new(overtones_amplitude))
         };
-        let note2 =
-            Rc::new(try!(Note::new(sample_rate, BUFFER_SIZE_DEFAULT, Rc::new(amplitude), 4)));
+        let timbre2 =
+            Rc::new(try!(Timbre::new(sample_rate, BUFFER_SIZE_DEFAULT, Rc::new(amplitude), 4)));
         let mixer = Rc::new(try!(Mixer::new(BUFFER_SIZE_DEFAULT)));
-        try!(mixer.add(try!(Interval::new(1, 1)), note1, 4.0));
-        try!(mixer.add(try!(Interval::new(1, 1)), note2, 1.0));
+        try!(mixer.add(try!(Interval::new(1, 1)), timbre1, 4.0));
+        try!(mixer.add(try!(Interval::new(1, 1)), timbre2, 1.0));
 
         Ok(InstrumentBasic {
             sample_rate: sample_rate,
@@ -86,16 +86,18 @@ impl InstrumentBasic {
     }
 }
 // TODO: -unwrap()
-impl SoundGenerator<Command> for InstrumentBasic {
+impl SoundGenerator for InstrumentBasic {
+    type Command = GeneratorCommand;
+
     fn get_samples(&mut self, sample_count: usize, result: &mut Vec<SampleCalc>) {
         self.frequency1.get(self.time, None, &mut self.frequency1_buffer).unwrap();
         self.mixer.get(self.time, &self.frequency1_buffer, result).unwrap();
         self.time += sample_count as SampleCalc / self.sample_rate;
     }
 
-    fn process_command(&mut self, command: Command) {
+    fn process_command(&mut self, command: GeneratorCommand) {
         match command {
-            Command::Keypress { key } => {
+            GeneratorCommand::Keypress { key } => {
                 let _ = match key {
                     Key::Q => self.change_frequency(1, 2),
                     Key::W => self.change_frequency(3, 2),
@@ -119,10 +121,10 @@ impl SoundGenerator<Command> for InstrumentBasic {
                     _ => self.change_frequency(1, 1),
                 };
             }
-            Command::Mute => {
+            GeneratorCommand::Mute => {
                 let _ = self.change_frequency(1, 1);
             }
-            Command::FrequencyMultiple { numerator, denominator } => {
+            GeneratorCommand::FrequencyMultiple { numerator, denominator } => {
                 let _ = self.change_frequency(numerator, denominator);
             }
         }
@@ -151,7 +153,7 @@ fn main() {
     while let Some(event) = window.next() {
         if let Some(button) = event.press_args() {
             if let Button::Keyboard(key) = button {
-                sound.send_command(Command::Keypress { key: key })
+                sound.send_command(GeneratorCommand::Keypress { key: key })
                     .expect("send_command failed.");
             } else {
                 println!("Pressed {:?}", button);

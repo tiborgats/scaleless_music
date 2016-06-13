@@ -1,6 +1,7 @@
 use sound::*;
-// use std::cell::Cell;
+use num::num_integer::*;
 use std::fmt;
+use std::ops::{Div, Mul};
 
 /// Harmonic musical interval, represented by a rational number.
 #[derive(Debug, Copy, Clone)]
@@ -29,13 +30,14 @@ impl Interval {
         try!(interval.set(numerator, denominator));
         Ok(interval)
     }
-    /// Simplifies the ratio with dividing by the greatest common divisor.
-    fn simplify(&mut self) {
-        use num::*;
+
+    /// Reduces to lowest terms with dividing by the greatest common divisor.
+    fn reduce(&mut self) {
         let d = self.numerator.gcd(&self.denominator);
         self.numerator /= d;
         self.denominator /= d;
     }
+
     /// Changes the interval.
     pub fn set(&mut self, numerator: u16, denominator: u16) -> SoundResult<()> {
         if numerator == 0 {
@@ -48,17 +50,20 @@ impl Interval {
         self.denominator = denominator;
         self.ratio = numerator as SampleCalc / denominator as SampleCalc;
         self.reciprocal = denominator as SampleCalc / numerator as SampleCalc;
-        self.simplify();
+        self.reduce();
         Ok(())
     }
+
     /// Returns the ratio of the frequency interval.
     pub fn get(&self) -> SampleCalc {
         self.ratio
     }
+
     /// True, if the interval is `1:1`, aka. unison.
     pub fn is_unison(&self) -> bool {
         self.numerator == self.denominator
     }
+
     /// Gives the common name of the interval (if there is any).
     pub fn get_name(&self) -> &str {
         let ratio = if self.numerator > self.denominator {
@@ -102,6 +107,7 @@ impl Interval {
             _ => "",
         }
     }
+
     /// Change a frequency according to the interval.
     pub fn change_frequency(&self, frequency: SampleCalc) -> SoundResult<SampleCalc> {
         let new_frequency = frequency * self.ratio;
@@ -113,6 +119,7 @@ impl Interval {
         };
         Ok(new_frequency)
     }
+
     /// Change a frequency according to the interval's reciprocal.
     pub fn reverse_frequency(&self, frequency: SampleCalc) -> SoundResult<SampleCalc> {
         let new_frequency = frequency * self.reciprocal;
@@ -124,6 +131,7 @@ impl Interval {
         };
         Ok(new_frequency)
     }
+
     /// Change a frequency according to the interval.
     pub fn transpose(&self,
                      base_frequency: &[SampleCalc],
@@ -142,6 +150,34 @@ impl Interval {
             };
         }
         Ok(())
+    }
+}
+
+impl Mul for Interval {
+    type Output = Interval;
+
+    fn mul(self, rhs: Interval) -> Interval {
+        let mut interval = Interval::default();
+        interval.numerator = self.numerator * rhs.numerator;
+        interval.denominator = self.denominator * rhs.denominator;
+        interval.reduce();
+        interval.ratio = interval.numerator as SampleCalc / interval.denominator as SampleCalc;
+        interval.reciprocal = interval.denominator as SampleCalc / interval.numerator as SampleCalc;
+        interval
+    }
+}
+
+impl Div for Interval {
+    type Output = Interval;
+
+    fn div(self, rhs: Interval) -> Interval {
+        let mut interval = Interval::default();
+        interval.numerator = self.numerator * rhs.denominator;
+        interval.denominator = self.denominator * rhs.numerator;
+        interval.reduce();
+        interval.ratio = interval.numerator as SampleCalc / interval.denominator as SampleCalc;
+        interval.reciprocal = interval.denominator as SampleCalc / interval.numerator as SampleCalc;
+        interval
     }
 }
 

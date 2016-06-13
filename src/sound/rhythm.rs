@@ -3,6 +3,14 @@ use num::num_integer::*;
 use std::ops::Add;
 use std::fmt;
 
+/// The `Rhythm` trait is used to specify the functionality of rhythmic time syncronization.
+pub trait Rhythm {
+    /// Sets the actual tempo base.
+    fn set_tempo(&self, tempo: Tempo) -> SoundResult<()>;
+    /// Sets the ratio of the timing compared to the tempo beat duration.
+    fn set_note_value(&self, note_value: NoteValue);
+}
+
 /// The speed of the music. See also: [Tempo](https://en.wikipedia.org/wiki/Tempo)
 #[derive(Debug, Copy, Clone)]
 pub struct Tempo {

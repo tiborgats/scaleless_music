@@ -36,6 +36,8 @@ pub enum Error {
     PeriodInvalid,
     /// Channel of the given number does not exist.
     ChannelInvalid,
+    /// Beats per minute must be positive
+    TempoInvalid,
 }
 
 impl fmt::Display for Error {
@@ -63,6 +65,7 @@ impl error::Error for Error {
             AmplitudeRateInvalid => "invalid amplitude decay rate",
             PeriodInvalid => "invalid period",
             ChannelInvalid => "invalid channel",
+            TempoInvalid => "beats per minute must be positive",
         }
     }
 

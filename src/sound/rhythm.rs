@@ -11,7 +11,13 @@ pub trait Rhythm {
     fn set_note_value(&self, note_value: NoteValue);
 }
 
-/// The speed of the music. See also: [Tempo](https://en.wikipedia.org/wiki/Tempo)
+/// The `TempoProvider` trait is used to provide tempo.
+pub trait TempoProvider {
+    /// Returns the beat duration for each sample in the `result` buffer.
+    fn get_beat_duration(&self, time_start: SampleCalc, result: &mut [SampleCalc]);
+}
+
+/// Constant speed of the music. See also: [Tempo](https://en.wikipedia.org/wiki/Tempo)
 #[derive(Debug, Copy, Clone)]
 pub struct Tempo {
     beats_per_minute: SampleCalc,
@@ -72,6 +78,62 @@ impl Tempo {
     }
 }
 
+impl TempoProvider for Tempo {
+    fn get_beat_duration(&self, _time_start: SampleCalc, result: &mut [SampleCalc]) {
+        for item in result {
+            *item = self.beat_duration;
+        }
+    }
+}
+
+/// Linearly changing speed of the music.
+#[derive(Debug, Copy, Clone)]
+pub struct TempoChangeLinear {
+    sample_time: SampleCalc,
+    tempo_start: Tempo,
+    tempo_end: Tempo,
+    duration: SampleCalc,
+    duration_change_rate: SampleCalc,
+}
+
+impl TempoChangeLinear {
+    /// custom constructor
+    pub fn new(sample_rate: SampleCalc,
+               tempo_start: Tempo,
+               tempo_end: Tempo,
+               duration: SampleCalc)
+               -> SoundResult<TempoChangeLinear> {
+        let sample_time = try!(get_sample_time(sample_rate));
+        let duration_change_rate = (tempo_end.beat_duration - tempo_start.beat_duration) / duration;
+        Ok(TempoChangeLinear {
+            sample_time: sample_time,
+            tempo_start: tempo_start,
+            tempo_end: tempo_end,
+            duration: duration,
+            duration_change_rate: duration_change_rate,
+        })
+    }
+    /// Sets duration calculated from the given note value.
+    pub fn set_note_value(&mut self, note_value: NoteValue) {
+        let beat_mean = (self.tempo_start.beat_duration + self.tempo_end.beat_duration) * 0.5;
+        self.duration = note_value.get_duration_in_beats() * beat_mean;
+    }
+}
+
+impl TempoProvider for TempoChangeLinear {
+    fn get_beat_duration(&self, time_start: SampleCalc, result: &mut [SampleCalc]) {
+        for (index, item) in result.iter_mut().enumerate() {
+            let time = (index as SampleCalc * self.sample_time) + time_start;
+            *item = if time < self.duration {
+                self.tempo_start.beat_duration + (time * self.duration_change_rate)
+            } else if time < 0.0 {
+                self.tempo_start.beat_duration
+            } else {
+                self.tempo_end.beat_duration
+            }
+        }
+    }
+}
 
 /// The duration of a note relative to the duration of a beat.
 /// See also: [Note value](https://en.wikipedia.org/wiki/Note_value)
@@ -79,7 +141,8 @@ impl Tempo {
 pub struct NoteValue {
     numerator: u16,
     denominator: u16,
-    ratio: SampleCalc,
+    duration_in_beats: SampleCalc,
+    notes_per_beat: SampleCalc,
 }
 
 impl Default for NoteValue {
@@ -87,7 +150,8 @@ impl Default for NoteValue {
         NoteValue {
             numerator: 1,
             denominator: 1,
-            ratio: 1.0,
+            duration_in_beats: 1.0,
+            notes_per_beat: 1.0,
         }
     }
 }
@@ -117,10 +181,20 @@ impl NoteValue {
         };
         self.numerator = numerator;
         self.denominator = denominator;
-        self.ratio = numerator as SampleCalc / denominator as SampleCalc;
-        // self.reciprocal = denominator as SampleCalc / numerator as SampleCalc;
+        self.duration_in_beats = numerator as SampleCalc / denominator as SampleCalc;
+        self.notes_per_beat = denominator as SampleCalc / numerator as SampleCalc;
         self.reduce();
         Ok(())
+    }
+
+    /// Provides the number of notes per beat.
+    pub fn get_notes_per_beat(&self) -> SampleCalc {
+        self.notes_per_beat
+    }
+
+    /// Provides the duration measured in beats.
+    pub fn get_duration_in_beats(&self) -> SampleCalc {
+        self.duration_in_beats
     }
 }
 
@@ -134,14 +208,15 @@ impl Add for NoteValue {
         NoteValue {
             numerator: n,
             denominator: d,
-            ratio: n as SampleCalc / d as SampleCalc,
+            duration_in_beats: n as SampleCalc / d as SampleCalc,
+            notes_per_beat: d as SampleCalc / n as SampleCalc,
         }
     }
 }
 
 impl From<NoteValue> for SampleCalc {
     fn from(note_value: NoteValue) -> Self {
-        note_value.ratio
+        note_value.duration_in_beats
     }
 }
 

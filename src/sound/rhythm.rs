@@ -15,20 +15,22 @@ pub trait Rhythm {
 pub trait TempoProvider {
     /// Returns the beat duration for each sample in the `result` buffer.
     fn get_beat_duration(&self, time_start: SampleCalc, result: &mut [SampleCalc]);
+    ///
+    fn get_beats_per_second(&self, time_start: SampleCalc, result: &mut [SampleCalc]);
 }
 
 /// Constant speed of the music. See also: [Tempo](https://en.wikipedia.org/wiki/Tempo)
 #[derive(Debug, Copy, Clone)]
 pub struct Tempo {
-    beats_per_minute: SampleCalc,
+    beats_per_second: SampleCalc,
     beat_duration: SampleCalc,
 }
 
 impl Default for Tempo {
-    /// The default value is 120bpm (= allegretto)
+    /// The default value is 120 beats per minute (= allegretto)
     fn default() -> Tempo {
         Tempo {
-            beats_per_minute: 120.0,
+            beats_per_second: 2.0,
             beat_duration: 0.5,
         }
     }
@@ -42,7 +44,7 @@ impl Tempo {
         };
         let beat_duration = 60.0 / beats_per_minute;
         Ok(Tempo {
-            beats_per_minute: beats_per_minute,
+            beats_per_second: beats_per_minute / 60.0,
             beat_duration: beat_duration,
         })
     }
@@ -52,7 +54,7 @@ impl Tempo {
         if beats_per_minute <= 0.0 {
             return Err(Error::TempoInvalid);
         };
-        self.beats_per_minute = beats_per_minute;
+        self.beats_per_second = beats_per_minute / 60.0;
         self.beat_duration = 60.0 / beats_per_minute;
         Ok(())
     }
@@ -63,7 +65,7 @@ impl Tempo {
             return Err(Error::TempoInvalid);
         };
         self.beat_duration = beat_duration;
-        self.beats_per_minute = 60.0 / beat_duration;
+        self.beats_per_second = 1.0 / beat_duration;
         Ok(())
     }
 
@@ -74,7 +76,7 @@ impl Tempo {
 
     /// Returns the number of beats per minute.
     pub fn get_bpm(&self) -> SampleCalc {
-        self.beats_per_minute
+        self.beats_per_second * 60.0
     }
 }
 
@@ -82,6 +84,12 @@ impl TempoProvider for Tempo {
     fn get_beat_duration(&self, _time_start: SampleCalc, result: &mut [SampleCalc]) {
         for item in result {
             *item = self.beat_duration;
+        }
+    }
+
+    fn get_beats_per_second(&self, _time_start: SampleCalc, result: &mut [SampleCalc]) {
+        for item in result {
+            *item = self.beats_per_second;
         }
     }
 }
@@ -93,9 +101,12 @@ pub struct TempoChangeLinear {
     tempo_start: Tempo,
     tempo_end: Tempo,
     duration: SampleCalc,
-    duration_change_rate: SampleCalc,
+    /// positive for slowing down tempo, negative for speeding up
+    beat_duration_change_rate: SampleCalc,
+    /// negative for slowing down tempo, positive for speeding up
+    bps_change_rate: SampleCalc,
 }
-
+// TODO: build pattern for the possibility to use different input variable combinations
 impl TempoChangeLinear {
     /// custom constructor
     pub fn new(sample_rate: SampleCalc,
@@ -104,19 +115,25 @@ impl TempoChangeLinear {
                duration: SampleCalc)
                -> SoundResult<TempoChangeLinear> {
         let sample_time = try!(get_sample_time(sample_rate));
-        let duration_change_rate = (tempo_end.beat_duration - tempo_start.beat_duration) / duration;
+        let beat_duration_change_rate = (tempo_end.beat_duration - tempo_start.beat_duration) /
+                                        duration;
+        let bps_change_rate = -1.0 / beat_duration_change_rate;
         Ok(TempoChangeLinear {
             sample_time: sample_time,
             tempo_start: tempo_start,
             tempo_end: tempo_end,
             duration: duration,
-            duration_change_rate: duration_change_rate,
+            beat_duration_change_rate: beat_duration_change_rate,
+            bps_change_rate: bps_change_rate,
         })
     }
     /// Sets duration calculated from the given note value.
     pub fn set_note_value(&mut self, note_value: NoteValue) {
         let beat_mean = (self.tempo_start.beat_duration + self.tempo_end.beat_duration) * 0.5;
         self.duration = note_value.get_duration_in_beats() * beat_mean;
+        self.beat_duration_change_rate =
+            (self.tempo_end.beat_duration - self.tempo_start.beat_duration) / self.duration;
+        self.bps_change_rate = -1.0 / self.beat_duration_change_rate;
     }
 }
 
@@ -125,11 +142,24 @@ impl TempoProvider for TempoChangeLinear {
         for (index, item) in result.iter_mut().enumerate() {
             let time = (index as SampleCalc * self.sample_time) + time_start;
             *item = if time < self.duration {
-                self.tempo_start.beat_duration + (time * self.duration_change_rate)
+                self.tempo_start.beat_duration + (time * self.beat_duration_change_rate)
             } else if time < 0.0 {
                 self.tempo_start.beat_duration
             } else {
                 self.tempo_end.beat_duration
+            }
+        }
+    }
+
+    fn get_beats_per_second(&self, time_start: SampleCalc, result: &mut [SampleCalc]) {
+        for (index, item) in result.iter_mut().enumerate() {
+            let time = (index as SampleCalc * self.sample_time) + time_start;
+            *item = if time < self.duration {
+                self.tempo_start.beats_per_second + (time * self.bps_change_rate)
+            } else if time < 0.0 {
+                self.tempo_start.beats_per_second
+            } else {
+                self.tempo_end.beats_per_second
             }
         }
     }

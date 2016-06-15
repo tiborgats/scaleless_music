@@ -37,15 +37,17 @@ fn freqconst(bencher: &mut Bencher) {
 // FrequencyConst + Vibrato
 #[bench]
 fn freqconst_vibrato(bencher: &mut Bencher) {
+    let mut tempo_buffer: Vec<SampleCalc> = vec![0.0; BENCH_BUFFER_SIZE];
     let mut frequency_buffer: Vec<SampleCalc> = vec![440.0; BENCH_BUFFER_SIZE];
-    let mut time: SampleCalc = 0.0;
+    let tempo = Tempo::new(120.0).unwrap();
+    tempo.get_beats_per_second(0.0, &mut tempo_buffer);
     let frequency = FrequencyConst::new(440.0).unwrap();
-    let vibrato = Vibrato::new(BENCH_SAMPLE_RATE, 4.0, 1.125).unwrap();
+    let mut vibrato = Vibrato::new(BENCH_SAMPLE_RATE, NoteValue::new(1, 4).unwrap(), 1.125)
+        .unwrap();
 
     bencher.iter(|| {
         frequency.get(0.0, None, &mut frequency_buffer).unwrap();
-        vibrato.apply(time, &mut frequency_buffer).unwrap();
-        time += BENCH_BUFFER_TIME;
+        vibrato.apply(&tempo_buffer, &mut frequency_buffer).unwrap();
     });
 }
 
@@ -55,7 +57,7 @@ fn tremolo(bencher: &mut Bencher) {
     let mut amplitude_buffer: Vec<SampleCalc> = vec![0.0; BENCH_BUFFER_SIZE];
     let tempo = Tempo::new(120.0).unwrap();
     tempo.get_beats_per_second(0.0, &mut tempo_buffer);
-    let mut amplitude_rhythm = Tremolo::new(BENCH_SAMPLE_RATE, NoteValue::new(1, 4).unwrap(), 1.1)
+    let mut amplitude_rhythm = Tremolo::new(BENCH_SAMPLE_RATE, NoteValue::new(1, 4).unwrap(), 1.2)
         .unwrap();
 
     bencher.iter(|| {

@@ -58,71 +58,87 @@ pub struct FrequencyChangeLinear {
     time: SampleCalc,
 }
 
-/// Input and output definition for the frequency functions.
+/// Provides rhythmic frequency changes. As phase depends on the integral of tempo, only
+/// sequential reading is possible (cannot be parallelized).
 pub trait FrequencyModulator {
     /// Provides the results of the modulation of an array of frequencies.
-    fn get(&self,
-           time_start: SampleCalc,
+    /// Tempo is given in beats per second.
+    fn get(&mut self,
+           tempo: &[SampleCalc],
            base_frequency: &[SampleCalc],
            result: &mut [SampleCalc])
            -> SoundResult<()>;
-    /// Applies the modulation on an already existing array of frequencies.
-    fn apply(&self, time_start: SampleCalc, samples: &mut [SampleCalc]) -> SoundResult<()>;
+    /// Applies the modulation on an already existing array of frequencies. It multiplies
+    /// each sample with it's new amplitude. Tempo is given in beats per second.
+    fn apply(&mut self, tempo: &[SampleCalc], samples: &mut [SampleCalc]) -> SoundResult<()>;
 }
 
 /// Vibrato: sinusoidal modulation of the base frequency.
 #[derive(Debug, Copy, Clone)]
 pub struct Vibrato {
     sample_time: SampleCalc,
-    /// The speed with which the pitch is varied.
-    rate: SampleCalc,
+    /// The (tempo relative) speed with which the amplitude is varied.
+    note_value: NoteValue,
     /// The ratio of maximum shift away from the base frequency (must be > 0.0).
     extent_ratio: SampleCalc,
+    /// The phase of the sine function.
+    phase: SampleCalc,
 }
+
 impl Vibrato {
     /// custom constructor
     pub fn new(sample_rate: SampleCalc,
-               rate: SampleCalc,
+               note_value: NoteValue,
                extent_ratio: SampleCalc)
                -> SoundResult<Vibrato> {
         let sample_time = try!(get_sample_time(sample_rate));
-        if rate <= 0.0 {
-            return Err(Error::PeriodInvalid);
-        }
         if extent_ratio <= 0.0 {
             return Err(Error::FrequencyTooLow);
         }
         Ok(Vibrato {
             sample_time: sample_time,
-            rate: rate,
+            note_value: note_value,
             extent_ratio: extent_ratio,
+            phase: 0.0,
         })
+    }
+
+    /// Sets a new phase value.
+    pub fn set_phase(&mut self, phase: SampleCalc) -> SoundResult<()> {
+        self.phase = phase % PI2;
+        Ok(())
     }
 }
 
 impl FrequencyModulator for Vibrato {
-    fn get(&self,
-           time_start: SampleCalc,
+    fn get(&mut self,
+           tempo: &[SampleCalc],
            base_frequency: &[SampleCalc],
            result: &mut [SampleCalc])
            -> SoundResult<()> {
         if base_frequency.len() != result.len() {
             return Err(Error::BufferSize);
         }
-        let rate_in_rad = self.rate * PI2;
-        for ((index, item), frequency) in result.iter_mut().enumerate().zip(base_frequency) {
-            let time = (index as SampleCalc * self.sample_time) + time_start;
-            *item = *frequency * (self.extent_ratio.powf((time * rate_in_rad).sin()));
+
+        let phase_change = self.sample_time * self.note_value.get_notes_per_beat() * PI2;
+        for ((item, frequency), beats_per_second) in result.iter_mut()
+            .zip(base_frequency)
+            .zip(tempo) {
+            self.phase += phase_change * beats_per_second;
+            *item = *frequency * (self.extent_ratio.powf(self.phase.sin()));
         }
+        self.phase %= PI2;
         Ok(())
     }
 
-    fn apply(&self, time_start: SampleCalc, samples: &mut [SampleCalc]) -> SoundResult<()> {
-        let rate_in_rad = self.rate * PI2;
-        for (index, item) in samples.iter_mut().enumerate() {
-            let time = (index as SampleCalc * self.sample_time) + time_start;
-            *item *= self.extent_ratio.powf((time * rate_in_rad).sin());
+    fn apply(&mut self, tempo: &[SampleCalc], samples: &mut [SampleCalc]) -> SoundResult<()> {
+        let phase_change = self.sample_time * self.note_value.get_notes_per_beat() * PI2;
+        for (item, beats_per_second) in samples.iter_mut()
+            .zip(tempo) {
+            self.phase += phase_change * beats_per_second;
+            *item *= self.extent_ratio.powf(self.phase.sin());
         }
+        self.phase %= PI2;
         Ok(())
     }
 }

@@ -61,7 +61,7 @@ fn tremolo(bencher: &mut Bencher) {
         .unwrap();
 
     bencher.iter(|| {
-        amplitude_rhythm.get(&tempo_buffer, &mut amplitude_buffer);
+        amplitude_rhythm.get(&tempo_buffer, &mut amplitude_buffer).unwrap();
     });
 }
 

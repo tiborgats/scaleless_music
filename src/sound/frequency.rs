@@ -83,6 +83,7 @@ pub struct Vibrato {
     extent_ratio: SampleCalc,
     /// The phase of the sine function.
     phase: SampleCalc,
+    phase_change: SampleCalc,
 }
 
 impl Vibrato {
@@ -95,11 +96,13 @@ impl Vibrato {
         if extent_ratio <= 0.0 {
             return Err(Error::FrequencyTooLow);
         }
+        let phase_change = sample_time * note_value.get_notes_per_beat() * PI2;
         Ok(Vibrato {
             sample_time: sample_time,
             note_value: note_value,
             extent_ratio: extent_ratio,
             phase: 0.0,
+            phase_change: phase_change,
         })
     }
 
@@ -116,15 +119,16 @@ impl FrequencyModulator for Vibrato {
            base_frequency: &[SampleCalc],
            result: &mut [SampleCalc])
            -> SoundResult<()> {
+        if tempo.len() != result.len() {
+            return Err(Error::BufferSize);
+        }
         if base_frequency.len() != result.len() {
             return Err(Error::BufferSize);
         }
-
-        let phase_change = self.sample_time * self.note_value.get_notes_per_beat() * PI2;
         for ((item, frequency), beats_per_second) in result.iter_mut()
             .zip(base_frequency)
             .zip(tempo) {
-            self.phase += phase_change * beats_per_second;
+            self.phase += self.phase_change * beats_per_second;
             *item = *frequency * (self.extent_ratio.powf(self.phase.sin()));
         }
         self.phase %= PI2;
@@ -132,10 +136,11 @@ impl FrequencyModulator for Vibrato {
     }
 
     fn apply(&mut self, tempo: &[SampleCalc], samples: &mut [SampleCalc]) -> SoundResult<()> {
-        let phase_change = self.sample_time * self.note_value.get_notes_per_beat() * PI2;
-        for (item, beats_per_second) in samples.iter_mut()
-            .zip(tempo) {
-            self.phase += phase_change * beats_per_second;
+        if tempo.len() != samples.len() {
+            return Err(Error::BufferSize);
+        }
+        for (item, beats_per_second) in samples.iter_mut().zip(tempo) {
+            self.phase += self.phase_change * beats_per_second;
             *item *= self.extent_ratio.powf(self.phase.sin());
         }
         self.phase %= PI2;

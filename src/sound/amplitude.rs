@@ -5,9 +5,21 @@ use sound::*;
 pub trait AmplitudeFunction {
     /// Provides the results of the amplitude calculations.
     fn get(&self, time_start: SampleCalc, result: &mut [SampleCalc]) -> SoundResult<()>;
-    /// Applies the amplitude function over an existing sample.
+    /// Applies the amplitude function over an existing sample. It multiplies each sample with
+    /// it's new amplitude.
     fn apply(&self, time_start: SampleCalc, samples: &mut [SampleCalc]) -> SoundResult<()>;
 }
+
+/// Provides rhythmic amlitude changes. As phase depends on the integral of tempo, only sequential
+/// reading is possible (cannot be parallelized).
+pub trait AmplitudeRhythm {
+    /// Provides the results of the amplitude calculations. Tempo is given in beats per second.
+    fn get(&mut self, tempo: &[SampleCalc], result: &mut [SampleCalc]) -> SoundResult<()>;
+    /// Applies the amplitude function over already existing samples. It multiplies each sample
+    /// with it's new amplitude. Tempo is given in beats per second.
+    fn apply(&mut self, tempo: &[SampleCalc], samples: &mut [SampleCalc]) -> SoundResult<()>;
+}
+
 
 /// Linearly increasing amplitude.
 #[derive(Debug, Copy, Clone)]
@@ -107,64 +119,67 @@ impl AmplitudeFunction for FadeOutLinear {
     }
 }
 
-/// Sinusoidal variation in amplitude.
+/// [tremolo](https://en.wikipedia.org/wiki/Tremolo), as sine variation of the amplitude.
 #[derive(Debug, Copy, Clone)]
 pub struct Tremolo {
     sample_time: SampleCalc,
     /// The speed with which the amplitude is varied.
-    rate: SampleCalc,
+    note_value: NoteValue,
     /// The ratio of maximum shift away from the base amplitude (must be > 0.0).
     extent_ratio: SampleCalc,
+    /// The phase of the sine function.
+    phase: SampleCalc,
     amplitude_normalized: SampleCalc,
 }
 
 impl Tremolo {
     /// custom constructor
     pub fn new(sample_rate: SampleCalc,
-               rate: SampleCalc,
+               note_value: NoteValue,
                extent_ratio: SampleCalc)
                -> SoundResult<Tremolo> {
         let sample_time = try!(get_sample_time(sample_rate));
-        if rate <= 0.0 {
-            return Err(Error::PeriodInvalid);
-        }
-        if extent_ratio <= 0.0 {
+        if extent_ratio <= 1.0 {
             return Err(Error::AmplitudeInvalid);
         }
-        let amplitude_normalized = extent_ratio.min(1.0 / extent_ratio);
+        let amplitude_normalized = 1.0 / extent_ratio;
         Ok(Tremolo {
             sample_time: sample_time,
-            rate: rate,
+            note_value: note_value,
             extent_ratio: extent_ratio,
+            phase: 0.0,
             amplitude_normalized: amplitude_normalized,
         })
     }
-}
 
-impl AmplitudeFunction for Tremolo {
-    fn get(&self, time_start: SampleCalc, result: &mut [SampleCalc]) -> SoundResult<()> {
-        let rate_in_rad = self.rate * PI2;
-        let phase_start = time_start * rate_in_rad;
-        let phase_change = self.sample_time * rate_in_rad;
-        for (index, item) in result.iter_mut().enumerate() {
-            let phase = (index as SampleCalc * phase_change) + phase_start;
-            *item = self.amplitude_normalized * (self.extent_ratio.powf(phase.sin()));
-        }
-        Ok(())
-    }
-
-    fn apply(&self, time_start: SampleCalc, samples: &mut [SampleCalc]) -> SoundResult<()> {
-        let rate_in_rad = self.rate * PI2;
-        let phase_start = time_start * rate_in_rad;
-        let phase_change = self.sample_time * rate_in_rad;
-        for (index, item) in samples.iter_mut().enumerate() {
-            let phase = (index as SampleCalc * phase_change) + phase_start;
-            *item *= self.amplitude_normalized * (self.extent_ratio.powf(phase.sin()));
-        }
+    /// Sets a new phase value.
+    pub fn set_phase(&mut self, phase: SampleCalc) -> SoundResult<()> {
+        self.phase = phase % PI2;
         Ok(())
     }
 }
 
+impl AmplitudeRhythm for Tremolo {
+    fn get(&mut self, tempo: &[SampleCalc], result: &mut [SampleCalc]) -> SoundResult<()> {
+        let phase_change = self.sample_time * self.note_value.get_notes_per_beat() * PI2;
+        for (item, beats_per_second) in result.iter_mut().zip(tempo.iter()) {
+            self.phase += phase_change * beats_per_second;
+            *item = self.amplitude_normalized * (self.extent_ratio.powf(self.phase.sin()));
+        }
+        self.phase %= PI2;
+        Ok(())
+    }
+
+    fn apply(&mut self, tempo: &[SampleCalc], samples: &mut [SampleCalc]) -> SoundResult<()> {
+        let phase_change = self.sample_time * self.note_value.get_notes_per_beat() * PI2;
+        for (item, beats_per_second) in samples.iter_mut().zip(tempo.iter()) {
+            self.phase += phase_change * beats_per_second;
+            *item *= self.amplitude_normalized * (self.extent_ratio.powf(self.phase.sin()));
+        }
+        self.phase %= PI2;
+        Ok(())
+    }
+}
 
 /// Input and output definition for the amplitude functions with overtones.
 pub trait AmplitudeFunctionOvertones {

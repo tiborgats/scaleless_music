@@ -51,13 +51,15 @@ fn freqconst_vibrato(bencher: &mut Bencher) {
 
 #[bench]
 fn tremolo(bencher: &mut Bencher) {
+    let mut tempo_buffer: Vec<SampleCalc> = vec![0.0; BENCH_BUFFER_SIZE];
     let mut amplitude_buffer: Vec<SampleCalc> = vec![0.0; BENCH_BUFFER_SIZE];
-    let mut time: SampleCalc = 0.0;
-    let amplitude = Tremolo::new(BENCH_SAMPLE_RATE, 8.0, 1.1).unwrap();
+    let tempo = Tempo::new(120.0).unwrap();
+    tempo.get_beats_per_second(0.0, &mut tempo_buffer);
+    let mut amplitude_rhythm = Tremolo::new(BENCH_SAMPLE_RATE, NoteValue::new(1, 4).unwrap(), 1.1)
+        .unwrap();
 
     bencher.iter(|| {
-        amplitude.get(time, &mut amplitude_buffer).unwrap();
-        time += BENCH_BUFFER_TIME;
+        amplitude_rhythm.get(&tempo_buffer, &mut amplitude_buffer);
     });
 }
 

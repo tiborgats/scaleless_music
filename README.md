@@ -36,8 +36,8 @@ Henceforward, I plan to create a tool for analyzing recorded samples, finding cl
 - `cargo build` (or `cargo build --features "be-portaudio"`) for the default PortAudio backend. If for some reason the building of [rust-portaudio](https://github.com/RustAudio/rust-portaudio) fails, you can check it's [README](https://github.com/RustAudio/rust-portaudio/blob/master/README.md) for further instructions.
 - `cargo build --features "be-rsoundio"` for [rsoundio](https://github.com/klingtnet/rsoundio) ([libsoundio](http://libsound.io/)) backend - not available yet
 
-## Examples
-`cargo run --example instrument1`
+## [Examples](https://github.com/tiborgats/music/tree/master/examples)
+
 ## [Documentation](https://tiborgats.github.io/music/)
 
 # Todo Items

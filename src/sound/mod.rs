@@ -22,7 +22,7 @@ pub mod backend_portaudio;
 pub mod backend_rsoundio;
 
 pub use self::errors::Error;
-pub use self::interval::Interval;
+pub use self::interval::*;
 pub use self::frequency::*;
 pub use self::amplitude::*;
 pub use self::wave::*;
@@ -48,7 +48,7 @@ pub const TONE_FREQUENCY_MIN: SampleCalc = 3.0;
 /// See: [hearing range](https://en.wikipedia.org/wiki/Hearing_range#Humans)
 pub const TONE_FREQUENCY_MAX: SampleCalc = 28000.0;
 
-/// = 192 kHz, as Humans can discern time differences of
+/// = 192 kHz, as humans can discern time differences of
 /// [5 microseconds](http://boson.physics.sc.edu/~kunchur/papers/gradual.pdf).
 /// Humans can hear < 1° difference in the location of the sound source, when it is in front of
 /// them. See also:
@@ -85,6 +85,7 @@ pub trait MusicStructure {
     /// Returns the calculated samples in the `result` buffer.
     fn get(&self,
            time_start: SampleCalc,
+           base_tempo: &[SampleCalc],
            base_frequency: &[SampleCalc],
            tempo: &[SampleCalc],
            result: &mut [SampleCalc])

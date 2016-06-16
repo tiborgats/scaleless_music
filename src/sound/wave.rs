@@ -6,6 +6,10 @@ use std::cell::RefCell;
 /// A sinusoidal wave generator, with variable frequency.
 #[derive(Debug, Copy, Clone)]
 pub struct Wave {
+    sample_time: SampleCalc,
+    /// The interval is used for transposition of the input frequencies
+    interval: Interval,
+    overtone: SampleCalc,
     frequency_multiplier: SampleCalc,
     /// The phase value is always kept close to zero for maximizing the floating point precision.
     phase: SampleCalc,
@@ -16,10 +20,14 @@ impl Wave {
     pub fn new(sample_rate: SampleCalc, overtone: usize) -> SoundResult<Wave> {
         let sample_time = try!(get_sample_time(sample_rate));
         Ok(Wave {
+            sample_time: sample_time,
+            interval: INTERVAL_UNISON,
+            overtone: overtone as SampleCalc,
             frequency_multiplier: (overtone as SampleCalc + 1.0) * PI2 * sample_time,
             phase: 0.0,
         })
     }
+
     /// Gets the next samples of the wave.
     pub fn get(&mut self,
                base_frequency: &[SampleCalc],
@@ -32,10 +40,17 @@ impl Wave {
         self.phase %= PI2;
         Ok(())
     }
+
+    /// Sets a new frequency interval.
+    pub fn set_interval(&mut self, interval: Interval) {
+        self.interval = interval;
+        self.frequency_multiplier = (self.overtone + 1.0) * PI2 * self.sample_time *
+                                    interval.get_ratio();
+    }
+
     /// Sets a new phase value.
-    pub fn set_phase(&mut self, phase: SampleCalc) -> SoundResult<()> {
+    pub fn set_phase(&mut self, phase: SampleCalc) {
         self.phase = phase % PI2;
-        Ok(())
     }
 }
 
@@ -43,6 +58,9 @@ impl Wave {
 /// Some examples: https://youtu.be/VRAXK4QKJ1Q?t=25s
 #[derive(Clone)]
 pub struct Timbre {
+    // sample_time: SampleCalc,
+    /// The interval is used for transposition of the input frequencies
+    interval: Interval,
     waves: RefCell<Vec<Wave>>,
     amplitude_function: Rc<AmplitudeFunctionOvertones>,
     wave_buffer: RefCell<Vec<SampleCalc>>,
@@ -61,12 +79,22 @@ impl Timbre {
             wave_vec.push(try!(Wave::new(sample_rate, overtone)));
         }
         Ok(Timbre {
+            interval: INTERVAL_UNISON,
             waves: RefCell::new(wave_vec),
             amplitude_function: amplitude_function,
             wave_buffer: RefCell::new(vec![0.0; buffer_size]),
             overtone_max: overtone_max,
         })
     }
+
+    /// Sets a new frequency interval.
+    pub fn set_interval(&mut self, interval: Interval) {
+        self.interval = interval;
+        for wave in self.waves.borrow_mut().iter_mut() {
+            wave.set_interval(interval);
+        }
+    }
+
     /// Set a new amplitude function
     pub fn set_amplitude(&mut self,
                          amplitude_function: Rc<AmplitudeFunctionOvertones>)
@@ -77,6 +105,7 @@ impl Timbre {
 }
 
 impl SoundStructure for Timbre {
+    // TODO: filtering out frequencies from the calculations which are out of range
     fn get(&self,
            time_start: SampleCalc,
            base_frequency: &[SampleCalc],

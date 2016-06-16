@@ -3,6 +3,14 @@ use num::num_integer::*;
 use std::fmt;
 use std::ops::{Div, Mul};
 
+/// unison (1:1)
+pub const INTERVAL_UNISON: Interval = Interval {
+    numerator: 1,
+    denominator: 1,
+    ratio: 1.0,
+    reciprocal: 1.0,
+};
+
 /// Harmonic musical interval, represented by a rational number.
 #[derive(Debug, Copy, Clone)]
 pub struct Interval {
@@ -55,8 +63,13 @@ impl Interval {
     }
 
     /// Returns the ratio of the frequency interval.
-    pub fn get(&self) -> SampleCalc {
+    pub fn get_ratio(&self) -> SampleCalc {
         self.ratio
+    }
+
+    /// Returns the reciprocal of the frequency interval.
+    pub fn get_recip(&self) -> SampleCalc {
+        self.reciprocal
     }
 
     /// True, if the interval is `1:1`, aka. unison.

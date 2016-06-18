@@ -5,6 +5,9 @@ use sound::backend_portaudio::*;
 #[cfg(feature = "be-rsoundio")]
 use sound::backend_rsoundio::*;
 
+/// Return type for the sound module functions.
+pub type SoundResult<T> = Result<T, Error>;
+
 /// Error types of the sound module.
 #[derive(Debug, Copy, Clone)]
 pub enum Error {
@@ -38,6 +41,8 @@ pub enum Error {
     ChannelInvalid,
     /// Beats per minute must be positive
     TempoInvalid,
+    /// The selected progress option is invalid for this case.
+    ProgressInvalid,
 }
 
 impl fmt::Display for Error {
@@ -66,6 +71,7 @@ impl error::Error for Error {
             PeriodInvalid => "invalid period",
             ChannelInvalid => "invalid channel",
             TempoInvalid => "beats per minute must be positive",
+            ProgressInvalid => "invalid progress option",
         }
     }
 

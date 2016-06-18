@@ -3,14 +3,6 @@ use num::num_integer::*;
 use std::ops::Add;
 use std::fmt;
 
-/// The `Rhythm` trait is used to specify the functionality of rhythmic time syncronization.
-pub trait Rhythm {
-    /// Sets the actual tempo base.
-    fn set_tempo(&self, tempo: Tempo) -> SoundResult<()>;
-    /// Sets the ratio of the timing compared to the tempo beat duration.
-    fn set_note_value(&self, note_value: NoteValue);
-}
-
 /// The `TempoProvider` trait is used to provide tempo.
 pub trait TempoProvider {
     /// Returns the beat duration for each sample in the `result` buffer.
@@ -253,5 +245,149 @@ impl From<NoteValue> for SampleCalc {
 impl fmt::Display for NoteValue {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         write!(f, "{}/{}", self.numerator, self.denominator)
+    }
+}
+
+
+/// Tempo based progress calculations.
+#[derive(Debug, Copy, Clone)]
+pub struct ProgressTempo {
+    sample_time: SampleCalc,
+    /// The (tempo relative) speed.
+    note_value: NoteValue,
+    /// The amount of phase change during one period.
+    period_unit: SampleCalc,
+    /// The phase of the progress.
+    phase: SampleCalc,
+    phase_change: SampleCalc,
+}
+
+impl ProgressTempo {
+    /// custom constructor
+    pub fn new(sample_rate: SampleCalc, note_value: NoteValue) -> SoundResult<ProgressTempo> {
+        let sample_time = try!(get_sample_time(sample_rate));
+        let period_unit = PI2;
+        let phase_change = sample_time * note_value.get_notes_per_beat() * period_unit;
+        Ok(ProgressTempo {
+            sample_time: sample_time,
+            note_value: note_value,
+            period_unit: period_unit,
+            phase: 0.0,
+            phase_change: phase_change,
+        })
+    }
+
+    /// Provides the next phase value depending on the actual tempo.
+    pub fn next_phase(&mut self, beats_per_second: SampleCalc) -> SampleCalc {
+        self.phase += self.phase_change * beats_per_second;
+        self.phase
+    }
+
+    /// Simplifies the phase to achieve higher accuracy. It is only used for periodic functions.
+    pub fn simplify(&mut self) {
+        self.phase %= self.period_unit;
+    }
+
+    /// Sets the ratio of the timing compared to the tempo beat duration.
+    pub fn set_note_value(&mut self, note_value: NoteValue) {
+        self.note_value = note_value;
+        self.phase_change = self.sample_time * self.note_value.get_notes_per_beat() *
+                            self.period_unit;
+    }
+
+    /// Sets a new period unit.
+    pub fn set_period(&mut self, period_unit: SampleCalc) -> SoundResult<()> {
+        if period_unit <= 0.0 {
+            return Err(Error::PeriodInvalid);
+        }
+        self.period_unit = period_unit;
+        self.phase_change = self.sample_time * self.note_value.get_notes_per_beat() * period_unit;
+        Ok(())
+    }
+
+    /// Sets a new phase value.
+    pub fn set_phase(&mut self, phase: SampleCalc) {
+        self.phase = phase;
+    }
+}
+
+/// Time based progress calculations.
+#[derive(Debug, Copy, Clone)]
+pub struct ProgressTime {
+    sample_time: SampleCalc,
+    duration: SampleCalc,
+    /// The amount of phase change during one period.
+    period_unit: SampleCalc,
+    /// The phase of the progress.
+    phase: SampleCalc,
+    phase_change: SampleCalc,
+}
+
+impl ProgressTime {
+    /// custom constructor
+    pub fn new(sample_rate: SampleCalc, duration: SampleCalc) -> SoundResult<ProgressTime> {
+        let sample_time = try!(get_sample_time(sample_rate));
+        let period_unit = PI2;
+        let phase_change = (sample_time / duration) * period_unit;
+        Ok(ProgressTime {
+            sample_time: sample_time,
+            duration: duration,
+            period_unit: period_unit,
+            phase: 0.0,
+            phase_change: phase_change,
+        })
+    }
+
+    /// Provides the next phase value depending on the actual tempo.
+    pub fn next_phase(&mut self) -> SampleCalc {
+        self.phase += self.phase_change;
+        self.phase
+    }
+
+    /// Simplifies the phase to achieve higher accuracy. It is only used for periodic functions.
+    pub fn simplify(&mut self) {
+        self.phase %= self.period_unit;
+    }
+
+    /// Sets the ratio of the timing compared to the tempo beat duration.
+    pub fn set_duration(&mut self, duration: SampleCalc) {
+        self.duration = duration;
+        self.phase_change = (self.sample_time / self.duration) * self.period_unit;
+    }
+
+    /// Sets a new period unit.
+    pub fn set_period(&mut self, period_unit: SampleCalc) -> SoundResult<()> {
+        if period_unit <= 0.0 {
+            return Err(Error::PeriodInvalid);
+        }
+        self.period_unit = period_unit;
+        self.phase_change = (self.sample_time / self.duration) * self.period_unit;
+        Ok(())
+    }
+
+    /// Sets a new phase value.
+    pub fn set_phase(&mut self, phase: SampleCalc) {
+        self.phase = phase;
+    }
+}
+
+/// Time or tempo based progress.
+#[derive(Debug, Copy, Clone)]
+pub enum ProgressOption {
+    /// Time lapse
+    Time(ProgressTime),
+    /// Rhythmic, tempo syncronized progress.
+    Tempo(ProgressTempo),
+}
+
+impl From<ProgressTime> for ProgressOption {
+    fn from(progress: ProgressTime) -> Self {
+        ProgressOption::Time(progress)
+    }
+}
+
+impl From<ProgressTempo> for ProgressOption {
+    fn from(progress: ProgressTempo) -> Self {
+        ProgressOption::Tempo(progress)
     }
 }

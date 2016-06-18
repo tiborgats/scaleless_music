@@ -2,11 +2,13 @@
 pub mod errors;
 /// Frequency interval.
 pub mod interval;
-/// Fuctions which output frequency changes.
+/// Fuctions which provide frequency changes.
 pub mod frequency;
-/// Fuctions which output amplitude changes.
+/// Fuctions which provide amplitude changes.
 pub mod amplitude;
-/// Fuctions which output complete waveforms.
+/// Fuctions which provide amplitude changes for overtones also.
+pub mod amplitude_overtones;
+/// Fuctions which provide complete waveforms.
 pub mod wave;
 /// Rhythm section.
 pub mod rhythm;
@@ -21,10 +23,11 @@ pub mod backend_portaudio;
 #[cfg(feature = "be-rsoundio")]
 pub mod backend_rsoundio;
 
-pub use self::errors::Error;
+pub use self::errors::*;
 pub use self::interval::*;
 pub use self::frequency::*;
 pub use self::amplitude::*;
+pub use self::amplitude_overtones::*;
 pub use self::wave::*;
 pub use self::rhythm::*;
 pub use self::note::*;
@@ -101,7 +104,3 @@ pub fn get_sample_time(sample_rate: SampleCalc) -> SoundResult<SampleCalc> {
         Ok((1.0 / sample_rate))
     }
 }
-
-
-/// Return type for the sound module functions.
-pub type SoundResult<T> = Result<T, Error>;

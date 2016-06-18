@@ -1,8 +1,8 @@
 use sound::*;
 // use rayon::prelude::*;
 
-/// Input and output definition for the amplitude functions.
-pub trait AmplitudeFunction {
+/// Provides time dependent amlitude changes.
+pub trait AmplitudeProvider {
     /// Provides the results of the amplitude calculations.
     fn get(&self, time_start: SampleCalc, result: &mut [SampleCalc]) -> SoundResult<()>;
     /// Applies the amplitude function over an existing sample. It multiplies each sample with
@@ -12,13 +12,83 @@ pub trait AmplitudeFunction {
 
 /// Provides rhythmic amlitude changes. As phase depends on the integral of tempo, only sequential
 /// reading is possible (cannot be parallelized).
-pub trait AmplitudeRhythm {
+pub trait AmplitudeRhythmProvider {
     /// Provides the results of the amplitude calculations. Tempo is given in beats per second.
     fn get(&mut self, tempo: &[SampleCalc], result: &mut [SampleCalc]) -> SoundResult<()>;
     /// Applies the amplitude function over already existing samples. It multiplies each sample
     /// with it's new amplitude. Tempo is given in beats per second.
     fn apply(&mut self, tempo: &[SampleCalc], samples: &mut [SampleCalc]) -> SoundResult<()>;
 }
+
+/// The `AmplitudeJoinable` trait is used to specify the ability of joining amplitude structures
+/// together, forming a sequence of them.
+pub trait AmplitudeJoinable {
+    /// Sets the initial amplitude, and resets time.
+    fn set_amplitude_start(&mut self, amplitude: SampleCalc) -> SoundResult<()>;
+    // Provides the last amplitude.
+    // fn get_last_amplitude() -> SampleCalc;
+    /// Provides the maximal possible amplitude (for normalization).
+    fn get_max(&self) -> SampleCalc;
+}
+
+/// Checks if the given value is in the valid amplitude range.
+pub fn is_valid_amplitude(amplitude: SampleCalc) -> SoundResult<()> {
+    if amplitude < 0.0 {
+        return Err(Error::AmplitudeInvalid);
+    }
+    if amplitude > 1.0 {
+        return Err(Error::AmplitudeInvalid);
+    }
+    Ok(())
+}
+
+/// Linearly changing amplitude.
+#[derive(Debug, Copy, Clone)]
+pub struct FadeLinear {
+    sample_time: SampleCalc,
+    amplitude_start: SampleCalc,
+    amplitude_end: SampleCalc,
+    duration: SampleCalc,
+    fade_rate: SampleCalc,
+}
+
+impl FadeLinear {
+    /// custom constructor
+    pub fn new(sample_rate: SampleCalc,
+               amplitude_end: SampleCalc,
+               duration: SampleCalc)
+               -> SoundResult<FadeLinear> {
+        let sample_time = try!(get_sample_time(sample_rate));
+        try!(is_valid_amplitude(amplitude_end));
+        if duration <= 0.0 {
+            return Err(Error::AmplitudeTimeInvalid);
+        }
+        let amplitude_start = 0.0;
+        let fade_rate = (amplitude_end - amplitude_start) / duration;
+        Ok(FadeLinear {
+            sample_time: sample_time,
+            amplitude_start: amplitude_start,
+            amplitude_end: amplitude_end,
+            duration: duration,
+            fade_rate: fade_rate,
+        })
+    }
+}
+
+impl AmplitudeJoinable for FadeLinear {
+    fn set_amplitude_start(&mut self, amplitude: SampleCalc) -> SoundResult<()> {
+        try!(is_valid_amplitude(amplitude));
+        self.amplitude_start = amplitude;
+        // self.time = 0.0;
+        Ok(())
+    }
+
+    fn get_max(&self) -> SampleCalc {
+        self.amplitude_start.max(self.amplitude_end)
+    }
+}
+
+
 
 
 /// Linearly increasing amplitude.
@@ -45,7 +115,7 @@ impl FadeInLinear {
     }
 }
 
-impl AmplitudeFunction for FadeInLinear {
+impl AmplitudeProvider for FadeInLinear {
     fn get(&self, time_start: SampleCalc, result: &mut [SampleCalc]) -> SoundResult<()> {
         for (index, item) in result.iter_mut().enumerate() {
             let time = (index as SampleCalc * self.sample_time) + time_start;
@@ -94,7 +164,7 @@ impl FadeOutLinear {
     }
 }
 
-impl AmplitudeFunction for FadeOutLinear {
+impl AmplitudeProvider for FadeOutLinear {
     fn get(&self, time_start: SampleCalc, result: &mut [SampleCalc]) -> SoundResult<()> {
         for (index, item) in result.iter_mut().enumerate() {
             let time_left = self.duration - ((index as SampleCalc * self.sample_time) + time_start);
@@ -122,15 +192,12 @@ impl AmplitudeFunction for FadeOutLinear {
 /// [tremolo](https://en.wikipedia.org/wiki/Tremolo), as sine variation of the amplitude.
 #[derive(Debug, Copy, Clone)]
 pub struct Tremolo {
-    sample_time: SampleCalc,
-    /// The (tempo relative) speed with which the amplitude is varied.
-    note_value: NoteValue,
     /// The ratio of maximum shift away from the base amplitude (must be > 1.0).
     extent_ratio: SampleCalc,
     /// The phase of the sine function.
-    phase: SampleCalc,
-    phase_change: SampleCalc,
     amplitude_normalized: SampleCalc,
+    /// Tempo based progress.
+    pub progress: ProgressOption,
 }
 
 impl Tremolo {
@@ -139,43 +206,44 @@ impl Tremolo {
     /// `note_value` = The (tempo relative) speed with which the amplitude is varied.
     ///
     /// `extent_ratio` = The ratio of maximum shift away from the base amplitude (must be > 1.0).
-    pub fn new(sample_rate: SampleCalc,
-               note_value: NoteValue,
-               extent_ratio: SampleCalc)
-               -> SoundResult<Tremolo> {
-        let sample_time = try!(get_sample_time(sample_rate));
+    pub fn new(progress: ProgressOption, extent_ratio: SampleCalc) -> SoundResult<Tremolo> {
         if extent_ratio <= 1.0 {
             return Err(Error::AmplitudeInvalid);
         }
-        let phase_change = sample_time * note_value.get_notes_per_beat() * PI2;
         let amplitude_normalized = 1.0 / extent_ratio;
+        //        let progress = try!(ProgressTempo::new(sample_rate, note_value));
         Ok(Tremolo {
-            sample_time: sample_time,
-            note_value: note_value,
             extent_ratio: extent_ratio,
-            phase: 0.0,
-            phase_change: phase_change,
             amplitude_normalized: amplitude_normalized,
+            progress: progress,
         })
     }
 
-    /// Sets a new phase value.
-    pub fn set_phase(&mut self, phase: SampleCalc) -> SoundResult<()> {
-        self.phase = phase % PI2;
-        Ok(())
+    /// Constructor with tempo based progress.
+    pub fn new_with_tempo(sample_rate: SampleCalc,
+                          note_value: NoteValue,
+                          extent_ratio: SampleCalc)
+                          -> SoundResult<Tremolo> {
+        let progress = try!(ProgressTempo::new(sample_rate, note_value));
+        Tremolo::new(ProgressOption::Tempo(progress), extent_ratio)
     }
 }
 
-impl AmplitudeRhythm for Tremolo {
+impl AmplitudeRhythmProvider for Tremolo {
     fn get(&mut self, tempo: &[SampleCalc], result: &mut [SampleCalc]) -> SoundResult<()> {
         if tempo.len() != result.len() {
             return Err(Error::BufferSize);
         }
-        for (item, beats_per_second) in result.iter_mut().zip(tempo) {
-            self.phase += self.phase_change * beats_per_second;
-            *item = self.amplitude_normalized * (self.extent_ratio.powf(self.phase.sin()));
+        match self.progress {
+            ProgressOption::Tempo(ref mut p) => {
+                for (item, beats_per_second) in result.iter_mut().zip(tempo) {
+                    *item = self.amplitude_normalized *
+                            (self.extent_ratio.powf(p.next_phase(*beats_per_second).sin()));
+                }
+                p.simplify();
+            }
+            ProgressOption::Time(ref _p) => return Err(Error::ProgressInvalid),
         }
-        self.phase %= PI2;
         Ok(())
     }
 
@@ -183,189 +251,20 @@ impl AmplitudeRhythm for Tremolo {
         if tempo.len() != samples.len() {
             return Err(Error::BufferSize);
         }
-        for (item, beats_per_second) in samples.iter_mut().zip(tempo) {
-            self.phase += self.phase_change * beats_per_second;
-            *item *= self.amplitude_normalized * (self.extent_ratio.powf(self.phase.sin()));
-        }
-        self.phase %= PI2;
-        Ok(())
-    }
-}
-
-/// Input and output definition for the amplitude functions with overtones.
-pub trait AmplitudeFunctionOvertones {
-    /// Provides the results of the amplitude calculations for a given overtone.
-    /// For the fundamental tone `overtone = 0`.
-    fn get(&self,
-           time_start: SampleCalc,
-           overtone: usize,
-           result: &mut [SampleCalc])
-           -> SoundResult<()>;
-    /// Applies the amplitude function over an existing sample for a given overtone.
-    /// For the fundamental tone `overtone = 0`.
-    fn apply(&self,
-             time_start: SampleCalc,
-             overtone: usize,
-             samples: &mut [SampleCalc])
-             -> SoundResult<()>;
-}
-
-/// Amplitude is not changing by time, this function gives the overtone amplitudes too.
-#[derive(Debug, Clone)]
-pub struct AmplitudeConstOvertones {
-    amplitude: Vec<SampleCalc>,
-}
-
-impl AmplitudeConstOvertones {
-    /// custom constructor
-    /// It normalizes the amplitudes, so the sum of them will be 1.0.
-    pub fn new(mut amplitude: Vec<SampleCalc>) -> SoundResult<AmplitudeConstOvertones> {
-        let mut amplitude_sum: SampleCalc = 0.0;
-        for amplitude_check in &amplitude {
-            if *amplitude_check < 0.0 {
-                return Err(Error::AmplitudeInvalid);
-            };
-            amplitude_sum += *amplitude_check;
-        }
-        if amplitude_sum == 0.0 {
-            return Err(Error::AmplitudeInvalid);
-        };
-        // normalization
-        for item in &mut amplitude {
-            *item /= amplitude_sum;
-        }
-
-        Ok(AmplitudeConstOvertones { amplitude: amplitude })
-    }
-}
-
-impl AmplitudeFunctionOvertones for AmplitudeConstOvertones {
-    fn get(&self,
-           _time_start: SampleCalc,
-           overtone: usize,
-           result: &mut [SampleCalc])
-           -> SoundResult<()> {
-        if overtone >= self.amplitude.len() {
-            for item in result.iter_mut() {
-                *item = 0.0;
+        match self.progress {
+            ProgressOption::Tempo(ref mut p) => {
+                for (item, beats_per_second) in samples.iter_mut().zip(tempo) {
+                    *item *= self.amplitude_normalized *
+                             (self.extent_ratio.powf(p.next_phase(*beats_per_second).sin()));
+                }
+                p.simplify();
             }
-            return Ok(());
-        };
-        for item in result.iter_mut() {
-            *item = self.amplitude[overtone];
-        }
-        Ok(())
-    }
-
-    fn apply(&self,
-             _time_start: SampleCalc,
-             overtone: usize,
-             samples: &mut [SampleCalc])
-             -> SoundResult<()> {
-        if overtone >= self.amplitude.len() {
-            for item in samples.iter_mut() {
-                *item = 0.0;
-            }
-            return Ok(());
-        };
-        for item in samples.iter_mut() {
-            *item *= self.amplitude[overtone];
+            ProgressOption::Time(ref _p) => return Err(Error::ProgressInvalid),
         }
         Ok(())
     }
 }
 
-/// Amplitude is decaying exponentially, also for overtones
-/// [Exponential decay](https://en.wikipedia.org/wiki/Exponential_decay)
-/// index: 0 = fundamental tone, 1.. = overtones.
-#[derive(Debug, Clone)]
-pub struct AmplitudeDecayExpOvertones {
-    sample_time: SampleCalc,
-    amplitude: Vec<SampleCalc>, // starting amplitudes
-    rate: Vec<SampleCalc>, // rate must be negative!
-}
-
-impl AmplitudeDecayExpOvertones {
-    /// custom constructor
-    /// It normalizes the amplitudes, so the sum of the starting amplitudes will be 1.0.
-    /// Rate must be negative!
-    pub fn new(sample_rate: SampleCalc,
-               mut amplitude: Vec<SampleCalc>,
-               rate: Vec<SampleCalc>)
-               -> SoundResult<AmplitudeDecayExpOvertones> {
-        let sample_time = try!(get_sample_time(sample_rate));
-        let mut amplitude_sum: SampleCalc = 0.0;
-        for amplitude_check in &amplitude {
-            if *amplitude_check < 0.0 {
-                return Err(Error::AmplitudeInvalid);
-            };
-            amplitude_sum += *amplitude_check;
-        }
-        if amplitude_sum == 0.0 {
-            return Err(Error::AmplitudeInvalid);
-        };
-        // normalization
-        for item in &mut amplitude {
-            *item /= amplitude_sum;
-        }
-        for rate_check in &rate {
-            if *rate_check > 0.0 {
-                return Err(Error::AmplitudeRateInvalid);
-            }
-        }
-        Ok(AmplitudeDecayExpOvertones {
-            sample_time: sample_time,
-            amplitude: amplitude,
-            rate: rate,
-        })
-    }
-}
-
-impl AmplitudeFunctionOvertones for AmplitudeDecayExpOvertones {
-    fn get(&self,
-           time_start: SampleCalc,
-           overtone: usize,
-           result: &mut [SampleCalc])
-           -> SoundResult<()> {
-        if (overtone >= self.amplitude.len()) || (overtone >= self.rate.len()) {
-            for item in result.iter_mut() {
-                *item = 0.0;
-            }
-            return Ok(());
-        };
-        let amplitude_overtone = self.amplitude[overtone];
-        let position_start = time_start * self.rate[overtone];
-        let position_change = self.sample_time * self.rate[overtone];
-        for (index, item) in result.iter_mut().enumerate() {
-            let position: SampleCalc = (index as SampleCalc * position_change) + position_start;
-            // TODO: speed optimization, .exp() is very slow
-            *item = amplitude_overtone * position.exp();
-        }
-        Ok(())
-    }
-
-    fn apply(&self,
-             time_start: SampleCalc,
-             overtone: usize,
-             samples: &mut [SampleCalc])
-             -> SoundResult<()> {
-        if (overtone >= self.amplitude.len()) || (overtone >= self.rate.len()) {
-            for item in samples.iter_mut() {
-                *item = 0.0;
-            }
-            return Ok(());
-        };
-        let amplitude_overtone = self.amplitude[overtone];
-        let position_start = time_start * self.rate[overtone];
-        let position_change = self.sample_time * self.rate[overtone];
-        for (index, item) in samples.iter_mut().enumerate() {
-            let position: SampleCalc = (index as SampleCalc * position_change) + position_start;
-            // TODO: speed optimization, .exp() is very slow
-            *item *= amplitude_overtone * position.exp();
-        }
-        Ok(())
-    }
-}
 
 /// Combination of several amplitude functions.
 pub struct AmplitudeCombination;

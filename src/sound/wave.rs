@@ -62,7 +62,7 @@ pub struct Timbre {
     /// The interval is used for transposition of the input frequencies
     interval: Interval,
     waves: RefCell<Vec<Wave>>,
-    amplitude_function: Rc<AmplitudeFunctionOvertones>,
+    amplitude_function: Rc<AmplitudeOvertonesProvider>,
     wave_buffer: RefCell<Vec<SampleCalc>>,
     overtone_max: usize,
 }
@@ -71,7 +71,7 @@ impl Timbre {
     /// Custom constructor
     pub fn new(sample_rate: SampleCalc,
                buffer_size: usize,
-               amplitude_function: Rc<AmplitudeFunctionOvertones>,
+               amplitude_function: Rc<AmplitudeOvertonesProvider>,
                overtone_max: usize)
                -> SoundResult<Timbre> {
         let mut wave_vec = Vec::with_capacity(overtone_max + 1);
@@ -97,7 +97,7 @@ impl Timbre {
 
     /// Set a new amplitude function
     pub fn set_amplitude(&mut self,
-                         amplitude_function: Rc<AmplitudeFunctionOvertones>)
+                         amplitude_function: Rc<AmplitudeOvertonesProvider>)
                          -> &mut Timbre {
         self.amplitude_function = amplitude_function;
         self

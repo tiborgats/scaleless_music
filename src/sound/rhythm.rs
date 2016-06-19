@@ -248,6 +248,105 @@ impl fmt::Display for NoteValue {
     }
 }
 
+/// Common methods of the Progress types.
+pub trait Progress {
+    /// Simplifies the phase to achieve higher accuracy. It is only used for periodic functions.
+    fn simplify(&mut self);
+    /// Sets a new period unit.
+    fn set_period(&mut self, period_unit: SampleCalc);
+    /// Sets a new phase value.
+    fn set_phase(&mut self, phase: SampleCalc);
+}
+
+/// Time based progress calculations.
+#[derive(Debug, Copy, Clone)]
+pub struct ProgressTime {
+    sample_time: SampleCalc,
+    duration: SampleCalc,
+    /// The amount of phase change during one period.
+    period_unit: SampleCalc,
+    /// The phase of the progress.
+    phase: SampleCalc,
+    phase_change: SampleCalc,
+}
+
+impl ProgressTime {
+    /// Custom constructor with duration.
+    pub fn new(sample_rate: SampleCalc, duration: SampleCalc) -> SoundResult<ProgressTime> {
+        let sample_time = try!(get_sample_time(sample_rate));
+        if duration <= 0.0 {
+            return Err(Error::PeriodInvalid);
+        }
+        let period_unit = PI2;
+        let phase_change = (sample_time / duration) * period_unit;
+        Ok(ProgressTime {
+            sample_time: sample_time,
+            duration: duration,
+            period_unit: period_unit,
+            phase: 0.0,
+            phase_change: phase_change,
+        })
+    }
+
+    /// Custom constructor with frequency.
+    pub fn new_f(sample_rate: SampleCalc, frequency: SampleCalc) -> SoundResult<ProgressTime> {
+        let sample_time = try!(get_sample_time(sample_rate));
+        if frequency <= 0.0 {
+            return Err(Error::FrequencyInvalid);
+        }
+        let period_unit = PI2;
+        let phase_change = sample_time * frequency * period_unit;
+        Ok(ProgressTime {
+            sample_time: sample_time,
+            duration: 1.0 / frequency,
+            period_unit: period_unit,
+            phase: 0.0,
+            phase_change: phase_change,
+        })
+    }
+
+    /// Provides the next phase value depending on the actual tempo.
+    pub fn next_phase(&mut self) -> SampleCalc {
+        self.phase += self.phase_change;
+        self.phase
+    }
+
+    /// Sets the ratio of the timing compared to the tempo beat duration.
+    pub fn set_duration(&mut self, duration: SampleCalc) -> SoundResult<()> {
+        if duration <= 0.0 {
+            return Err(Error::DurationInvalid);
+        }
+        self.duration = duration;
+        self.phase_change = (self.sample_time / self.duration) * self.period_unit;
+        Ok(())
+    }
+
+    /// Sets the ratio of the timing compared to the tempo beat frequency.
+    pub fn set_frequency(&mut self, frequency: SampleCalc) -> SoundResult<()> {
+        if frequency <= 0.0 {
+            return Err(Error::FrequencyInvalid);
+        }
+        self.duration = 1.0 / frequency;
+        self.phase_change = (self.sample_time / self.duration) * self.period_unit;
+        Ok(())
+    }
+}
+
+impl Progress for ProgressTime {
+    fn simplify(&mut self) {
+        self.phase %= self.period_unit;
+    }
+
+    fn set_period(&mut self, period_unit: SampleCalc) {
+        self.period_unit = period_unit;
+        self.phase_change = (self.sample_time / self.duration) * self.period_unit;
+    }
+
+    fn set_phase(&mut self, phase: SampleCalc) {
+        self.phase = phase;
+    }
+}
+
 
 /// Tempo based progress calculations.
 #[derive(Debug, Copy, Clone)]
@@ -283,90 +382,25 @@ impl ProgressTempo {
         self.phase
     }
 
-    /// Simplifies the phase to achieve higher accuracy. It is only used for periodic functions.
-    pub fn simplify(&mut self) {
-        self.phase %= self.period_unit;
-    }
-
     /// Sets the ratio of the timing compared to the tempo beat duration.
     pub fn set_note_value(&mut self, note_value: NoteValue) {
         self.note_value = note_value;
         self.phase_change = self.sample_time * self.note_value.get_notes_per_beat() *
                             self.period_unit;
     }
-
-    /// Sets a new period unit.
-    pub fn set_period(&mut self, period_unit: SampleCalc) -> SoundResult<()> {
-        if period_unit <= 0.0 {
-            return Err(Error::PeriodInvalid);
-        }
-        self.period_unit = period_unit;
-        self.phase_change = self.sample_time * self.note_value.get_notes_per_beat() * period_unit;
-        Ok(())
-    }
-
-    /// Sets a new phase value.
-    pub fn set_phase(&mut self, phase: SampleCalc) {
-        self.phase = phase;
-    }
 }
 
-/// Time based progress calculations.
-#[derive(Debug, Copy, Clone)]
-pub struct ProgressTime {
-    sample_time: SampleCalc,
-    duration: SampleCalc,
-    /// The amount of phase change during one period.
-    period_unit: SampleCalc,
-    /// The phase of the progress.
-    phase: SampleCalc,
-    phase_change: SampleCalc,
-}
-
-impl ProgressTime {
-    /// custom constructor
-    pub fn new(sample_rate: SampleCalc, duration: SampleCalc) -> SoundResult<ProgressTime> {
-        let sample_time = try!(get_sample_time(sample_rate));
-        let period_unit = PI2;
-        let phase_change = (sample_time / duration) * period_unit;
-        Ok(ProgressTime {
-            sample_time: sample_time,
-            duration: duration,
-            period_unit: period_unit,
-            phase: 0.0,
-            phase_change: phase_change,
-        })
-    }
-
-    /// Provides the next phase value depending on the actual tempo.
-    pub fn next_phase(&mut self) -> SampleCalc {
-        self.phase += self.phase_change;
-        self.phase
-    }
-
-    /// Simplifies the phase to achieve higher accuracy. It is only used for periodic functions.
-    pub fn simplify(&mut self) {
+impl Progress for ProgressTempo {
+    fn simplify(&mut self) {
         self.phase %= self.period_unit;
     }
 
-    /// Sets the ratio of the timing compared to the tempo beat duration.
-    pub fn set_duration(&mut self, duration: SampleCalc) {
-        self.duration = duration;
-        self.phase_change = (self.sample_time / self.duration) * self.period_unit;
-    }
-
-    /// Sets a new period unit.
-    pub fn set_period(&mut self, period_unit: SampleCalc) -> SoundResult<()> {
-        if period_unit <= 0.0 {
-            return Err(Error::PeriodInvalid);
-        }
+    fn set_period(&mut self, period_unit: SampleCalc) {
         self.period_unit = period_unit;
-        self.phase_change = (self.sample_time / self.duration) * self.period_unit;
-        Ok(())
+        self.phase_change = self.sample_time * self.note_value.get_notes_per_beat() * period_unit;
     }
 
-    /// Sets a new phase value.
-    pub fn set_phase(&mut self, phase: SampleCalc) {
+    fn set_phase(&mut self, phase: SampleCalc) {
         self.phase = phase;
     }
 }
@@ -374,10 +408,33 @@ impl ProgressTime {
 /// Time or tempo based progress.
 #[derive(Debug, Copy, Clone)]
 pub enum ProgressOption {
-    /// Time lapse
+    /// Time based progress.
     Time(ProgressTime),
     /// Rhythmic, tempo syncronized progress.
     Tempo(ProgressTempo),
+}
+
+impl Progress for ProgressOption {
+    fn simplify(&mut self) {
+        match *self {
+            ProgressOption::Time(ref mut p) => p.simplify(),
+            ProgressOption::Tempo(ref mut p) => p.simplify(),
+        }
+    }
+
+    fn set_period(&mut self, period_unit: SampleCalc) {
+        match *self {
+            ProgressOption::Time(ref mut p) => p.set_period(period_unit),
+            ProgressOption::Tempo(ref mut p) => p.set_period(period_unit),
+        }
+    }
+
+    fn set_phase(&mut self, phase: SampleCalc) {
+        match *self {
+            ProgressOption::Time(ref mut p) => p.set_phase(phase),
+            ProgressOption::Tempo(ref mut p) => p.set_phase(phase),
+        }
+    }
 }
 
 impl From<ProgressTime> for ProgressOption {

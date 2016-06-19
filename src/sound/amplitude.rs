@@ -45,33 +45,43 @@ pub fn is_valid_amplitude(amplitude: SampleCalc) -> SoundResult<()> {
 /// Linearly changing amplitude.
 #[derive(Debug, Copy, Clone)]
 pub struct FadeLinear {
-    sample_time: SampleCalc,
+    /// Tempo or time based progress.
+    pub progress: ProgressOption,
     amplitude_start: SampleCalc,
     amplitude_end: SampleCalc,
-    duration: SampleCalc,
-    fade_rate: SampleCalc,
 }
 
 impl FadeLinear {
     /// custom constructor
-    pub fn new(sample_rate: SampleCalc,
-               amplitude_end: SampleCalc,
-               duration: SampleCalc)
-               -> SoundResult<FadeLinear> {
-        let sample_time = try!(get_sample_time(sample_rate));
+    pub fn new(mut progress: ProgressOption, amplitude_end: SampleCalc) -> SoundResult<FadeLinear> {
         try!(is_valid_amplitude(amplitude_end));
-        if duration <= 0.0 {
-            return Err(Error::AmplitudeTimeInvalid);
-        }
         let amplitude_start = 0.0;
-        let fade_rate = (amplitude_end - amplitude_start) / duration;
+        progress.set_period(amplitude_end - amplitude_start);
         Ok(FadeLinear {
-            sample_time: sample_time,
+            progress: progress,
             amplitude_start: amplitude_start,
             amplitude_end: amplitude_end,
-            duration: duration,
-            fade_rate: fade_rate,
         })
+    }
+
+    /// Custom constructor with time based progress.
+    pub fn new_with_time(sample_rate: SampleCalc,
+                         duration: SampleCalc,
+                         amplitude_end: SampleCalc)
+                         -> SoundResult<FadeLinear> {
+        let progress = try!(ProgressTime::new(sample_rate, duration));
+        Self::new(ProgressOption::Time(progress), amplitude_end)
+    }
+
+    /// Constructor with tempo based progress.
+    ///
+    /// `note_value` = The (tempo relative) speed with which the amplitude is varied.
+    pub fn new_with_tempo(sample_rate: SampleCalc,
+                          note_value: NoteValue,
+                          amplitude_end: SampleCalc)
+                          -> SoundResult<FadeLinear> {
+        let progress = try!(ProgressTempo::new(sample_rate, note_value));
+        Self::new(ProgressOption::Tempo(progress), amplitude_end)
     }
 }
 
@@ -88,6 +98,39 @@ impl AmplitudeJoinable for FadeLinear {
     }
 }
 
+impl AmplitudeRhythmProvider for FadeLinear {
+    fn get(&mut self, tempo: &[SampleCalc], result: &mut [SampleCalc]) -> SoundResult<()> {
+        if tempo.len() != result.len() {
+            return Err(Error::BufferSize);
+        }
+        match self.progress {
+            ProgressOption::Tempo(ref mut p) => {
+                for (item, beats_per_second) in result.iter_mut().zip(tempo) {
+                    *item = p.next_phase(*beats_per_second);
+                }
+                p.simplify();
+            }
+            ProgressOption::Time(ref _p) => return Err(Error::ProgressInvalid),
+        }
+        Ok(())
+    }
+
+    fn apply(&mut self, tempo: &[SampleCalc], samples: &mut [SampleCalc]) -> SoundResult<()> {
+        if tempo.len() != samples.len() {
+            return Err(Error::BufferSize);
+        }
+        match self.progress {
+            ProgressOption::Tempo(ref mut p) => {
+                for (item, beats_per_second) in samples.iter_mut().zip(tempo) {
+                    *item *= p.next_phase(*beats_per_second);
+                }
+                p.simplify();
+            }
+            ProgressOption::Time(ref _p) => return Err(Error::ProgressInvalid),
+        }
+        Ok(())
+    }
+}
 
 
 
@@ -192,18 +235,16 @@ impl AmplitudeProvider for FadeOutLinear {
 /// [tremolo](https://en.wikipedia.org/wiki/Tremolo), as sine variation of the amplitude.
 #[derive(Debug, Copy, Clone)]
 pub struct Tremolo {
+    /// Tempo or time based progress.
+    pub progress: ProgressOption,
     /// The ratio of maximum shift away from the base amplitude (must be > 1.0).
     extent_ratio: SampleCalc,
     /// The phase of the sine function.
     amplitude_normalized: SampleCalc,
-    /// Tempo based progress.
-    pub progress: ProgressOption,
 }
 
 impl Tremolo {
     /// Custom constructor.
-    ///
-    /// `note_value` = The (tempo relative) speed with which the amplitude is varied.
     ///
     /// `extent_ratio` = The ratio of maximum shift away from the base amplitude (must be > 1.0).
     pub fn new(progress: ProgressOption, extent_ratio: SampleCalc) -> SoundResult<Tremolo> {
@@ -213,19 +254,30 @@ impl Tremolo {
         let amplitude_normalized = 1.0 / extent_ratio;
         //        let progress = try!(ProgressTempo::new(sample_rate, note_value));
         Ok(Tremolo {
+            progress: progress,
             extent_ratio: extent_ratio,
             amplitude_normalized: amplitude_normalized,
-            progress: progress,
         })
     }
 
+    /// Custom constructor with time based progress.
+    pub fn new_with_time(sample_rate: SampleCalc,
+                         duration: SampleCalc,
+                         extent_ratio: SampleCalc)
+                         -> SoundResult<Tremolo> {
+        let progress = try!(ProgressTime::new(sample_rate, duration));
+        Self::new(ProgressOption::Time(progress), extent_ratio)
+    }
+
     /// Constructor with tempo based progress.
+    ///
+    /// `note_value` = The (tempo relative) speed with which the amplitude is varied.
     pub fn new_with_tempo(sample_rate: SampleCalc,
                           note_value: NoteValue,
                           extent_ratio: SampleCalc)
                           -> SoundResult<Tremolo> {
         let progress = try!(ProgressTempo::new(sample_rate, note_value));
-        Tremolo::new(ProgressOption::Tempo(progress), extent_ratio)
+        Self::new(ProgressOption::Tempo(progress), extent_ratio)
     }
 }
 

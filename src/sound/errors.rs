@@ -25,6 +25,8 @@ pub enum Error {
     FrequencyTooLow,
     /// The frequency exceeds the hearing range.
     FrequencyTooHigh,
+    /// Frequency can not be zero or negative.
+    FrequencyInvalid,
     /// This frequency function is a source, it can not use an input frequency buffer.
     FrequencySource,
     /// A rate must be positive.
@@ -37,6 +39,8 @@ pub enum Error {
     AmplitudeRateInvalid,
     /// A time period must be positive.
     PeriodInvalid,
+    /// A time duration must be positive.
+    DurationInvalid,
     /// Channel of the given number does not exist.
     ChannelInvalid,
     /// Beats per minute must be positive
@@ -63,12 +67,14 @@ impl error::Error for Error {
             DenominatorInvalid => "invalid denominator",
             FrequencyTooLow => "frequency is below the hearing range",
             FrequencyTooHigh => "frequency exceeds the hearing range",
+            FrequencyInvalid => "frequency can not be zero or negative",
             FrequencySource => "input frequency buffer can not be used",
             RateInvalid => "invalid rate",
             AmplitudeInvalid => "invalid amplitude",
             AmplitudeTimeInvalid => "invalid amplitude change time",
             AmplitudeRateInvalid => "invalid amplitude decay rate",
             PeriodInvalid => "invalid period",
+            DurationInvalid => "invalid duration",
             ChannelInvalid => "invalid channel",
             TempoInvalid => "beats per minute must be positive",
             ProgressInvalid => "invalid progress option",

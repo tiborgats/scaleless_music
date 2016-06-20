@@ -4,20 +4,23 @@ use sound::*;
 /// Provides time dependent amlitude changes.
 pub trait AmplitudeProvider {
     /// Provides the results of the amplitude calculations.
-    fn get(&self, time_start: SampleCalc, result: &mut [SampleCalc]) -> SoundResult<()>;
-    /// Applies the amplitude function over an existing sample. It multiplies each sample with
-    /// it's new amplitude.
-    fn apply(&self, time_start: SampleCalc, samples: &mut [SampleCalc]) -> SoundResult<()>;
+    fn get(&mut self, result: &mut [SampleCalc]) -> SoundResult<()>;
+    /// Applies the amplitude function over already existing samples. It multiplies each sample
+    /// with it's new amplitude.
+    fn apply(&mut self, samples: &mut [SampleCalc]) -> SoundResult<()>;
 }
 
 /// Provides rhythmic amlitude changes. As phase depends on the integral of tempo, only sequential
 /// reading is possible (cannot be parallelized).
 pub trait AmplitudeRhythmProvider {
     /// Provides the results of the amplitude calculations. Tempo is given in beats per second.
-    fn get(&mut self, tempo: &[SampleCalc], result: &mut [SampleCalc]) -> SoundResult<()>;
+    fn get_rhythmic(&mut self, tempo: &[SampleCalc], result: &mut [SampleCalc]) -> SoundResult<()>;
     /// Applies the amplitude function over already existing samples. It multiplies each sample
     /// with it's new amplitude. Tempo is given in beats per second.
-    fn apply(&mut self, tempo: &[SampleCalc], samples: &mut [SampleCalc]) -> SoundResult<()>;
+    fn apply_rhythmic(&mut self,
+                      tempo: &[SampleCalc],
+                      samples: &mut [SampleCalc])
+                      -> SoundResult<()>;
 }
 
 /// The `AmplitudeJoinable` trait is used to specify the ability of joining amplitude structures
@@ -42,13 +45,14 @@ pub fn is_valid_amplitude(amplitude: SampleCalc) -> SoundResult<()> {
     Ok(())
 }
 
-/// Linearly changing amplitude.
+/// Linearly changing amplitude. After the fade period it provides constant amplitude.
 #[derive(Debug, Copy, Clone)]
 pub struct FadeLinear {
     /// Tempo or time based progress.
     pub progress: ProgressOption,
     amplitude_start: SampleCalc,
     amplitude_end: SampleCalc,
+    amplitude_change: SampleCalc,
 }
 
 impl FadeLinear {
@@ -56,11 +60,13 @@ impl FadeLinear {
     pub fn new(mut progress: ProgressOption, amplitude_end: SampleCalc) -> SoundResult<FadeLinear> {
         try!(is_valid_amplitude(amplitude_end));
         let amplitude_start = 0.0;
-        progress.set_period(amplitude_end - amplitude_start);
+        progress.set_period_unit(1.0);
+        let amplitude_change = amplitude_end - amplitude_start;
         Ok(FadeLinear {
             progress: progress,
             amplitude_start: amplitude_start,
             amplitude_end: amplitude_end,
+            amplitude_change: amplitude_change,
         })
     }
 
@@ -89,7 +95,8 @@ impl AmplitudeJoinable for FadeLinear {
     fn set_amplitude_start(&mut self, amplitude: SampleCalc) -> SoundResult<()> {
         try!(is_valid_amplitude(amplitude));
         self.amplitude_start = amplitude;
-        // self.time = 0.0;
+        self.progress.set_period_unit(self.amplitude_end - self.amplitude_start);
+        self.progress.set_phase(self.amplitude_start);
         Ok(())
     }
 
@@ -98,15 +105,47 @@ impl AmplitudeJoinable for FadeLinear {
     }
 }
 
+impl AmplitudeProvider for FadeLinear {
+    fn get(&mut self, result: &mut [SampleCalc]) -> SoundResult<()> {
+        match self.progress {
+            ProgressOption::Time(ref mut p) => {
+                for item in result.iter_mut() {
+                    *item = p.next_phase();
+                }
+                p.simplify();
+            }
+            ProgressOption::Tempo(ref _p) => return Err(Error::ProgressInvalid),
+        }
+        Ok(())
+    }
+
+    fn apply(&mut self, samples: &mut [SampleCalc]) -> SoundResult<()> {
+        match self.progress {
+            ProgressOption::Time(ref mut p) => {
+                for item in samples.iter_mut() {
+                    *item *= p.next_phase();
+                }
+                p.simplify();
+            }
+            ProgressOption::Tempo(ref _p) => return Err(Error::ProgressInvalid),
+        }
+        Ok(())
+    }
+}
+
 impl AmplitudeRhythmProvider for FadeLinear {
-    fn get(&mut self, tempo: &[SampleCalc], result: &mut [SampleCalc]) -> SoundResult<()> {
+    fn get_rhythmic(&mut self, tempo: &[SampleCalc], result: &mut [SampleCalc]) -> SoundResult<()> {
         if tempo.len() != result.len() {
             return Err(Error::BufferSize);
         }
         match self.progress {
             ProgressOption::Tempo(ref mut p) => {
-                for (item, beats_per_second) in result.iter_mut().zip(tempo) {
-                    *item = p.next_phase(*beats_per_second);
+                for ((index, item), beats_per_second) in result.iter_mut().enumerate().zip(tempo) {
+                    match p.next_phase(*beats_per_second) {
+                        Ok(phase) => *item = phase,
+                        Err(Error::ProgressCompleted) => return Err(Error::ItemsCompleted(index)),
+                        Err(e) => return Err(e),
+                    }
                 }
                 p.simplify();
             }
@@ -115,118 +154,27 @@ impl AmplitudeRhythmProvider for FadeLinear {
         Ok(())
     }
 
-    fn apply(&mut self, tempo: &[SampleCalc], samples: &mut [SampleCalc]) -> SoundResult<()> {
+    fn apply_rhythmic(&mut self,
+                      tempo: &[SampleCalc],
+                      samples: &mut [SampleCalc])
+                      -> SoundResult<()> {
         if tempo.len() != samples.len() {
             return Err(Error::BufferSize);
         }
         match self.progress {
             ProgressOption::Tempo(ref mut p) => {
-                for (item, beats_per_second) in samples.iter_mut().zip(tempo) {
-                    *item *= p.next_phase(*beats_per_second);
+                for ((index, item), beats_per_second) in samples.iter_mut()
+                    .enumerate()
+                    .zip(tempo) {
+                    match p.next_phase(*beats_per_second) {
+                        Ok(phase) => *item *= phase,
+                        Err(Error::ProgressCompleted) => return Err(Error::ItemsCompleted(index)),
+                        Err(e) => return Err(e),
+                    }
                 }
                 p.simplify();
             }
             ProgressOption::Time(ref _p) => return Err(Error::ProgressInvalid),
-        }
-        Ok(())
-    }
-}
-
-
-
-/// Linearly increasing amplitude.
-#[derive(Debug, Copy, Clone)]
-pub struct FadeInLinear {
-    sample_time: SampleCalc,
-    duration: SampleCalc,
-    fade_rate: SampleCalc,
-}
-
-impl FadeInLinear {
-    /// custom constructor
-    pub fn new(sample_rate: SampleCalc, duration: SampleCalc) -> SoundResult<FadeInLinear> {
-        let sample_time = try!(get_sample_time(sample_rate));
-        if duration <= 0.0 {
-            return Err(Error::AmplitudeTimeInvalid);
-        }
-        let fade_rate = 1.0 / duration;
-        Ok(FadeInLinear {
-            sample_time: sample_time,
-            duration: duration,
-            fade_rate: fade_rate,
-        })
-    }
-}
-
-impl AmplitudeProvider for FadeInLinear {
-    fn get(&self, time_start: SampleCalc, result: &mut [SampleCalc]) -> SoundResult<()> {
-        for (index, item) in result.iter_mut().enumerate() {
-            let time = (index as SampleCalc * self.sample_time) + time_start;
-            *item = if time < self.duration {
-                time * self.fade_rate
-            } else {
-                1.0
-            }
-        }
-        Ok(())
-    }
-    fn apply(&self, time_start: SampleCalc, samples: &mut [SampleCalc]) -> SoundResult<()> {
-        for (index, item) in samples.iter_mut().enumerate() {
-            let time = (index as SampleCalc * self.sample_time) + time_start;
-            *item *= if time < self.duration {
-                time * self.fade_rate
-            } else {
-                1.0
-            }
-        }
-        Ok(())
-    }
-}
-
-/// Linearly decreasing amplitude.
-#[derive(Debug, Copy, Clone)]
-pub struct FadeOutLinear {
-    sample_time: SampleCalc,
-    duration: SampleCalc,
-    fade_rate: SampleCalc,
-}
-
-impl FadeOutLinear {
-    /// custom constructor
-    pub fn new(sample_rate: SampleCalc, duration: SampleCalc) -> SoundResult<FadeOutLinear> {
-        let sample_time = try!(get_sample_time(sample_rate));
-        if duration <= 0.0 {
-            return Err(Error::AmplitudeTimeInvalid);
-        }
-        let fade_rate = 1.0 / duration;
-        Ok(FadeOutLinear {
-            sample_time: sample_time,
-            duration: duration,
-            fade_rate: fade_rate,
-        })
-    }
-}
-
-impl AmplitudeProvider for FadeOutLinear {
-    fn get(&self, time_start: SampleCalc, result: &mut [SampleCalc]) -> SoundResult<()> {
-        for (index, item) in result.iter_mut().enumerate() {
-            let time_left = self.duration - ((index as SampleCalc * self.sample_time) + time_start);
-            *item = if time_left > 0.0 {
-                time_left * self.fade_rate
-            } else {
-                0.0
-            }
-        }
-        Ok(())
-    }
-    fn apply(&self, time_start: SampleCalc, samples: &mut [SampleCalc]) -> SoundResult<()> {
-        for (index, item) in samples.iter_mut().enumerate() {
-            let time_left = self.duration - ((index as SampleCalc * self.sample_time) + time_start);
-            *item *= if time_left > 0.0 {
-                time_left * self.fade_rate
-            } else {
-                0.0
-            }
         }
         Ok(())
     }
@@ -281,16 +229,52 @@ impl Tremolo {
     }
 }
 
+impl AmplitudeProvider for Tremolo {
+    fn get(&mut self, result: &mut [SampleCalc]) -> SoundResult<()> {
+        match self.progress {
+            ProgressOption::Time(ref mut p) => {
+                for item in result.iter_mut() {
+                    *item = self.amplitude_normalized *
+                            (self.extent_ratio.powf(p.next_phase().sin()));
+                }
+                p.simplify();
+            }
+            ProgressOption::Tempo(ref _p) => return Err(Error::ProgressInvalid),
+        }
+        Ok(())
+    }
+
+    fn apply(&mut self, samples: &mut [SampleCalc]) -> SoundResult<()> {
+        match self.progress {
+            ProgressOption::Time(ref mut p) => {
+                for item in samples.iter_mut() {
+                    *item *= self.amplitude_normalized *
+                             (self.extent_ratio.powf(p.next_phase().sin()));
+                }
+                p.simplify();
+            }
+            ProgressOption::Tempo(ref _p) => return Err(Error::ProgressInvalid),
+        }
+        Ok(())
+    }
+}
+
 impl AmplitudeRhythmProvider for Tremolo {
-    fn get(&mut self, tempo: &[SampleCalc], result: &mut [SampleCalc]) -> SoundResult<()> {
+    fn get_rhythmic(&mut self, tempo: &[SampleCalc], result: &mut [SampleCalc]) -> SoundResult<()> {
         if tempo.len() != result.len() {
             return Err(Error::BufferSize);
         }
         match self.progress {
             ProgressOption::Tempo(ref mut p) => {
-                for (item, beats_per_second) in result.iter_mut().zip(tempo) {
-                    *item = self.amplitude_normalized *
-                            (self.extent_ratio.powf(p.next_phase(*beats_per_second).sin()));
+                for ((index, item), beats_per_second) in result.iter_mut().enumerate().zip(tempo) {
+                    match p.next_phase(*beats_per_second) {
+                        Ok(phase) => {
+                            *item = self.amplitude_normalized *
+                                    (self.extent_ratio.powf(phase.sin()))
+                        }
+                        Err(Error::ProgressCompleted) => return Err(Error::ItemsCompleted(index)),
+                        Err(e) => return Err(e),
+                    }
                 }
                 p.simplify();
             }
@@ -299,15 +283,24 @@ impl AmplitudeRhythmProvider for Tremolo {
         Ok(())
     }
 
-    fn apply(&mut self, tempo: &[SampleCalc], samples: &mut [SampleCalc]) -> SoundResult<()> {
+    fn apply_rhythmic(&mut self,
+                      tempo: &[SampleCalc],
+                      samples: &mut [SampleCalc])
+                      -> SoundResult<()> {
         if tempo.len() != samples.len() {
             return Err(Error::BufferSize);
         }
         match self.progress {
             ProgressOption::Tempo(ref mut p) => {
-                for (item, beats_per_second) in samples.iter_mut().zip(tempo) {
-                    *item *= self.amplitude_normalized *
-                             (self.extent_ratio.powf(p.next_phase(*beats_per_second).sin()));
+                for ((index, item), beats_per_second) in samples.iter_mut().enumerate().zip(tempo) {
+                    match p.next_phase(*beats_per_second) {
+                        Ok(phase) => {
+                            *item *= self.amplitude_normalized *
+                                     (self.extent_ratio.powf(phase.sin()))
+                        }
+                        Err(Error::ProgressCompleted) => return Err(Error::ItemsCompleted(index)),
+                        Err(e) => return Err(e),
+                    }
                 }
                 p.simplify();
             }
@@ -316,7 +309,6 @@ impl AmplitudeRhythmProvider for Tremolo {
         Ok(())
     }
 }
-
 
 /// Combination of several amplitude functions.
 pub struct AmplitudeCombination;

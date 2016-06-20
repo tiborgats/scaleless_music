@@ -14,6 +14,7 @@ pub trait TempoProvider {
 /// Constant speed of the music. See also: [Tempo](https://en.wikipedia.org/wiki/Tempo)
 #[derive(Debug, Copy, Clone)]
 pub struct Tempo {
+    /// beat frequency
     beats_per_second: SampleCalc,
     beat_duration: SampleCalc,
 }
@@ -253,7 +254,7 @@ pub trait Progress {
     /// Simplifies the phase to achieve higher accuracy. It is only used for periodic functions.
     fn simplify(&mut self);
     /// Sets a new period unit.
-    fn set_period(&mut self, period_unit: SampleCalc);
+    fn set_period_unit(&mut self, period_unit: SampleCalc);
     /// Sets a new phase value.
     fn set_phase(&mut self, phase: SampleCalc);
 }
@@ -263,6 +264,10 @@ pub trait Progress {
 pub struct ProgressTime {
     sample_time: SampleCalc,
     duration: SampleCalc,
+    /// The remaining beats.
+    remaining: SampleCalc, // elapsed?
+    /// Only for periodic functions: the duration of one period in beats.
+    period: SampleCalc,
     /// The amount of phase change during one period.
     period_unit: SampleCalc,
     /// The phase of the progress.
@@ -277,11 +282,14 @@ impl ProgressTime {
         if duration <= 0.0 {
             return Err(Error::PeriodInvalid);
         }
+        let period = duration;
         let period_unit = PI2;
         let phase_change = (sample_time / duration) * period_unit;
         Ok(ProgressTime {
             sample_time: sample_time,
             duration: duration,
+            remaining: duration,
+            period: period,
             period_unit: period_unit,
             phase: 0.0,
             phase_change: phase_change,
@@ -294,11 +302,15 @@ impl ProgressTime {
         if frequency <= 0.0 {
             return Err(Error::FrequencyInvalid);
         }
+        let duration = 1.0 / frequency;
+        let period = duration;
         let period_unit = PI2;
         let phase_change = sample_time * frequency * period_unit;
         Ok(ProgressTime {
             sample_time: sample_time,
-            duration: 1.0 / frequency,
+            duration: duration,
+            remaining: duration,
+            period: period,
             period_unit: period_unit,
             phase: 0.0,
             phase_change: phase_change,
@@ -330,6 +342,12 @@ impl ProgressTime {
         self.phase_change = (self.sample_time / self.duration) * self.period_unit;
         Ok(())
     }
+
+    /// Sets a new period.
+    pub fn set_period(&mut self, period: SampleCalc) {
+        self.period = period;
+        self.phase_change = (self.sample_time / self.duration) * self.period_unit;
+    }
 }
 
 impl Progress for ProgressTime {
@@ -337,7 +355,7 @@ impl Progress for ProgressTime {
         self.phase %= self.period_unit;
     }
 
-    fn set_period(&mut self, period_unit: SampleCalc) {
+    fn set_period_unit(&mut self, period_unit: SampleCalc) {
         self.period_unit = period_unit;
         self.phase_change = (self.sample_time / self.duration) * self.period_unit;
     }
@@ -352,8 +370,12 @@ impl Progress for ProgressTime {
 #[derive(Debug, Copy, Clone)]
 pub struct ProgressTempo {
     sample_time: SampleCalc,
-    /// The (tempo relative) speed.
-    note_value: NoteValue,
+    /// The tempo relative duration, measured in beats.
+    duration: NoteValue,
+    /// The remaining beats.
+    remaining: SampleCalc, // elapsed?
+    /// Only for periodic functions: the duration of one period in beats.
+    period: NoteValue,
     /// The amount of phase change during one period.
     period_unit: SampleCalc,
     /// The phase of the progress.
@@ -363,30 +385,43 @@ pub struct ProgressTempo {
 
 impl ProgressTempo {
     /// custom constructor
-    pub fn new(sample_rate: SampleCalc, note_value: NoteValue) -> SoundResult<ProgressTempo> {
+    pub fn new(sample_rate: SampleCalc, duration: NoteValue) -> SoundResult<ProgressTempo> {
         let sample_time = try!(get_sample_time(sample_rate));
+        let period = duration;
         let period_unit = PI2;
-        let phase_change = sample_time * note_value.get_notes_per_beat() * period_unit;
+        let phase_change = sample_time * period.get_notes_per_beat() * period_unit;
         Ok(ProgressTempo {
             sample_time: sample_time,
-            note_value: note_value,
+            duration: duration,
+            remaining: duration.get_duration_in_beats(),
+            period: period,
             period_unit: period_unit,
             phase: 0.0,
             phase_change: phase_change,
         })
     }
 
-    /// Provides the next phase value depending on the actual tempo.
-    pub fn next_phase(&mut self, beats_per_second: SampleCalc) -> SampleCalc {
+    /// Provides the next phase value depending on the actual tempo, or `ProgressCompleted` if
+    /// progress is finished.
+    pub fn next_phase(&mut self, beats_per_second: SampleCalc) -> SoundResult<SampleCalc> {
+        self.remaining -= self.sample_time * beats_per_second;
+        if self.remaining <= 0.0 {
+            return Err(Error::ProgressCompleted);
+        }
         self.phase += self.phase_change * beats_per_second;
-        self.phase
+        Ok(self.phase)
     }
 
     /// Sets the ratio of the timing compared to the tempo beat duration.
-    pub fn set_note_value(&mut self, note_value: NoteValue) {
-        self.note_value = note_value;
-        self.phase_change = self.sample_time * self.note_value.get_notes_per_beat() *
-                            self.period_unit;
+    pub fn set_duration(&mut self, duration: NoteValue) {
+        self.duration = duration;
+        // TODO: remaining
+    }
+
+    /// Sets a new period.
+    pub fn set_period(&mut self, period: NoteValue) {
+        self.period = period;
+        self.phase_change = self.sample_time * self.period.get_notes_per_beat() * self.period_unit;
     }
 }
 
@@ -395,9 +430,9 @@ impl Progress for ProgressTempo {
         self.phase %= self.period_unit;
     }
 
-    fn set_period(&mut self, period_unit: SampleCalc) {
+    fn set_period_unit(&mut self, period_unit: SampleCalc) {
         self.period_unit = period_unit;
-        self.phase_change = self.sample_time * self.note_value.get_notes_per_beat() * period_unit;
+        self.phase_change = self.sample_time * self.period.get_notes_per_beat() * period_unit;
     }
 
     fn set_phase(&mut self, phase: SampleCalc) {
@@ -422,10 +457,10 @@ impl Progress for ProgressOption {
         }
     }
 
-    fn set_period(&mut self, period_unit: SampleCalc) {
+    fn set_period_unit(&mut self, period_unit: SampleCalc) {
         match *self {
-            ProgressOption::Time(ref mut p) => p.set_period(period_unit),
-            ProgressOption::Tempo(ref mut p) => p.set_period(period_unit),
+            ProgressOption::Time(ref mut p) => p.set_period_unit(period_unit),
+            ProgressOption::Tempo(ref mut p) => p.set_period_unit(period_unit),
         }
     }
 

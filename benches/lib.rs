@@ -58,10 +58,10 @@ fn tremolo(bencher: &mut Bencher) {
     let tempo = Tempo::new(120.0).unwrap();
     tempo.get_beats_per_second(0.0, &mut tempo_buffer);
     let mut amplitude_rhythm =
-        Tremolo::new_with_tempo(BENCH_SAMPLE_RATE, NoteValue::new(1, 4).unwrap(), 1.2).unwrap();
+        Tremolo::new_with_tempo(BENCH_SAMPLE_RATE, NoteValue::new(8, 1).unwrap(), 1.2).unwrap();
 
     bencher.iter(|| {
-        amplitude_rhythm.get(&tempo_buffer, &mut amplitude_buffer).unwrap();
+        amplitude_rhythm.get_rhythmic(&tempo_buffer, &mut amplitude_buffer).unwrap();
     });
 }
 

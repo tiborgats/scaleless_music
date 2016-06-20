@@ -47,6 +47,10 @@ pub enum Error {
     TempoInvalid,
     /// The selected progress option is invalid for this case.
     ProgressInvalid,
+    /// Progress is finished.
+    ProgressCompleted,
+    /// The number of items completed in an unfinished buffer operation.
+    ItemsCompleted(usize),
 }
 
 impl fmt::Display for Error {
@@ -78,6 +82,8 @@ impl error::Error for Error {
             ChannelInvalid => "invalid channel",
             TempoInvalid => "beats per minute must be positive",
             ProgressInvalid => "invalid progress option",
+            ProgressCompleted => "progress completed",
+            ItemsCompleted(_) => "",
         }
     }
 

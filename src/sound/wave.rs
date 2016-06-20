@@ -255,15 +255,19 @@ impl SoundStructure for Mixer {
     }
 }
 
+// TODO: `FadeOutLinear` and `FadeInLinear` replaced by `FadeLinear`, ProgressOption shall be used
+// too here.
 // https://en.wikipedia.org/wiki/Fade_(audio_engineering)#Crossfading
 /// Mixes two sound structures. While one fades out, another fades in.
+#[doc(hidden)]
+#[allow(dead_code)]
 pub struct Crossfader {
     duration: SampleCalc,
     sound_fade_out: Rc<SoundStructure>,
     sound_fade_in: Rc<SoundStructure>,
     interval: Interval,
-    amplitude_fade_out: FadeOutLinear,
-    amplitude_fade_in: FadeInLinear,
+    amplitude_fade_out: FadeLinear,
+    amplitude_fade_in: FadeLinear,
     frequency_buffer_in: RefCell<Vec<SampleCalc>>, // only used when interval is not unison
     wave_fade_out_buffer: RefCell<Vec<SampleCalc>>,
     wave_fade_in_buffer: RefCell<Vec<SampleCalc>>,
@@ -277,8 +281,9 @@ impl Crossfader {
                sound_fade_out: Rc<SoundStructure>,
                sound_fade_in: Rc<SoundStructure>)
                -> SoundResult<Crossfader> {
-        let amplitude_fade_out = try!(FadeOutLinear::new(sample_rate, duration));
-        let amplitude_fade_in = try!(FadeInLinear::new(sample_rate, duration));
+        let mut amplitude_fade_out = try!(FadeLinear::new_with_time(sample_rate, duration, 0.0));
+        try!(amplitude_fade_out.set_amplitude_start(1.0));
+        let amplitude_fade_in = try!(FadeLinear::new_with_time(sample_rate, duration, 1.0));
         Ok(Crossfader {
             duration: duration,
             interval: try!(Interval::new(1, 1)),
@@ -304,39 +309,39 @@ impl Crossfader {
     }
 }
 
-impl SoundStructure for Crossfader {
-    fn get(&self,
-           time_start: SampleCalc,
-           base_frequency: &[SampleCalc],
-           result: &mut [SampleCalc])
-           -> SoundResult<()> {
-        if base_frequency.len() != result.len() {
-            return Err(Error::BufferSize);
-        }
-        try!(self.sound_fade_out.get(time_start,
-                                     base_frequency,
-                                     &mut self.wave_fade_out_buffer.borrow_mut()));
-        if self.interval.is_unison() {
-            try!(self.sound_fade_in.get(time_start,
-                                        base_frequency,
-                                        &mut self.wave_fade_in_buffer.borrow_mut()));
-
-        } else {
-            try!(self.interval
-                .transpose(base_frequency, &mut self.frequency_buffer_in.borrow_mut()));
-            try!(self.sound_fade_in.get(time_start,
-                                        &self.frequency_buffer_in.borrow(),
-                                        &mut self.wave_fade_in_buffer.borrow_mut()));
-        }
-        try!(self.amplitude_fade_out
-            .apply(time_start, &mut self.wave_fade_out_buffer.borrow_mut()));
-        try!(self.amplitude_fade_in
-            .apply(time_start, &mut self.wave_fade_in_buffer.borrow_mut()));
-        for ((item, sample_out), sample_in) in result.iter_mut()
-            .zip(self.wave_fade_out_buffer.borrow().iter())
-            .zip(self.wave_fade_in_buffer.borrow().iter()) {
-            *item = *sample_out + *sample_in;
-        }
-        Ok(())
-    }
-}
+// impl SoundStructure for Crossfader {
+// fn get(&self,
+// time_start: SampleCalc,
+// base_frequency: &[SampleCalc],
+// result: &mut [SampleCalc])
+// -> SoundResult<()> {
+// if base_frequency.len() != result.len() {
+// return Err(Error::BufferSize);
+// }
+// try!(self.sound_fade_out.get(time_start,
+// base_frequency,
+// &mut self.wave_fade_out_buffer.borrow_mut()));
+// if self.interval.is_unison() {
+// try!(self.sound_fade_in.get(time_start,
+// base_frequency,
+// &mut self.wave_fade_in_buffer.borrow_mut()));
+//
+// } else {
+// try!(self.interval
+// .transpose(base_frequency, &mut self.frequency_buffer_in.borrow_mut()));
+// try!(self.sound_fade_in.get(time_start,
+// &self.frequency_buffer_in.borrow(),
+// &mut self.wave_fade_in_buffer.borrow_mut()));
+// }
+// try!(self.amplitude_fade_out
+// .apply(time_start, &mut self.wave_fade_out_buffer.borrow_mut()));
+// try!(self.amplitude_fade_in
+// .apply(time_start, &mut self.wave_fade_in_buffer.borrow_mut()));
+// for ((item, sample_out), sample_in) in result.iter_mut()
+// .zip(self.wave_fade_out_buffer.borrow().iter())
+// .zip(self.wave_fade_in_buffer.borrow().iter()) {
+// item = *sample_out + *sample_in;
+// }
+// Ok(())
+// }
+// }

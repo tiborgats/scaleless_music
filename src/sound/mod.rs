@@ -12,6 +12,8 @@ pub mod amplitude_overtones;
 pub mod wave;
 /// Rhythm section.
 pub mod rhythm;
+/// Time and tempo based progress measurement.
+pub mod progress;
 /// Musical note structures.
 pub mod note;
 
@@ -30,6 +32,7 @@ pub use self::amplitude::*;
 pub use self::amplitude_overtones::*;
 pub use self::wave::*;
 pub use self::rhythm::*;
+pub use self::progress::*;
 pub use self::note::*;
 
 /// Precision of the finally produced samples.

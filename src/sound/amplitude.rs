@@ -45,28 +45,25 @@ pub fn is_valid_amplitude(amplitude: SampleCalc) -> SoundResult<()> {
     Ok(())
 }
 
-/// Linearly changing amplitude. After the fade period it provides constant amplitude.
+/// Linearly changing amplitude.
 #[derive(Debug, Copy, Clone)]
 pub struct FadeLinear {
     /// Tempo or time based progress.
     pub progress: ProgressOption,
     amplitude_start: SampleCalc,
     amplitude_end: SampleCalc,
-    amplitude_change: SampleCalc,
 }
 
 impl FadeLinear {
-    /// custom constructor
+    /// Custom constructor.
     pub fn new(mut progress: ProgressOption, amplitude_end: SampleCalc) -> SoundResult<FadeLinear> {
         try!(is_valid_amplitude(amplitude_end));
         let amplitude_start = 0.0;
-        progress.set_period_unit(1.0);
-        let amplitude_change = amplitude_end - amplitude_start;
+        progress.set_period_unit(amplitude_end - amplitude_start);
         Ok(FadeLinear {
             progress: progress,
             amplitude_start: amplitude_start,
             amplitude_end: amplitude_end,
-            amplitude_change: amplitude_change,
         })
     }
 
@@ -80,8 +77,7 @@ impl FadeLinear {
     }
 
     /// Constructor with tempo based progress.
-    ///
-    /// `note_value` = The (tempo relative) speed with which the amplitude is varied.
+    /// `note_value` is the tempo relative fade duration.
     pub fn new_with_tempo(sample_rate: SampleCalc,
                           note_value: NoteValue,
                           amplitude_end: SampleCalc)
@@ -95,8 +91,8 @@ impl AmplitudeJoinable for FadeLinear {
     fn set_amplitude_start(&mut self, amplitude: SampleCalc) -> SoundResult<()> {
         try!(is_valid_amplitude(amplitude));
         self.amplitude_start = amplitude;
+        self.progress.set_phase_init(self.amplitude_start);
         self.progress.set_period_unit(self.amplitude_end - self.amplitude_start);
-        self.progress.set_phase(self.amplitude_start);
         Ok(())
     }
 
@@ -109,10 +105,13 @@ impl AmplitudeProvider for FadeLinear {
     fn get(&mut self, result: &mut [SampleCalc]) -> SoundResult<()> {
         match self.progress {
             ProgressOption::Time(ref mut p) => {
-                for item in result.iter_mut() {
-                    *item = p.next_phase();
+                for (index, item) in result.iter_mut().enumerate() {
+                    match p.next_phase() {
+                        Ok(phase) => *item = phase,
+                        Err(Error::ProgressCompleted) => return Err(Error::ItemsCompleted(index)),
+                        Err(e) => return Err(e),
+                    }
                 }
-                p.simplify();
             }
             ProgressOption::Tempo(ref _p) => return Err(Error::ProgressInvalid),
         }
@@ -122,10 +121,13 @@ impl AmplitudeProvider for FadeLinear {
     fn apply(&mut self, samples: &mut [SampleCalc]) -> SoundResult<()> {
         match self.progress {
             ProgressOption::Time(ref mut p) => {
-                for item in samples.iter_mut() {
-                    *item *= p.next_phase();
+                for (index, item) in samples.iter_mut().enumerate() {
+                    match p.next_phase() {
+                        Ok(phase) => *item *= phase,
+                        Err(Error::ProgressCompleted) => return Err(Error::ItemsCompleted(index)),
+                        Err(e) => return Err(e),
+                    }
                 }
-                p.simplify();
             }
             ProgressOption::Tempo(ref _p) => return Err(Error::ProgressInvalid),
         }
@@ -147,7 +149,6 @@ impl AmplitudeRhythmProvider for FadeLinear {
                         Err(e) => return Err(e),
                     }
                 }
-                p.simplify();
             }
             ProgressOption::Time(ref _p) => return Err(Error::ProgressInvalid),
         }
@@ -172,7 +173,6 @@ impl AmplitudeRhythmProvider for FadeLinear {
                         Err(e) => return Err(e),
                     }
                 }
-                p.simplify();
             }
             ProgressOption::Time(ref _p) => return Err(Error::ProgressInvalid),
         }
@@ -180,7 +180,7 @@ impl AmplitudeRhythmProvider for FadeLinear {
     }
 }
 
-/// [tremolo](https://en.wikipedia.org/wiki/Tremolo), as sine variation of the amplitude.
+/// [Tremolo](https://en.wikipedia.org/wiki/Tremolo), as sine variation of the amplitude.
 #[derive(Debug, Copy, Clone)]
 pub struct Tremolo {
     /// Tempo or time based progress.
@@ -194,13 +194,12 @@ pub struct Tremolo {
 impl Tremolo {
     /// Custom constructor.
     ///
-    /// `extent_ratio` = The ratio of maximum shift away from the base amplitude (must be > 1.0).
+    /// `extent_ratio` is the ratio of maximum shift away from the base amplitude (must be > 1.0).
     pub fn new(progress: ProgressOption, extent_ratio: SampleCalc) -> SoundResult<Tremolo> {
         if extent_ratio <= 1.0 {
             return Err(Error::AmplitudeInvalid);
         }
         let amplitude_normalized = 1.0 / extent_ratio;
-        //        let progress = try!(ProgressTempo::new(sample_rate, note_value));
         Ok(Tremolo {
             progress: progress,
             extent_ratio: extent_ratio,
@@ -211,20 +210,22 @@ impl Tremolo {
     /// Custom constructor with time based progress.
     pub fn new_with_time(sample_rate: SampleCalc,
                          duration: SampleCalc,
+                         period: SampleCalc,
                          extent_ratio: SampleCalc)
                          -> SoundResult<Tremolo> {
-        let progress = try!(ProgressTime::new(sample_rate, duration));
+        let mut progress = try!(ProgressTime::new(sample_rate, duration));
+        try!(progress.set_period(period));
         Self::new(ProgressOption::Time(progress), extent_ratio)
     }
 
     /// Constructor with tempo based progress.
-    ///
-    /// `note_value` = The (tempo relative) speed with which the amplitude is varied.
     pub fn new_with_tempo(sample_rate: SampleCalc,
                           note_value: NoteValue,
+                          period: NoteValue,
                           extent_ratio: SampleCalc)
                           -> SoundResult<Tremolo> {
-        let progress = try!(ProgressTempo::new(sample_rate, note_value));
+        let mut progress = try!(ProgressTempo::new(sample_rate, note_value));
+        progress.set_period(period);
         Self::new(ProgressOption::Tempo(progress), extent_ratio)
     }
 }
@@ -233,9 +234,15 @@ impl AmplitudeProvider for Tremolo {
     fn get(&mut self, result: &mut [SampleCalc]) -> SoundResult<()> {
         match self.progress {
             ProgressOption::Time(ref mut p) => {
-                for item in result.iter_mut() {
-                    *item = self.amplitude_normalized *
-                            (self.extent_ratio.powf(p.next_phase().sin()));
+                for (index, item) in result.iter_mut().enumerate() {
+                    match p.next_phase() {
+                        Ok(phase) => {
+                            *item = self.amplitude_normalized *
+                                    (self.extent_ratio.powf(phase.sin()))
+                        }
+                        Err(Error::ProgressCompleted) => return Err(Error::ItemsCompleted(index)),
+                        Err(e) => return Err(e),
+                    }
                 }
                 p.simplify();
             }
@@ -247,9 +254,15 @@ impl AmplitudeProvider for Tremolo {
     fn apply(&mut self, samples: &mut [SampleCalc]) -> SoundResult<()> {
         match self.progress {
             ProgressOption::Time(ref mut p) => {
-                for item in samples.iter_mut() {
-                    *item *= self.amplitude_normalized *
-                             (self.extent_ratio.powf(p.next_phase().sin()));
+                for (index, item) in samples.iter_mut().enumerate() {
+                    match p.next_phase() {
+                        Ok(phase) => {
+                            *item *= self.amplitude_normalized *
+                                     (self.extent_ratio.powf(phase.sin()))
+                        }
+                        Err(Error::ProgressCompleted) => return Err(Error::ItemsCompleted(index)),
+                        Err(e) => return Err(e),
+                    }
                 }
                 p.simplify();
             }

@@ -281,7 +281,7 @@ impl Crossfader {
                sound_fade_out: Rc<SoundStructure>,
                sound_fade_in: Rc<SoundStructure>)
                -> SoundResult<Crossfader> {
-        let mut amplitude_fade_out = try!(FadeLinear::new_with_time(sample_rate, duration, 0.0));
+        let amplitude_fade_out = try!(FadeLinear::new_with_time(sample_rate, duration, 0.0));
         try!(amplitude_fade_out.set_amplitude_start(1.0));
         let amplitude_fade_in = try!(FadeLinear::new_with_time(sample_rate, duration, 1.0));
         Ok(Crossfader {

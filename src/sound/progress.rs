@@ -17,13 +17,67 @@ pub trait Progress {
     fn get_phase_final(&self) -> SampleCalc;
 }
 
+/// Simple time progress.
+#[derive(Debug, Clone)]
+pub struct ProgressTimeSimple {
+    sample_time: SampleCalc,
+    duration: Cell<SampleCalc>,
+    /// The actual time.
+    time: Cell<SampleCalc>,
+}
+
+impl ProgressTimeSimple {
+    /// Custom constructor with duration.
+    pub fn new(sample_rate: SampleCalc, duration: SampleCalc) -> SoundResult<ProgressTimeSimple> {
+        let sample_time = try!(get_sample_time(sample_rate));
+        if duration <= 0.0 {
+            return Err(Error::PeriodInvalid);
+        }
+        Ok(ProgressTimeSimple {
+            sample_time: sample_time,
+            duration: Cell::new(duration),
+            time: Cell::new(0.0),
+        })
+    }
+
+    /// Provides the next phase value, or `Error::ProgressCompleted` if the progress is finished.
+    pub fn next(&self) -> SoundResult<SampleCalc> {
+        self.time.set(self.time.get() + self.sample_time);
+        if self.time.get() >= self.duration.get() {
+            return Err(Error::ProgressCompleted);
+        }
+        Ok(self.time.get())
+    }
+}
+
+impl Progress for ProgressTimeSimple {
+    fn simplify(&self) {}
+
+    fn set_period_unit(&self, _period_unit: SampleCalc) {
+        self.restart();
+    }
+
+    fn set_phase_init(&self, _phase: SampleCalc) {
+        self.restart();
+    }
+
+    fn restart(&self) {
+        self.time.set(0.0);
+    }
+
+    fn get_phase_final(&self) -> SampleCalc {
+        self.duration.get()
+    }
+}
+
+
 /// Time based progress measurement. It provides the sequence of phases (for sound functions) by
 /// calling `next_phase()`. The whole duration can be divided to periods, for periodic functions.
 #[derive(Debug, Clone)]
 pub struct ProgressTime {
     sample_time: SampleCalc,
     duration: Cell<SampleCalc>,
-    /// Only for periodic functions: the duration of one period.
+    /// For periodic functions: the duration of one period.
     period: Cell<SampleCalc>,
     /// The amount of phase change during one period.
     period_unit: Cell<SampleCalc>,

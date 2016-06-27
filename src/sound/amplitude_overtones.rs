@@ -9,13 +9,22 @@ pub trait AmplitudeOvertonesProvider {
            overtone: usize,
            result: &mut [SampleCalc])
            -> SoundResult<()>;
-    /// Applies the amplitude function over an existing sample for a given overtone.
-    /// For the fundamental tone `overtone = 0`.
+    /// Applies the amplitude function over existing samples for a given overtone.
+    /// For the fundamental tone `overtone = 0`. It multiplies each sample with it's new amplitude.
     fn apply(&self,
              time_start: SampleCalc,
              overtone: usize,
              samples: &mut [SampleCalc])
              -> SoundResult<()>;
+}
+
+/// The `AmplitudeOvertonesJoinable` trait is used to specify the ability of joining
+/// amplitude structures (with overtones) together, forming a sequence of them.
+pub trait AmplitudeOvertonesJoinable {
+    /// Sets the initial amplitude, and resets time.
+    fn set_amplitude_start(&mut self, amplitude: Vec<SampleCalc>) -> SoundResult<()>;
+    // Provides the last amplitude.
+    // fn get_last_amplitude() -> SampleCalc;
 }
 
 /// Amplitude is not changing by time, this function gives the overtone amplitudes too.
@@ -78,6 +87,28 @@ impl AmplitudeOvertonesProvider for AmplitudeConstOvertones {
         };
         for item in samples.iter_mut() {
             *item *= self.amplitude[overtone];
+        }
+        Ok(())
+    }
+}
+
+impl AmplitudeOvertonesJoinable for AmplitudeConstOvertones {
+    fn set_amplitude_start(&mut self, amplitude: Vec<SampleCalc>) -> SoundResult<()> {
+        if amplitude.len() != self.amplitude.len() {
+            return Err(Error::OvertoneCountInvalid);
+        }
+        let mut amplitude_sum: SampleCalc = 0.0;
+        for amplitude_check in &amplitude {
+            if (*amplitude_check < 0.0) || (*amplitude_check > 1.0) {
+                return Err(Error::AmplitudeInvalid);
+            };
+            amplitude_sum += *amplitude_check;
+        }
+        if amplitude_sum == 0.0 {
+            return Err(Error::AmplitudeInvalid);
+        };
+        for (item, amplitude) in self.amplitude.iter_mut().zip(amplitude) {
+            *item = amplitude;
         }
         Ok(())
     }
@@ -170,6 +201,28 @@ impl AmplitudeOvertonesProvider for AmplitudeDecayExpOvertones {
             let position: SampleCalc = (index as SampleCalc * position_change) + position_start;
             // TODO: speed optimization, .exp() is very slow
             *item *= amplitude_overtone * position.exp();
+        }
+        Ok(())
+    }
+}
+
+impl AmplitudeOvertonesJoinable for AmplitudeDecayExpOvertones {
+    fn set_amplitude_start(&mut self, amplitude: Vec<SampleCalc>) -> SoundResult<()> {
+        if amplitude.len() != self.amplitude.len() {
+            return Err(Error::OvertoneCountInvalid);
+        }
+        let mut amplitude_sum: SampleCalc = 0.0;
+        for amplitude_check in &amplitude {
+            if (*amplitude_check < 0.0) || (*amplitude_check > 1.0) {
+                return Err(Error::AmplitudeInvalid);
+            };
+            amplitude_sum += *amplitude_check;
+        }
+        if amplitude_sum == 0.0 {
+            return Err(Error::AmplitudeInvalid);
+        };
+        for (item, amplitude) in self.amplitude.iter_mut().zip(amplitude) {
+            *item = amplitude;
         }
         Ok(())
     }

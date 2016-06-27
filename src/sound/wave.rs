@@ -62,7 +62,7 @@ pub struct Timbre {
     /// The interval is used for transposition of the input frequencies
     interval: Interval,
     waves: RefCell<Vec<Wave>>,
-    amplitude_function: Rc<AmplitudeOvertonesProvider>,
+    amplitude_overtones: Rc<AmplitudeOvertonesProvider>,
     wave_buffer: RefCell<Vec<SampleCalc>>,
     overtone_max: usize,
 }
@@ -71,7 +71,7 @@ impl Timbre {
     /// Custom constructor
     pub fn new(sample_rate: SampleCalc,
                buffer_size: usize,
-               amplitude_function: Rc<AmplitudeOvertonesProvider>,
+               amplitude_overtones: Rc<AmplitudeOvertonesProvider>,
                overtone_max: usize)
                -> SoundResult<Timbre> {
         let mut wave_vec = Vec::with_capacity(overtone_max + 1);
@@ -81,7 +81,7 @@ impl Timbre {
         Ok(Timbre {
             interval: INTERVAL_UNISON,
             waves: RefCell::new(wave_vec),
-            amplitude_function: amplitude_function,
+            amplitude_overtones: amplitude_overtones,
             wave_buffer: RefCell::new(vec![0.0; buffer_size]),
             overtone_max: overtone_max,
         })
@@ -97,9 +97,9 @@ impl Timbre {
 
     /// Set a new amplitude function
     pub fn set_amplitude(&mut self,
-                         amplitude_function: Rc<AmplitudeOvertonesProvider>)
+                         amplitude_overtones: Rc<AmplitudeOvertonesProvider>)
                          -> &mut Timbre {
-        self.amplitude_function = amplitude_function;
+        self.amplitude_overtones = amplitude_overtones;
         self
     }
 }
@@ -124,7 +124,7 @@ impl SoundStructure for Timbre {
         }
         for (overtone, wave) in self.waves.borrow_mut().iter_mut().enumerate() {
             try!(wave.get(base_frequency, &mut wave_buffer));
-            try!(self.amplitude_function
+            try!(self.amplitude_overtones
                 .apply(time_start, overtone, &mut wave_buffer));
             for (item, wave) in result.iter_mut()
                 .zip(wave_buffer.iter()) {

@@ -12,6 +12,9 @@ pub trait Progress {
     fn set_phase_init(&self, phase: SampleCalc);
     /// Restarts the progress.
     fn restart(&self);
+    /// Returns the final phase value. This phase value will be the last one when the progress
+    /// reaches it's duration.
+    fn get_phase_final(&self) -> SampleCalc;
 }
 
 /// Time based progress measurement. It provides the sequence of phases (for sound functions) by
@@ -116,6 +119,10 @@ impl Progress for ProgressTime {
         self.remaining_time.set(self.duration.get());
         self.phase_change.set((self.sample_time / self.period.get()) * self.period_unit.get());
     }
+
+    fn get_phase_final(&self) -> SampleCalc {
+        self.phase_init.get() + ((self.duration.get() / self.period.get()) * self.period_unit.get())
+    }
 }
 
 /// Tempo based progress measurement. It provides the sequence of phases (for sound functions) by
@@ -125,7 +132,7 @@ pub struct ProgressTempo {
     sample_time: SampleCalc,
     /// The tempo relative duration, measured in beats.
     duration: Cell<NoteValue>,
-    /// Only for periodic functions: the duration of one period in beats.
+    /// For periodic functions: the duration of one period in beats.
     period: Cell<NoteValue>,
     /// The amount of phase change during one period.
     period_unit: Cell<SampleCalc>,
@@ -203,6 +210,12 @@ impl Progress for ProgressTempo {
         self.phase_change.set(self.sample_time * self.period.get().get_notes_per_beat() *
                               self.period_unit.get());
     }
+
+    fn get_phase_final(&self) -> SampleCalc {
+        self.phase_init.get() +
+        (self.duration.get().get_duration_in_beats() * self.period.get().get_notes_per_beat() *
+         self.period_unit.get())
+    }
 }
 
 /// Time or tempo based progress.
@@ -240,6 +253,13 @@ impl Progress for ProgressOption {
         match *self {
             ProgressOption::Time(ref p) => p.restart(),
             ProgressOption::Tempo(ref p) => p.restart(),
+        }
+    }
+
+    fn get_phase_final(&self) -> SampleCalc {
+        match *self {
+            ProgressOption::Time(ref p) => p.get_phase_final(),
+            ProgressOption::Tempo(ref p) => p.get_phase_final(),
         }
     }
 }

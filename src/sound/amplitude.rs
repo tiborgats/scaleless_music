@@ -26,8 +26,8 @@ pub trait AmplitudeRhythmProvider {
 pub trait AmplitudeJoinable {
     /// Sets the initial amplitude, and resets time.
     fn set_amplitude_start(&self, amplitude: SampleCalc) -> SoundResult<()>;
-    // Provides the last amplitude.
-    // fn get_last_amplitude() -> SampleCalc;
+    /// Provides the final amplitude value. (Independent of the current progress phase.)
+    fn get_amplitude_final(&self) -> SampleCalc;
     /// Provides the maximal possible amplitude (for normalization).
     fn get_max(&self) -> SampleCalc;
 }
@@ -92,6 +92,10 @@ impl AmplitudeJoinable for FadeLinear {
         self.progress.set_phase_init(self.amplitude_start.get());
         self.progress.set_period_unit(self.amplitude_end - self.amplitude_start.get());
         Ok(())
+    }
+
+    fn get_amplitude_final(&self) -> SampleCalc {
+        self.progress.get_phase_final()
     }
 
     fn get_max(&self) -> SampleCalc {

@@ -17,6 +17,8 @@ pub enum Error {
     SampleRateInvalid,
     /// Invalid buffer size for the given sample count.
     BufferSize,
+    /// Overtone count does not match the reserved array size.
+    OvertoneCountInvalid,
     /// Numerator cannot be 0, because frequencies can not be 0.
     NumeratorInvalid,
     /// Denominator cannot be 0 (division by zero error).
@@ -67,6 +69,7 @@ impl error::Error for Error {
             Backend(ref err) => err.description(),
             SampleRateInvalid => "invalid sample rate",
             BufferSize => "incorrect buffer size",
+            OvertoneCountInvalid => "invalid overtone count",
             NumeratorInvalid => "invalid numerator",
             DenominatorInvalid => "invalid denominator",
             FrequencyTooLow => "frequency is below the hearing range",

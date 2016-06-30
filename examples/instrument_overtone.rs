@@ -45,12 +45,13 @@ impl InstrumentBasic {
             let overtones_amplitude: Vec<SampleCalc> = vec![10.0, 1.0, 1.0, 0.95, 0.9, 0.9, 0.86,
                                                             0.83, 0.80, 0.78, 0.76, 0.74, 0.73,
                                                             0.72, 0.71, 0.70];
-            let overtones_dec_rate: Vec<SampleCalc> = vec![-0.5, -1.4, -1.9, -2.1, -2.4, -3.0,
-                                                           -3.5, -3.7, -3.8, -4.0, -4.2, -4.4,
-                                                           -4.8, -5.3, -6.1, -7.0];
+            let overtones_half_life: Vec<SampleCalc> = vec![1.0, 0.2, 0.1, 0.06, 0.04, 0.03, 0.02,
+                                                            0.015, 0.01, 0.008, 0.007, 0.006,
+                                                            0.005, 0.004, 0.002, 0.001];
             try!(AmplitudeDecayExpOvertones::new(sample_rate,
-                                                 overtones_amplitude,
-                                                 overtones_dec_rate))
+                                                 4,
+                                                 &overtones_amplitude,
+                                                 &overtones_half_life))
         };
         let timbre1 =
             Rc::new(try!(Timbre::new(sample_rate, BUFFER_SIZE_DEFAULT, Rc::new(amplitude), 4)));
@@ -58,7 +59,7 @@ impl InstrumentBasic {
             let overtones_amplitude: Vec<SampleCalc> = vec![1.0, 0.1, 0.1, 0.1, 0.2, 0.5, 0.1,
                                                             0.1, 0.1, 0.1, 0.1, 0.1, 0.1, 0.1,
                                                             0.1, 0.1, 0.1, 0.1, 0.1, 0.1];
-            try!(AmplitudeConstOvertones::new(overtones_amplitude))
+            try!(AmplitudeConstOvertones::new(4, &overtones_amplitude))
         };
         let timbre2 =
             Rc::new(try!(Timbre::new(sample_rate, BUFFER_SIZE_DEFAULT, Rc::new(amplitude), 4)));
@@ -81,6 +82,7 @@ impl InstrumentBasic {
         let interval = try!(Interval::new(numerator, denominator));
         try!(self.mixer.set_interval(0, interval));
         self.time = 0.0;
+        self.mixer.restart();
         println!("{}", interval);
         Ok(())
     }
@@ -91,7 +93,7 @@ impl SoundGenerator for InstrumentBasic {
 
     fn get_samples(&mut self, sample_count: usize, result: &mut Vec<SampleCalc>) {
         self.frequency1.get(self.time, None, &mut self.frequency1_buffer).unwrap();
-        self.mixer.get(self.time, &self.frequency1_buffer, result).unwrap();
+        self.mixer.get(&self.frequency1_buffer, result).unwrap();
         self.time += sample_count as SampleCalc / self.sample_rate;
     }
 

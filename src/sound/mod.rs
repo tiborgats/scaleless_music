@@ -80,20 +80,19 @@ pub trait SoundGenerator {
 pub trait SoundStructure {
     /// Returns the calculated samples in the `result` buffer.
     fn get(&self,
-           time_start: SampleCalc,
            base_frequency: &[SampleCalc],
            result: &mut [SampleCalc])
            -> SoundResult<()>;
+    /// Resets the internal time.
+    fn restart(&self);
 }
 
 /// A structure of music.
 pub trait MusicStructure {
     /// Returns the calculated samples in the `result` buffer.
     fn get(&self,
-           time_start: SampleCalc,
            base_tempo: &[SampleCalc],
            base_frequency: &[SampleCalc],
-           tempo: &[SampleCalc],
            result: &mut [SampleCalc])
            -> SoundResult<()>;
 }

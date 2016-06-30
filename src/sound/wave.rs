@@ -15,6 +15,8 @@ pub struct Wave {
     phase: SampleCalc,
 }
 
+// TODO: speed optimization
+// e.g. https://pizer.wordpress.com/2010/02/08/fast-digital-sine-oscillator/
 impl Wave {
     /// custom constructor
     pub fn new(sample_rate: SampleCalc, overtone: usize) -> SoundResult<Wave> {
@@ -106,11 +108,7 @@ impl Timbre {
 
 impl SoundStructure for Timbre {
     // TODO: filtering out frequencies from the calculations which are out of range
-    fn get(&self,
-           time_start: SampleCalc,
-           base_frequency: &[SampleCalc],
-           result: &mut [SampleCalc])
-           -> SoundResult<()> {
+    fn get(&self, base_frequency: &[SampleCalc], result: &mut [SampleCalc]) -> SoundResult<()> {
         let mut wave_buffer = self.wave_buffer.borrow_mut();
         let buffer_size = wave_buffer.len();
         if base_frequency.len() != buffer_size {
@@ -125,13 +123,17 @@ impl SoundStructure for Timbre {
         for (overtone, wave) in self.waves.borrow_mut().iter_mut().enumerate() {
             try!(wave.get(base_frequency, &mut wave_buffer));
             try!(self.amplitude_overtones
-                .apply(time_start, overtone, &mut wave_buffer));
+                .apply(overtone, &mut wave_buffer));
             for (item, wave) in result.iter_mut()
                 .zip(wave_buffer.iter()) {
                 *item += *wave;
             }
         }
         Ok(())
+    }
+
+    fn restart(&self) {
+        self.amplitude_overtones.restart();
     }
 }
 
@@ -230,11 +232,7 @@ impl Mixer {
 }
 
 impl SoundStructure for Mixer {
-    fn get(&self,
-           time_start: SampleCalc,
-           base_frequency: &[SampleCalc],
-           result: &mut [SampleCalc])
-           -> SoundResult<()> {
+    fn get(&self, base_frequency: &[SampleCalc], result: &mut [SampleCalc]) -> SoundResult<()> {
         if base_frequency.len() != result.len() {
             return Err(Error::BufferSize);
         }
@@ -244,14 +242,18 @@ impl SoundStructure for Mixer {
         for channel in self.channels.borrow_mut().iter_mut() {
             try!(channel.interval
                 .transpose(base_frequency, &mut channel.frequency_buffer));
-            try!(channel.sound.get(time_start,
-                                   &channel.frequency_buffer,
-                                   &mut channel.wave_buffer));
+            try!(channel.sound.get(&channel.frequency_buffer, &mut channel.wave_buffer));
             for (item, wave) in result.iter_mut().zip(channel.wave_buffer.iter()) {
                 *item += *wave * channel.volume_normalized;
             }
         }
         Ok(())
+    }
+
+    fn restart(&self) {
+        for channel in self.channels.borrow().iter() {
+            channel.sound.restart();
+        }
     }
 }
 

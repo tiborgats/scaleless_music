@@ -74,7 +74,7 @@ fn ampconst_overtone(bencher: &mut Bencher) {
     let mut amplitude_buffer: Vec<SampleCalc> = vec![0.0; BENCH_BUFFER_SIZE];
     let amplitude = {
         let overtones_amplitude: Vec<SampleCalc> = vec![1.0, 0.5];
-        AmplitudeConstOvertones::new(1, &overtones_amplitude).unwrap()
+        AmplitudeConstOvertones::new(BENCH_SAMPLE_RATE, 1, &overtones_amplitude).unwrap()
     };
 
     bencher.iter(|| {

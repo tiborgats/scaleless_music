@@ -59,7 +59,7 @@ impl InstrumentBasic {
             let overtones_amplitude: Vec<SampleCalc> = vec![1.0, 0.1, 0.1, 0.1, 0.2, 0.5, 0.1,
                                                             0.1, 0.1, 0.1, 0.1, 0.1, 0.1, 0.1,
                                                             0.1, 0.1, 0.1, 0.1, 0.1, 0.1];
-            try!(AmplitudeConstOvertones::new(4, &overtones_amplitude))
+            try!(AmplitudeConstOvertones::new(sample_rate, 4, &overtones_amplitude))
         };
         let timbre2 =
             Rc::new(try!(Timbre::new(sample_rate, BUFFER_SIZE_DEFAULT, Rc::new(amplitude), 4)));

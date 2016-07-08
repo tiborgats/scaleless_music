@@ -14,6 +14,9 @@ pub mod wave;
 pub mod rhythm;
 /// Time and tempo based progress measurement.
 pub mod progress;
+/// Basic functionality of sequences. It handles the different type of timings of the
+/// sequence items.
+pub mod sequence;
 /// Musical note structures.
 pub mod note;
 
@@ -33,6 +36,7 @@ pub use self::amplitude_overtones::*;
 pub use self::wave::*;
 pub use self::rhythm::*;
 pub use self::progress::*;
+pub use self::sequence::*;
 pub use self::note::*;
 
 /// Precision of the finally produced samples.
@@ -68,21 +72,18 @@ pub const PI2: SampleCalc = ::std::f32::consts::PI * 2.0;
 /// Sound sample generator for output (playback). It can also take real-time input (commands),
 /// thus musical instruments can be realized with it.
 pub trait SoundGenerator {
-/// Message type.
+    /// Message type.
     type Command;
-/// Get the next `sample_count` amount of samples, put them in `result`
+    /// Get the next `sample_count` amount of samples, put them in `result`
     fn get_samples(&mut self, sample_count: usize, result: &mut Vec<SampleCalc>);
-/// Send a message to the `SoundGenerator`.
+    /// Send a message to the `SoundGenerator`.
     fn process_command(&mut self, command: Self::Command);
 }
 
 /// A sound component. Can be a simple wave or a complex structure of waves.
 pub trait SoundStructure {
     /// Returns the calculated samples in the `result` buffer.
-    fn get(&self,
-           base_frequency: &[SampleCalc],
-           result: &mut [SampleCalc])
-           -> SoundResult<()>;
+    fn get(&self, base_frequency: &[SampleCalc], result: &mut [SampleCalc]) -> SoundResult<()>;
     /// Resets the internal time.
     fn restart(&self);
 }

@@ -7,25 +7,35 @@ pub trait AmplitudeOvertonesProvider {
     /// Provides the results of the amplitude calculations for a given overtone.
     /// For the fundamental tone `overtone = 0`.
     fn get(&self, overtone: usize, result: &mut [SampleCalc]) -> SoundResult<()>;
+
     /// Applies the amplitude function over existing samples for a given overtone.
     /// For the fundamental tone `overtone = 0`. It multiplies each sample with it's new amplitude.
     fn apply(&self, overtone: usize, samples: &mut [SampleCalc]) -> SoundResult<()>;
+
     /// Resets to the initial state.
     fn restart(&self);
+
+    // It is only for measuring time lapse. Does nothing
+    // fn next_chunk_size(&self, buffer_size: usize) -> usize;
 }
 
 /// The `AmplitudeOvertonesJoinable` trait is used to specify the ability of joining
 /// amplitude structures (with overtones) together, forming a sequence of them.
-pub trait AmplitudeOvertonesJoinable {
+pub trait AmplitudeOvertonesJoinable: AmplitudeOvertonesProvider {
     /// Sets the initial amplitude, and resets time.
     fn set_amplitude_start(&self, amplitude: &[SampleCalc]) -> SoundResult<()>;
-    // Provides the final amplitude value. (Independent of the current progress phase.)
-    // fn get_amplitude_final(&self) -> SampleCalc;
+    /// Provides the actual amplitude values.
+    fn get_amplitudes(&self, result: &mut [SampleCalc]) -> SoundResult<()>;
+    // fn get_duration(&self) -> Option<SampleCalc>;
+
+    // fn set_duration(&self, duration: SampleCalc);
 }
+
 
 /// Amplitude is not changing by time, this function gives the overtone amplitudes too.
 #[derive(Debug, Clone)]
 pub struct AmplitudeConstOvertones {
+    timer: Timer,
     amplitude: RefCell<Vec<SampleCalc>>,
 }
 
@@ -33,7 +43,8 @@ impl AmplitudeConstOvertones {
     /// custom constructor
     /// It normalizes the amplitudes, so the sum of them will be 1.0.
     /// `overtone_count` is independent of the size of `amplitude`.
-    pub fn new(overtone_count: usize,
+    pub fn new(sample_rate: SampleCalc,
+               overtone_count: usize,
                amplitude: &[SampleCalc])
                -> SoundResult<AmplitudeConstOvertones> {
         let mut amplitude_sum: SampleCalc = 0.0;
@@ -46,12 +57,16 @@ impl AmplitudeConstOvertones {
         if amplitude_sum == 0.0 {
             return Err(Error::AmplitudeInvalid);
         };
-        let mut amplitude_new = vec![0.0; overtone_count + 1]; // fundamental tone included in size
+        // fundamental tone is included in size
+        let mut amplitude_new = vec![0.0; overtone_count + 1];
         // normalization
         for (item, amplitude_old) in amplitude_new.iter_mut().zip(amplitude) {
             *item = amplitude_old / amplitude_sum;
         }
-        Ok(AmplitudeConstOvertones { amplitude: RefCell::new(amplitude_new) })
+        Ok(AmplitudeConstOvertones {
+            timer: try!(Timer::new(sample_rate)),
+            amplitude: RefCell::new(amplitude_new),
+        })
     }
 }
 
@@ -85,7 +100,7 @@ impl AmplitudeOvertonesProvider for AmplitudeConstOvertones {
     }
 
     fn restart(&self) {
-        // Do nothing, as nothing changes by time.
+        self.timer.restart();
     }
 }
 
@@ -112,6 +127,23 @@ impl AmplitudeOvertonesJoinable for AmplitudeConstOvertones {
             *item = *amplitude;
         }
         for item in amp_empty.iter_mut() {
+            *item = 0.0;
+        }
+        Ok(())
+    }
+
+    fn get_amplitudes(&self, result: &mut [SampleCalc]) -> SoundResult<()> {
+        let amplitude = self.amplitude.borrow();
+        // checking the input data
+        if result.len() < amplitude.len() {
+            return Err(Error::OvertoneCountInvalid);
+        }
+        // Copying amplitudes and filling the rest with zero.
+        let (result_data, result_empty) = result.split_at_mut(amplitude.len());
+        for (item, amplitude) in result_data.iter_mut().zip(amplitude.iter()) {
+            *item = *amplitude;
+        }
+        for item in result_empty.iter_mut() {
             *item = 0.0;
         }
         Ok(())
@@ -150,7 +182,8 @@ impl AmplitudeDecayExpOvertones {
         if amplitude_sum == 0.0 {
             return Err(Error::AmplitudeInvalid);
         };
-        let mut amplitude_new = vec![0.0; overtone_count + 1]; // fundamental tone included in size
+        // fundamental tone is included in size
+        let mut amplitude_new = vec![0.0; overtone_count + 1];
         // normalization
         for (item, amplitude_old) in amplitude_new.iter_mut().zip(amplitude) {
             *item = amplitude_old / amplitude_sum;
@@ -160,7 +193,7 @@ impl AmplitudeDecayExpOvertones {
                 return Err(Error::AmplitudeRateInvalid);
             }
         }
-        let mut multiplier = vec![0.0; overtone_count + 1]; // fundamental tone included in size
+        let mut multiplier = vec![0.0; overtone_count + 1]; // fundamental tone is included in size
         let half: SampleCalc = 0.5;
         for (item, hl) in multiplier.iter_mut().zip(half_life) {
             *item = half.powf(sample_time / hl);
@@ -244,13 +277,30 @@ impl AmplitudeOvertonesJoinable for AmplitudeDecayExpOvertones {
         }
         Ok(())
     }
+
+    fn get_amplitudes(&self, result: &mut [SampleCalc]) -> SoundResult<()> {
+        let amplitude = self.amplitude.borrow();
+        // checking the input data
+        if result.len() < amplitude.len() {
+            return Err(Error::OvertoneCountInvalid);
+        }
+        // Copying amplitudes and filling the rest with zero.
+        let (result_data, result_empty) = result.split_at_mut(amplitude.len());
+        for (item, amplitude) in result_data.iter_mut().zip(amplitude.iter()) {
+            *item = *amplitude;
+        }
+        for item in result_empty.iter_mut() {
+            *item = 0.0;
+        }
+        Ok(())
+    }
 }
 
+// use std::any::Any;
 #[doc(hidden)]
 #[allow(dead_code)]
 struct AmplitudeOvertonesSequenceItem {
-    amplitude: Rc<AmplitudeOvertonesProvider>,
-    duration: SampleCalc,
+    amplitude: Rc<AmplitudeOvertonesJoinable>, //    timer: Timer,
 }
 
 /// A sequence of amplitude functions with overtones.
@@ -258,4 +308,7 @@ struct AmplitudeOvertonesSequenceItem {
 #[allow(dead_code)]
 pub struct AmplitudeOvertonesSequence {
     amplitudes: RefCell<Vec<AmplitudeOvertonesSequenceItem>>,
+    timer: Timer,
 }
+
+impl AmplitudeOvertonesSequence {}

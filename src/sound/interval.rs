@@ -1,5 +1,5 @@
 use sound::*;
-use num::num_integer::*;
+use num::*;
 use std::fmt;
 use std::ops::{Div, Mul};
 

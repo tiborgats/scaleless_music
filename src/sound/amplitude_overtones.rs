@@ -1,9 +1,13 @@
 use sound::*;
 use std::rc::Rc;
 use std::cell::RefCell;
+use std::cell::Cell;
 
 /// Provides time dependent amlitude changes both for the fundamental tone and for overtones.
 pub trait AmplitudeOvertonesProvider {
+    /// It is only for measuring time lapse. Does nothing else.
+    fn next_chunk(&self, samples: usize) -> SoundResult<()>;
+
     /// Provides the results of the amplitude calculations for a given overtone.
     /// For the fundamental tone `overtone = 0`.
     fn get(&self, overtone: usize, result: &mut [SampleCalc]) -> SoundResult<()>;
@@ -14,14 +18,11 @@ pub trait AmplitudeOvertonesProvider {
 
     /// Resets to the initial state.
     fn restart(&self);
-
-    // It is only for measuring time lapse. Does nothing
-    // fn next_chunk_size(&self, buffer_size: usize) -> usize;
 }
 
 /// The `AmplitudeOvertonesJoinable` trait is used to specify the ability of joining
 /// amplitude structures (with overtones) together, forming a sequence of them.
-pub trait AmplitudeOvertonesJoinable: AmplitudeOvertonesProvider {
+pub trait AmplitudeOvertonesJoinable: AmplitudeOvertonesProvider + HasTimer {
     /// Sets the initial amplitude, and resets time.
     fn set_amplitude_start(&self, amplitude: &[SampleCalc]) -> SoundResult<()>;
     /// Provides the actual amplitude values.
@@ -71,6 +72,10 @@ impl AmplitudeConstOvertones {
 }
 
 impl AmplitudeOvertonesProvider for AmplitudeConstOvertones {
+    fn next_chunk(&self, samples: usize) -> SoundResult<()> {
+        self.timer.jump_by_time(samples)
+    }
+
     fn get(&self, overtone: usize, result: &mut [SampleCalc]) -> SoundResult<()> {
         let amplitude = self.amplitude.borrow();
         if overtone >= amplitude.len() {
@@ -101,6 +106,12 @@ impl AmplitudeOvertonesProvider for AmplitudeConstOvertones {
 
     fn restart(&self) {
         self.timer.restart();
+    }
+}
+
+impl HasTimer for AmplitudeConstOvertones {
+    fn get_timer(&self) -> &Timer {
+        &self.timer
     }
 }
 
@@ -155,6 +166,7 @@ impl AmplitudeOvertonesJoinable for AmplitudeConstOvertones {
 /// index: 0 = fundamental tone, 1.. = overtones.
 #[derive(Debug, Clone)]
 pub struct AmplitudeDecayExpOvertones {
+    timer: Timer,
     sample_time: SampleCalc,
     amplitude_init: Vec<SampleCalc>, // initial amplitudes
     multiplier: Vec<SampleCalc>,
@@ -199,6 +211,7 @@ impl AmplitudeDecayExpOvertones {
             *item = half.powf(sample_time / hl);
         }
         Ok(AmplitudeDecayExpOvertones {
+            timer: try!(Timer::new(sample_rate)),
             sample_time: sample_time,
             amplitude_init: amplitude_new.clone(),
             multiplier: multiplier,
@@ -208,6 +221,10 @@ impl AmplitudeDecayExpOvertones {
 }
 
 impl AmplitudeOvertonesProvider for AmplitudeDecayExpOvertones {
+    fn next_chunk(&self, samples: usize) -> SoundResult<()> {
+        self.timer.jump_by_time(samples)
+    }
+
     fn get(&self, overtone: usize, result: &mut [SampleCalc]) -> SoundResult<()> {
         let mut amplitude = self.amplitude.borrow_mut();
         if (overtone >= amplitude.len()) || (overtone >= self.multiplier.len()) {
@@ -247,6 +264,13 @@ impl AmplitudeOvertonesProvider for AmplitudeDecayExpOvertones {
             .zip(self.amplitude_init.iter()) {
             *amplitude = *amplitude_init;
         }
+        self.timer.restart();
+    }
+}
+
+impl HasTimer for AmplitudeDecayExpOvertones {
+    fn get_timer(&self) -> &Timer {
+        &self.timer
     }
 }
 
@@ -296,19 +320,81 @@ impl AmplitudeOvertonesJoinable for AmplitudeDecayExpOvertones {
     }
 }
 
-// use std::any::Any;
-#[doc(hidden)]
-#[allow(dead_code)]
-struct AmplitudeOvertonesSequenceItem {
-    amplitude: Rc<AmplitudeOvertonesJoinable>, //    timer: Timer,
-}
-
 /// A sequence of amplitude functions with overtones.
-#[doc(hidden)]
-#[allow(dead_code)]
+#[derive(Clone)]
 pub struct AmplitudeOvertonesSequence {
-    amplitudes: RefCell<Vec<AmplitudeOvertonesSequenceItem>>,
     timer: Timer,
+    amplitudes: Vec<Rc<AmplitudeOvertonesJoinable>>,
+    amplitude_index: Cell<usize>,
 }
 
-impl AmplitudeOvertonesSequence {}
+impl AmplitudeOvertonesSequence {
+    /// custom constructor
+    pub fn new(sample_rate: SampleCalc) -> SoundResult<AmplitudeOvertonesSequence> {
+        Ok(AmplitudeOvertonesSequence {
+            timer: try!(Timer::new(sample_rate)),
+            amplitudes: Vec::new(),
+            amplitude_index: Cell::new(0),
+        })
+    }
+}
+
+impl AmplitudeOvertonesProvider for AmplitudeOvertonesSequence {
+    fn next_chunk(&self, samples: usize) -> SoundResult<()> {
+        if self.amplitudes.is_empty() {
+            return Err(Error::SequenceEmpty);
+        }
+        // let amplitude_act =
+        //    try!(self.amplitudes.get(self.amplitude_index.get()).ok_or(Error::ItemInvalid));
+        //        let buffer_len: usize;
+        // match amplitude_act.get_timer().step_time(samples) {
+        // Ok(()) => {
+        // buffer_len = samples;
+        // }
+        // Err(Error::ItemsCompleted(completed)) => {
+        // buffer_len = completed;
+        // }
+        // Err(e) => return Err(e),
+        // }
+        //
+        self.timer.jump_by_time(samples)
+    }
+
+    fn get(&self, overtone: usize, result: &mut [SampleCalc]) -> SoundResult<()> {
+        if self.amplitudes.is_empty() {
+            return Err(Error::SequenceEmpty);
+        }
+        let amplitude_act =
+            try!(self.amplitudes.get(self.amplitude_index.get()).ok_or(Error::ItemInvalid));
+        //        let buffer_len: usize;
+        // match amplitude_act.get_timer().step_time(result.len()) {
+        // Ok(()) => {
+        // buffer_len = result.len();
+        // }
+        // Err(Error::ItemsCompleted(completed)) => {
+        // buffer_len = completed;
+        // }
+        // Err(e) => return Err(e),
+        // }
+        //
+        // TODO
+        try!(amplitude_act.get(overtone, result));
+        Ok(())
+    }
+
+    fn apply(&self, _overtone: usize, _samples: &mut [SampleCalc]) -> SoundResult<()> {
+        if self.amplitudes.is_empty() {
+            return Err(Error::SequenceEmpty);
+        }
+
+
+        // TODO
+        Ok(())
+    }
+
+
+    fn restart(&self) {
+        self.amplitude_index.set(0);
+        self.timer.restart();
+    }
+}

@@ -1,4 +1,4 @@
-music [![Build Status](https://travis-ci.org/tiborgats/music.svg?branch=master)](https://travis-ci.org/tiborgats/music) [![License](https://img.shields.io/badge/License-WTFPL-green.svg)](https://github.com/tiborgats/music/blob/master/COPYING)
+music [![Build Status](https://travis-ci.org/tiborgats/music.svg?branch=master)](https://travis-ci.org/tiborgats/music) [![Dependency Status](https://dependencyci.com/github/tiborgats/music/badge)](https://dependencyci.com/github/tiborgats/music) [![License](https://img.shields.io/badge/License-WTFPL-green.svg)](https://github.com/tiborgats/music/blob/master/COPYING)
 =====
 I was always annoyed by the slightly false notes that came out from electronic musical instruments. When I wanted to compose some overtone flute music I also realized, that music composing software (MIDI editors) are limited to the western chromatic music scale. They miss not only some harmonies of the overtone flute, but also many of those, which are present in other types of music (e.g. Arabic). And so this project was born...
 

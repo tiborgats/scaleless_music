@@ -7,7 +7,6 @@
 /// Other keys play the previous frequency. To quit press <kbd>Esc</kbd>.
 
 extern crate music;
-extern crate rayon;
 
 #[macro_use]
 extern crate conrod;

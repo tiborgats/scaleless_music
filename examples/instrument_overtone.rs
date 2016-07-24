@@ -3,7 +3,6 @@
 //! only testing.
 //! See also: [Overtone flute](https://en.wikipedia.org/wiki/Overtone_flute)
 extern crate music;
-extern crate rayon;
 
 #[macro_use]
 extern crate conrod;

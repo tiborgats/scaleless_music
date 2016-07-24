@@ -14,9 +14,8 @@ pub mod wave;
 pub mod rhythm;
 /// Time and tempo based progress measurement.
 pub mod progress;
-/// Basic functionality of sequences. It handles the different type of timings of the
-/// sequence items.
-pub mod sequence;
+/// Timing for the duration of sound components.
+pub mod timing;
 /// Musical note structures.
 pub mod note;
 
@@ -36,7 +35,7 @@ pub use self::amplitude_overtones::*;
 pub use self::wave::*;
 pub use self::rhythm::*;
 pub use self::progress::*;
-pub use self::sequence::*;
+pub use self::timing::*;
 pub use self::note::*;
 
 /// Precision of the finally produced samples.

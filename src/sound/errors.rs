@@ -45,14 +45,20 @@ pub enum Error {
     DurationInvalid,
     /// Channel of the given number does not exist.
     ChannelInvalid,
-    /// Beats per minute must be positive
+    /// Beats per minute must be positive.
     TempoInvalid,
+    /// Timing option does not match the method.
+    TimingInvalid,
     /// The selected progress option is invalid for this case.
     ProgressInvalid,
     /// Progress is finished.
     ProgressCompleted,
     /// The number of items completed in an unfinished buffer operation.
     ItemsCompleted(usize),
+    /// The Sequence has no items.
+    SequenceEmpty,
+    /// Item at the given index does not exist.
+    ItemInvalid,
 }
 
 impl fmt::Display for Error {
@@ -84,9 +90,12 @@ impl error::Error for Error {
             DurationInvalid => "invalid duration",
             ChannelInvalid => "invalid channel",
             TempoInvalid => "beats per minute must be positive",
+            TimingInvalid => "invalid timing option",
             ProgressInvalid => "invalid progress option",
             ProgressCompleted => "progress completed",
             ItemsCompleted(_) => "",
+            SequenceEmpty => "sequence has no items",
+            ItemInvalid => "the item does not exist",
         }
     }
 

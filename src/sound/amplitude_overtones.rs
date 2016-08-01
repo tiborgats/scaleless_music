@@ -22,7 +22,7 @@ pub trait AmplitudeOvertonesProvider {
 
 /// The `AmplitudeOvertonesJoinable` trait is used to specify the ability of joining
 /// amplitude structures (with overtones) together, forming a sequence of them.
-pub trait AmplitudeOvertonesJoinable: AmplitudeOvertonesProvider + HasTimer {
+pub trait AmplitudeOvertonesJoinable: AmplitudeOvertonesProvider {
     /// Sets the initial amplitude, and resets time.
     fn set_amplitude_start(&self, amplitude: &[SampleCalc]) -> SoundResult<()>;
     /// Provides the actual amplitude values.
@@ -106,12 +106,6 @@ impl AmplitudeOvertonesProvider for AmplitudeConstOvertones {
 
     fn restart(&self) {
         self.timer.restart();
-    }
-}
-
-impl HasTimer for AmplitudeConstOvertones {
-    fn get_timer(&self) -> &Timer {
-        &self.timer
     }
 }
 
@@ -265,12 +259,6 @@ impl AmplitudeOvertonesProvider for AmplitudeDecayExpOvertones {
             *amplitude = *amplitude_init;
         }
         self.timer.restart();
-    }
-}
-
-impl HasTimer for AmplitudeDecayExpOvertones {
-    fn get_timer(&self) -> &Timer {
-        &self.timer
     }
 }
 

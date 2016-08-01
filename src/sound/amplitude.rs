@@ -1,6 +1,6 @@
 use sound::*;
 use std::cell::Cell;
-// use rayon::prelude::*;
+use std::rc::Rc;
 
 /// Provides time dependent amlitude changes.
 pub trait AmplitudeProvider {
@@ -26,7 +26,7 @@ pub trait AmplitudeProvider {
 
 /// The `AmplitudeJoinable` trait is used to specify the ability of joining amplitude structures
 /// together, forming a sequence of them.
-pub trait AmplitudeJoinable {
+pub trait AmplitudeJoinable: AmplitudeProvider {
     /// Sets the initial amplitude, and resets time.
     fn set_amplitude_start(&self, amplitude: SampleCalc) -> SoundResult<()>;
     /// Provides the actual amplitude value.
@@ -427,8 +427,69 @@ impl AmplitudeProvider for Tremolo {
 }
 
 /// Sequence of several amplitude functions.
-pub struct AmplitudeSequence;
+pub struct AmplitudeSequence {
+    timer: Timer,
+    amplitudes: Vec<Rc<AmplitudeJoinable>>,
+    amplitude_index: Cell<usize>,
+}
 
+impl AmplitudeSequence {
+    /// Custom constructor.
+    pub fn new(sample_rate: SampleCalc) -> SoundResult<AmplitudeSequence> {
+        let v = Vec::new();
+        Ok(AmplitudeSequence {
+            timer: try!(Timer::new(sample_rate)),
+            amplitudes: v,
+            amplitude_index: Cell::new(0),
+        })
+    }
+}
+
+impl AmplitudeProvider for AmplitudeSequence {
+    fn apply(&self, samples: &mut [SampleCalc]) -> SoundResult<()> {
+        if self.amplitudes.is_empty() {
+            return Err(Error::SequenceEmpty);
+        }
+        let buffer: &mut [SampleCalc];
+        let timer_result = self.timer.jump_by_time(samples.len());
+        match timer_result {
+            Ok(()) => buffer = samples,
+            Err(Error::ItemsCompleted(completed)) => buffer = &mut samples[0..completed],
+            Err(_) => return timer_result,
+        }
+        let mut index_from: usize = 0;
+        loop {
+            let amplitude_act =
+                try!(self.amplitudes.get(self.amplitude_index.get()).ok_or(Error::ItemInvalid));
+            let child_result = amplitude_act.apply(&mut buffer[index_from..]);
+            match child_result {
+                Ok(()) => return timer_result,
+                Err(Error::ItemsCompleted(completed)) => {
+                    index_from = completed;
+                    let amplitude_index = self.amplitude_index.get() + 1;
+                    if amplitude_index >= self.amplitudes.len() {
+                        return Err(Error::ItemInvalid);
+                    } else {
+                        self.amplitude_index.set(amplitude_index);
+                    }
+                }
+                Err(_) => return child_result,
+            }
+        }
+    }
+
+    fn apply_rhythmic(&self, tempo: &[SampleCalc], samples: &mut [SampleCalc]) -> SoundResult<()> {
+        if tempo.len() != samples.len() {
+            return Err(Error::BufferSize);
+        }
+        // TODO: implementation
+        Ok(())
+    }
+
+    fn set_timing(&self, timing: TimingOption) -> SoundResult<()> {
+        self.timer.set(timing)
+    }
+}
 
 
 /// Combination of several amplitude functions.

@@ -2,9 +2,9 @@ use sound::*;
 use std::cell::Cell;
 
 /// It provides the timing functionality required for making sequences.
-pub trait HasTimer {
-    /// It returns a reference to the `Timer`.
-    fn get_timer(&self) -> &Timer;
+pub trait SequenceItem {
+    /// Sets the timing (duration) of the sequence item.
+    fn set_timing(&self, timing: TimingOption) -> SoundResult<()>;
 }
 
 /// Optional duration type, for timings in sequences.

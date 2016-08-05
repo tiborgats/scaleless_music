@@ -14,12 +14,11 @@ documentation = ""
 [features]
 default = ["be-portaudio"]
 # Optional backends
-be-portaudio = ["portaudio", "lazy_static"]
+be-portaudio = ["portaudio"]
 be-rsoundio = ["rsoundio", "rb"]
 
 [dependencies]
-portaudio = { version = "0.6.4", optional = true }
-lazy_static = { version = "0.2.1", optional = true }
+portaudio = { version = "0.7.0", optional = true }
 rsoundio = { version = "0.1.6", optional = true }
 rb = { version = "0.2.0", optional = true }
 num = "0.1.34"

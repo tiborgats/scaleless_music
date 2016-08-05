@@ -4,39 +4,29 @@ use sound::*;
 // use std::sync::mpsc::channel;
 use std::sync::mpsc::Sender;
 
-lazy_static! {
-    static ref PORTAUDIO: pa::PortAudio = {
-        let pa = pa::PortAudio::new()
-            .expect("PortAudio construction shouldn't fail.");
-        println!("PortAudio is initialized.");
-        pa
-    };
-}
-
 /// This is a wrapper around the sound output backend
-pub struct SoundInterface<'a, T: 'static> {
+pub struct SoundInterface<T: 'static> {
     sample_rate: u32,
     channel_count: u16,
-    stream: pa::Stream<'a, pa::NonBlocking, pa::stream::Output<SampleOutput>>,
-    // synthesizer: Arc<Mutex<Wave>>,
+    stream: pa::Stream<pa::NonBlocking, pa::stream::Output<SampleOutput>>,
     sender: Option<Sender<T>>, // receiver: Option<Receiver<T>,
 }
 
-impl<'a, T> SoundInterface<'a, T> {
+impl<T> SoundInterface<T> {
     /// Creates a new backend for sound playback.
     /// At the moment all channels output the same sound.
     pub fn new(sample_rate: u32,
                buffer_size: usize,
                channel_count: u16,
                mut generator: Box<SoundGenerator<Command = T>>)
-               -> BackendResult<SoundInterface<'a, T>> {
+               -> BackendResult<SoundInterface<T>> {
         println!("PortAudio version : {}", pa::version());
         println!("PortAudio version text : {:?}", pa::version_text());
-        // println!("host count: {}", PORTAUDIO.host_api_count()?);
-        println!("host count: {}", try!(PORTAUDIO.host_api_count()));
-        let mut settings = try!(PORTAUDIO.default_output_stream_settings(channel_count as i32,
-                                                                         sample_rate as f64,
-                                                                         buffer_size as u32));
+        let pa = try!(pa::PortAudio::new());
+        println!("host count: {}", try!(pa.host_api_count()));
+        let mut settings = try!(pa.default_output_stream_settings(channel_count as i32,
+                                                                  sample_rate as f64,
+                                                                  buffer_size as u32));
         // we won't output out of range samples so don't bother clipping them.
         settings.flags = pa::stream_flags::CLIP_OFF;
 
@@ -66,15 +56,13 @@ impl<'a, T> SoundInterface<'a, T> {
         };
 
         // Open a non-blocking stream.
-        // let stream = PORTAUDIO.open_non_blocking_stream(settings, callback_fn)?;
-        let stream = try!(PORTAUDIO.open_non_blocking_stream(settings, callback_fn));
+        let stream = try!(pa.open_non_blocking_stream(settings, callback_fn));
         println!("Stream is created.");
 
         Ok(SoundInterface {
             sample_rate: sample_rate,
             channel_count: channel_count,
             stream: stream,
-            // synthesizer: Arc::new(Mutex::new(Wave::default())),
             sender: Some(sender),
         })
     }
@@ -106,7 +94,7 @@ impl<'a, T> SoundInterface<'a, T> {
     }
 }
 
-impl<'a, T> Drop for SoundInterface<'a, T> {
+impl<T> Drop for SoundInterface<T> {
     fn drop(&mut self) {
         use std::error::Error;
         if self.stream.is_active() == Ok(true) {

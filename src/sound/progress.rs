@@ -2,10 +2,7 @@ use sound::*;
 use std::cell::Cell;
 
 /// Common methods of the Progress types.
-pub trait Progress {
-    /// Sets the duration, and restarts the progress.
-    fn set_timing(&self, timing: TimingOption) -> SoundResult<()>;
-
+pub trait Progress: HasTimer {
     /// Sets a new period unit, and restarts the progress. Period unit is the amount of phase
     /// change during one period.
     fn set_period_unit(&self, period_unit: SampleCalc);
@@ -15,9 +12,6 @@ pub trait Progress {
 
     /// Simplifies the phase to achieve higher accuracy. It is only used for periodic functions.
     fn simplify(&self);
-
-    /// Restarts the progress.
-    fn restart(&self);
 
     /// Provides the next phase value, or `Error::ProgressCompleted` if the progress is finished.
     fn next_by_time(&self) -> SoundResult<SampleCalc>;
@@ -60,7 +54,7 @@ impl ProgressTime {
         if period <= 0.0 {
             return Err(Error::PeriodInvalid);
         }
-        try!(timer.set(TimingOption::TimeConst(period)));
+        try!(timer.set_timing(TimingOption::TimeConst(period)));
         let period_unit = PI2;
         let phase_change = (timer.get_sample_time() / period) * period_unit;
         Ok(ProgressTime {
@@ -92,13 +86,26 @@ impl ProgressTime {
     }
 }
 
-impl Progress for ProgressTime {
+impl HasTimer for ProgressTime {
     fn set_timing(&self, timing: TimingOption) -> SoundResult<()> {
-        try!(self.timer.set(timing));
+        try!(self.timer.set_timing(timing));
         self.restart();
         Ok(())
     }
 
+    fn get_timing(&self) -> TimingOption {
+        self.timer.get_timing()
+    }
+
+    fn restart(&self) {
+        self.timer.restart();
+        self.phase.set(self.phase_init.get());
+        self.phase_change
+            .set((self.timer.get_sample_time() / self.period.get()) * self.period_unit.get());
+    }
+}
+
+impl Progress for ProgressTime {
     fn set_period_unit(&self, period_unit: SampleCalc) {
         self.period_unit.set(period_unit);
         self.restart();
@@ -111,13 +118,6 @@ impl Progress for ProgressTime {
 
     fn simplify(&self) {
         self.phase.set(self.phase.get() % self.period_unit.get());
-    }
-
-    fn restart(&self) {
-        self.timer.restart();
-        self.phase.set(self.phase_init.get());
-        self.phase_change
-            .set((self.timer.get_sample_time() / self.period.get()) * self.period_unit.get());
     }
 
     fn next_by_time(&self) -> SoundResult<SampleCalc> {
@@ -168,7 +168,7 @@ impl ProgressTempo {
     /// The default period unit is π x 2.
     pub fn new(sample_rate: SampleCalc, period: NoteValue) -> SoundResult<ProgressTempo> {
         let timer = try!(Timer::new(sample_rate));
-        try!(timer.set(TimingOption::Tempo(period)));
+        try!(timer.set_timing(TimingOption::Tempo(period)));
         let period_unit = PI2;
         let phase_change = timer.get_sample_time() * period.get_notes_per_beat() * period_unit;
         Ok(ProgressTempo {
@@ -188,13 +188,27 @@ impl ProgressTempo {
     }
 }
 
-impl Progress for ProgressTempo {
+impl HasTimer for ProgressTempo {
     fn set_timing(&self, timing: TimingOption) -> SoundResult<()> {
-        try!(self.timer.set(timing));
+        try!(self.timer.set_timing(timing));
         self.restart();
         Ok(())
     }
 
+    fn get_timing(&self) -> TimingOption {
+        self.timer.get_timing()
+    }
+
+    fn restart(&self) {
+        self.timer.restart();
+        self.phase.set(self.phase_init.get());
+        self.phase_change
+            .set(self.timer.get_sample_time() * self.period.get().get_notes_per_beat() *
+                 self.period_unit.get());
+    }
+}
+
+impl Progress for ProgressTempo {
     fn set_period_unit(&self, period_unit: SampleCalc) {
         self.period_unit.set(period_unit);
         self.restart();
@@ -207,14 +221,6 @@ impl Progress for ProgressTempo {
 
     fn simplify(&self) {
         self.phase.set(self.phase.get() % self.period_unit.get());
-    }
-
-    fn restart(&self) {
-        self.timer.restart();
-        self.phase.set(self.phase_init.get());
-        self.phase_change
-            .set(self.timer.get_sample_time() * self.period.get().get_notes_per_beat() *
-                 self.period_unit.get());
     }
 
     fn next_by_time(&self) -> SoundResult<SampleCalc> {
@@ -251,7 +257,7 @@ pub enum ProgressOption {
     Tempo(ProgressTempo),
 }
 
-impl Progress for ProgressOption {
+impl HasTimer for ProgressOption {
     fn set_timing(&self, timing: TimingOption) -> SoundResult<()> {
         match *self {
             ProgressOption::Time(ref p) => p.set_timing(timing),
@@ -259,6 +265,22 @@ impl Progress for ProgressOption {
         }
     }
 
+    fn get_timing(&self) -> TimingOption {
+        match *self {
+            ProgressOption::Time(ref p) => p.get_timing(),
+            ProgressOption::Tempo(ref p) => p.get_timing(),
+        }
+    }
+
+    fn restart(&self) {
+        match *self {
+            ProgressOption::Time(ref p) => p.restart(),
+            ProgressOption::Tempo(ref p) => p.restart(),
+        }
+    }
+}
+
+impl Progress for ProgressOption {
     fn set_period_unit(&self, period_unit: SampleCalc) {
         match *self {
             ProgressOption::Time(ref p) => p.set_period_unit(period_unit),
@@ -277,13 +299,6 @@ impl Progress for ProgressOption {
         match *self {
             ProgressOption::Time(ref p) => p.simplify(),
             ProgressOption::Tempo(ref p) => p.simplify(),
-        }
-    }
-
-    fn restart(&self) {
-        match *self {
-            ProgressOption::Time(ref p) => p.restart(),
-            ProgressOption::Tempo(ref p) => p.restart(),
         }
     }
 

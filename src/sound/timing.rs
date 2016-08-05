@@ -2,9 +2,15 @@ use sound::*;
 use std::cell::Cell;
 
 /// It provides the timing functionality required for making sequences.
-pub trait SequenceItem {
-    /// Sets the timing (duration) of the sequence item.
+pub trait HasTimer {
+    /// Sets the timing (duration) of the sequence item, and restarts the internal timer.
     fn set_timing(&self, timing: TimingOption) -> SoundResult<()>;
+
+    /// Provides the `TimingOption`.
+    fn get_timing(&self) -> TimingOption;
+
+    /// Restarts the internal timer.
+    fn restart(&self);
 }
 
 /// Optional duration type, for timings in sequences.
@@ -47,32 +53,6 @@ impl Timer {
     /// Provides the sample time value.
     pub fn get_sample_time(&self) -> SampleCalc {
         self.sample_time
-    }
-
-    /// Sets the duration, and restarts the timer.
-    pub fn set(&self, timing: TimingOption) -> SoundResult<()> {
-        match timing {
-            TimingOption::None => {
-                self.remaining.set(0.0);
-            }
-            TimingOption::TimeConst(duration) |
-            TimingOption::TimeRatio { duration, .. } => {
-                if duration <= 0.0 {
-                    return Err(Error::DurationInvalid);
-                }
-                self.remaining.set(duration);
-            }
-            TimingOption::Tempo(note_value) => {
-                self.remaining.set(note_value.get_duration_in_beats());
-            }
-        }
-        self.timing.set(timing);
-        Ok(())
-    }
-
-    /// Provides the `TimingOption`.
-    pub fn get_timing(&self) -> TimingOption {
-        self.timing.get()
     }
 
     /// Moves forward `sample_count` steps in time. If the elapsed time reaches the timing
@@ -154,9 +134,34 @@ impl Timer {
             }
         }
     }
+}
 
-    /// Restarts the timer.
-    pub fn restart(&self) {
+impl HasTimer for Timer {
+    fn set_timing(&self, timing: TimingOption) -> SoundResult<()> {
+        match timing {
+            TimingOption::None => {
+                self.remaining.set(0.0);
+            }
+            TimingOption::TimeConst(duration) |
+            TimingOption::TimeRatio { duration, .. } => {
+                if duration <= 0.0 {
+                    return Err(Error::DurationInvalid);
+                }
+                self.remaining.set(duration);
+            }
+            TimingOption::Tempo(note_value) => {
+                self.remaining.set(note_value.get_duration_in_beats());
+            }
+        }
+        self.timing.set(timing);
+        Ok(())
+    }
+
+    fn get_timing(&self) -> TimingOption {
+        self.timing.get()
+    }
+
+    fn restart(&self) {
         match self.timing.get() {
             TimingOption::None => {}
             TimingOption::TimeConst(duration) |

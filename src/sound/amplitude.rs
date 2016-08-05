@@ -19,14 +19,11 @@ pub trait AmplitudeProvider {
     /// Note: as phase depends on the integral of tempo, only sequential reading is possible
     /// (cannot be parallelized).
     fn apply_rhythmic(&self, tempo: &[SampleCalc], samples: &mut [SampleCalc]) -> SoundResult<()>;
-
-    /// Sets the timing (duration).
-    fn set_timing(&self, timing: TimingOption) -> SoundResult<()>;
 }
 
 /// The `AmplitudeJoinable` trait is used to specify the ability of joining amplitude structures
 /// together, forming a sequence of them.
-pub trait AmplitudeJoinable: AmplitudeProvider {
+pub trait AmplitudeJoinable: AmplitudeProvider + HasTimer {
     /// Sets the initial amplitude, and resets time.
     fn set_amplitude_start(&self, amplitude: SampleCalc) -> SoundResult<()>;
     /// Provides the actual amplitude value.
@@ -102,9 +99,21 @@ impl AmplitudeProvider for AmplitudeConst {
         }
         timer_result
     }
+}
 
+impl HasTimer for AmplitudeConst {
     fn set_timing(&self, timing: TimingOption) -> SoundResult<()> {
-        self.timer.set(timing)
+        try!(self.timer.set_timing(timing));
+        self.restart();
+        Ok(())
+    }
+
+    fn get_timing(&self) -> TimingOption {
+        self.timer.get_timing()
+    }
+
+    fn restart(&self) {
+        self.timer.restart();
     }
 }
 
@@ -204,9 +213,21 @@ impl AmplitudeProvider for FadeLinear {
         }
         Ok(())
     }
+}
 
+impl HasTimer for FadeLinear {
     fn set_timing(&self, timing: TimingOption) -> SoundResult<()> {
-        self.progress.set_timing(timing)
+        try!(self.progress.set_timing(timing));
+        self.restart();
+        Ok(())
+    }
+
+    fn get_timing(&self) -> TimingOption {
+        self.progress.get_timing()
+    }
+
+    fn restart(&self) {
+        self.progress.restart();
     }
 }
 
@@ -304,9 +325,21 @@ impl AmplitudeProvider for AmplitudeDecayExp {
         }
         timer_result
     }
+}
 
+impl HasTimer for AmplitudeDecayExp {
     fn set_timing(&self, timing: TimingOption) -> SoundResult<()> {
-        self.timer.set(timing)
+        try!(self.timer.set_timing(timing));
+        self.restart();
+        Ok(())
+    }
+
+    fn get_timing(&self) -> TimingOption {
+        self.timer.get_timing()
+    }
+
+    fn restart(&self) {
+        self.timer.restart();
     }
 }
 
@@ -420,17 +453,31 @@ impl AmplitudeProvider for Tremolo {
         }
         Ok(())
     }
+}
 
+impl HasTimer for Tremolo {
     fn set_timing(&self, timing: TimingOption) -> SoundResult<()> {
-        self.progress.set_timing(timing)
+        try!(self.progress.set_timing(timing));
+        self.restart();
+        Ok(())
+    }
+
+    fn get_timing(&self) -> TimingOption {
+        self.progress.get_timing()
+    }
+
+    fn restart(&self) {
+        self.progress.restart();
     }
 }
 
 /// Sequence of several amplitude functions.
+#[derive(Clone)]
 pub struct AmplitudeSequence {
     timer: Timer,
     amplitudes: Vec<Rc<AmplitudeJoinable>>,
     amplitude_index: Cell<usize>,
+    amplitude: Cell<SampleCalc>, // the last amplitude value
 }
 
 impl AmplitudeSequence {
@@ -441,7 +488,13 @@ impl AmplitudeSequence {
             timer: try!(Timer::new(sample_rate)),
             amplitudes: v,
             amplitude_index: Cell::new(0),
+            amplitude: Cell::new(1.0),
         })
+    }
+
+    /// Adds a new amplitude function to the sequence.
+    pub fn add(&mut self, amplitude: Rc<AmplitudeJoinable>) {
+        self.amplitudes.push(amplitude);
     }
 }
 
@@ -463,7 +516,10 @@ impl AmplitudeProvider for AmplitudeSequence {
                 try!(self.amplitudes.get(self.amplitude_index.get()).ok_or(Error::ItemInvalid));
             let child_result = amplitude_act.apply(&mut buffer[index_from..]);
             match child_result {
-                Ok(()) => return timer_result,
+                Ok(()) => {
+                    self.amplitude.set(amplitude_act.get_amplitude());
+                    return timer_result;
+                }
                 Err(Error::ItemsCompleted(completed)) => {
                     index_from = completed;
                     let amplitude_index = self.amplitude_index.get() + 1;
@@ -471,6 +527,11 @@ impl AmplitudeProvider for AmplitudeSequence {
                         return Err(Error::ItemInvalid);
                     } else {
                         self.amplitude_index.set(amplitude_index);
+                        self.amplitude.set(amplitude_act.get_amplitude());
+                        try!(try!(self.amplitudes
+                                .get(amplitude_index)
+                                .ok_or(Error::ItemInvalid))
+                            .set_amplitude_start(self.amplitude.get()));
                     }
                 }
                 Err(_) => return child_result,
@@ -485,12 +546,48 @@ impl AmplitudeProvider for AmplitudeSequence {
         // TODO: implementation
         Ok(())
     }
+}
 
+impl HasTimer for AmplitudeSequence {
     fn set_timing(&self, timing: TimingOption) -> SoundResult<()> {
-        self.timer.set(timing)
+        try!(self.timer.set_timing(timing));
+        self.restart();
+        Ok(())
+    }
+
+    fn get_timing(&self) -> TimingOption {
+        self.timer.get_timing()
+    }
+
+    fn restart(&self) {
+        self.timer.restart();
+        self.amplitude_index.set(0);
+        if let Some(amplitude) = self.amplitudes.first() {
+            amplitude.restart();
+        }
     }
 }
 
+impl AmplitudeJoinable for AmplitudeSequence {
+    fn set_amplitude_start(&self, amplitude: SampleCalc) -> SoundResult<()> {
+        try!(is_valid_amplitude(amplitude));
+        self.amplitude.set(amplitude);
+        self.timer.restart();
+        Ok(())
+    }
+
+    fn get_amplitude(&self) -> SampleCalc {
+        self.amplitude.get()
+    }
+
+    fn get_max(&self) -> SampleCalc {
+        let mut amplitude_max: SampleCalc = 0.0;
+        for item in &self.amplitudes {
+            amplitude_max = amplitude_max.max(item.get_max());
+        }
+        amplitude_max
+    }
+}
 
 /// Combination of several amplitude functions.
 pub struct AmplitudeCombination;

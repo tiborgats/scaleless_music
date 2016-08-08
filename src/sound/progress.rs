@@ -103,6 +103,12 @@ impl HasTimer for ProgressTime {
         self.phase_change
             .set((self.timer.get_sample_time() / self.period.get()) * self.period_unit.get());
     }
+
+    fn apply_parent_timing(&self, parent_timing: TimingOption) -> SoundResult<()> {
+        try!(self.timer.apply_parent_timing(parent_timing));
+        self.restart();
+        Ok(())
+    }
 }
 
 impl Progress for ProgressTime {
@@ -168,7 +174,7 @@ impl ProgressTempo {
     /// The default period unit is π x 2.
     pub fn new(sample_rate: SampleCalc, period: NoteValue) -> SoundResult<ProgressTempo> {
         let timer = try!(Timer::new(sample_rate));
-        try!(timer.set_timing(TimingOption::Tempo(period)));
+        try!(timer.set_timing(TimingOption::TempoConst(period)));
         let period_unit = PI2;
         let phase_change = timer.get_sample_time() * period.get_notes_per_beat() * period_unit;
         Ok(ProgressTempo {
@@ -205,6 +211,12 @@ impl HasTimer for ProgressTempo {
         self.phase_change
             .set(self.timer.get_sample_time() * self.period.get().get_notes_per_beat() *
                  self.period_unit.get());
+    }
+
+    fn apply_parent_timing(&self, parent_timing: TimingOption) -> SoundResult<()> {
+        try!(self.timer.apply_parent_timing(parent_timing));
+        self.restart();
+        Ok(())
     }
 }
 
@@ -276,6 +288,13 @@ impl HasTimer for ProgressOption {
         match *self {
             ProgressOption::Time(ref p) => p.restart(),
             ProgressOption::Tempo(ref p) => p.restart(),
+        }
+    }
+
+    fn apply_parent_timing(&self, parent_timing: TimingOption) -> SoundResult<()> {
+        match *self {
+            ProgressOption::Time(ref p) => p.apply_parent_timing(parent_timing),
+            ProgressOption::Tempo(ref p) => p.apply_parent_timing(parent_timing),
         }
     }
 }

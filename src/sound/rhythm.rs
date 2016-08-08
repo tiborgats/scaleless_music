@@ -1,7 +1,19 @@
 use sound::*;
 use num::*;
-use std::ops::Add;
+use std::ops::{Add, Mul};
 use std::fmt;
+
+/// See: [RFC #1394](https://github.com/rust-lang/rfcs/pull/1394),
+/// [RFC #1465](https://github.com/rust-lang/rfcs/pull/1465)
+// https://github.com/crumblingstatue/try_opt
+macro_rules! try_opt {
+    ($e:expr) =>(
+        match $e {
+            Some(v) => v,
+            None => return None,
+        }
+    )
+}
 
 /// The `TempoProvider` trait is used to provide tempo.
 pub trait TempoProvider {
@@ -229,6 +241,7 @@ impl NoteValue {
     }
 }
 
+
 impl Add for NoteValue {
     type Output = NoteValue;
 
@@ -242,6 +255,57 @@ impl Add for NoteValue {
             duration_in_beats: n as SampleCalc / d as SampleCalc,
             notes_per_beat: d as SampleCalc / n as SampleCalc,
         }
+    }
+}
+
+impl CheckedAdd for NoteValue {
+    fn checked_add(&self, v: &Self) -> Option<Self> {
+        let lowest_common_multiple = try_opt!(self.denominator
+            .checked_mul(v.denominator / self.denominator.gcd(&v.denominator)));
+        let n1 = try_opt!(self.numerator
+            .checked_mul(lowest_common_multiple / self.denominator));
+        let n2 = try_opt!(v.numerator.checked_mul(lowest_common_multiple / v.denominator));
+        let n = try_opt!(n1.checked_add(n2));
+        Some(NoteValue {
+            numerator: n,
+            denominator: lowest_common_multiple,
+            duration_in_beats: n as SampleCalc / lowest_common_multiple as SampleCalc,
+            notes_per_beat: lowest_common_multiple as SampleCalc / n as SampleCalc,
+        })
+    }
+}
+
+impl Mul for NoteValue {
+    type Output = NoteValue;
+
+    fn mul(self, rhs: NoteValue) -> NoteValue {
+        let mut d = self.denominator * rhs.denominator;
+        let mut n = self.numerator * rhs.numerator;
+        let greatest_common_divisor = n.gcd(&d);
+        n /= greatest_common_divisor;
+        d /= greatest_common_divisor;
+        NoteValue {
+            numerator: n,
+            denominator: d,
+            duration_in_beats: n as SampleCalc / d as SampleCalc,
+            notes_per_beat: d as SampleCalc / n as SampleCalc,
+        }
+    }
+}
+
+impl CheckedMul for NoteValue {
+    fn checked_mul(&self, v: &Self) -> Option<Self> {
+        let mut d = try_opt!(self.denominator.checked_mul(v.denominator));
+        let mut n = try_opt!(self.numerator.checked_mul(v.numerator));
+        let greatest_common_divisor = n.gcd(&d);
+        n /= greatest_common_divisor;
+        d /= greatest_common_divisor;
+        Some(NoteValue {
+            numerator: n,
+            denominator: d,
+            duration_in_beats: n as SampleCalc / d as SampleCalc,
+            notes_per_beat: d as SampleCalc / n as SampleCalc,
+        })
     }
 }
 

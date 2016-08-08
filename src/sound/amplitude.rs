@@ -115,6 +115,10 @@ impl HasTimer for AmplitudeConst {
     fn restart(&self) {
         self.timer.restart();
     }
+
+    fn apply_parent_timing(&self, parent_timing: TimingOption) -> SoundResult<()> {
+        self.timer.apply_parent_timing(parent_timing)
+    }
 }
 
 impl AmplitudeJoinable for AmplitudeConst {
@@ -229,6 +233,10 @@ impl HasTimer for FadeLinear {
     fn restart(&self) {
         self.progress.restart();
     }
+
+    fn apply_parent_timing(&self, parent_timing: TimingOption) -> SoundResult<()> {
+        self.progress.apply_parent_timing(parent_timing)
+    }
 }
 
 impl AmplitudeJoinable for FadeLinear {
@@ -340,6 +348,10 @@ impl HasTimer for AmplitudeDecayExp {
 
     fn restart(&self) {
         self.timer.restart();
+    }
+
+    fn apply_parent_timing(&self, parent_timing: TimingOption) -> SoundResult<()> {
+        self.timer.apply_parent_timing(parent_timing)
     }
 }
 
@@ -469,14 +481,18 @@ impl HasTimer for Tremolo {
     fn restart(&self) {
         self.progress.restart();
     }
+
+    fn apply_parent_timing(&self, parent_timing: TimingOption) -> SoundResult<()> {
+        self.progress.apply_parent_timing(parent_timing)
+    }
 }
 
 /// Sequence of several amplitude functions.
 #[derive(Clone)]
 pub struct AmplitudeSequence {
     timer: Timer,
-    amplitudes: Vec<Rc<AmplitudeJoinable>>,
-    amplitude_index: Cell<usize>,
+    amp_funct_array: Vec<Rc<AmplitudeJoinable>>,
+    array_index: Cell<usize>,
     amplitude: Cell<SampleCalc>, // the last amplitude value
 }
 
@@ -486,21 +502,21 @@ impl AmplitudeSequence {
         let v = Vec::new();
         Ok(AmplitudeSequence {
             timer: try!(Timer::new(sample_rate)),
-            amplitudes: v,
-            amplitude_index: Cell::new(0),
+            amp_funct_array: v,
+            array_index: Cell::new(0),
             amplitude: Cell::new(1.0),
         })
     }
 
     /// Adds a new amplitude function to the sequence.
     pub fn add(&mut self, amplitude: Rc<AmplitudeJoinable>) {
-        self.amplitudes.push(amplitude);
+        self.amp_funct_array.push(amplitude);
     }
 }
 
 impl AmplitudeProvider for AmplitudeSequence {
     fn apply(&self, samples: &mut [SampleCalc]) -> SoundResult<()> {
-        if self.amplitudes.is_empty() {
+        if self.amp_funct_array.is_empty() {
             return Err(Error::SequenceEmpty);
         }
         let buffer: &mut [SampleCalc];
@@ -512,26 +528,27 @@ impl AmplitudeProvider for AmplitudeSequence {
         }
         let mut index_from: usize = 0;
         loop {
-            let amplitude_act =
-                try!(self.amplitudes.get(self.amplitude_index.get()).ok_or(Error::ItemInvalid));
-            let child_result = amplitude_act.apply(&mut buffer[index_from..]);
+            let amp_funct_act =
+                try!(self.amp_funct_array.get(self.array_index.get()).ok_or(Error::ItemInvalid));
+            let child_result = amp_funct_act.apply(&mut buffer[index_from..]);
             match child_result {
                 Ok(()) => {
-                    self.amplitude.set(amplitude_act.get_amplitude());
+                    self.amplitude.set(amp_funct_act.get_amplitude());
                     return timer_result;
                 }
                 Err(Error::ItemsCompleted(completed)) => {
                     index_from = completed;
-                    let amplitude_index = self.amplitude_index.get() + 1;
-                    if amplitude_index >= self.amplitudes.len() {
+                    let array_index = self.array_index.get() + 1;
+                    if array_index >= self.amp_funct_array.len() {
                         return Err(Error::ItemInvalid);
                     } else {
-                        self.amplitude_index.set(amplitude_index);
-                        self.amplitude.set(amplitude_act.get_amplitude());
-                        try!(try!(self.amplitudes
-                                .get(amplitude_index)
-                                .ok_or(Error::ItemInvalid))
-                            .set_amplitude_start(self.amplitude.get()));
+                        self.array_index.set(array_index);
+                        self.amplitude.set(amp_funct_act.get_amplitude());
+                        let amp_funct_next = try!(self.amp_funct_array
+                            .get(array_index)
+                            .ok_or(Error::ItemInvalid));
+                        try!(amp_funct_next.set_amplitude_start(self.amplitude.get()));
+                        try!(amp_funct_next.apply_parent_timing(self.timer.get_timing()));
                     }
                 }
                 Err(_) => return child_result,
@@ -561,10 +578,16 @@ impl HasTimer for AmplitudeSequence {
 
     fn restart(&self) {
         self.timer.restart();
-        self.amplitude_index.set(0);
-        if let Some(amplitude) = self.amplitudes.first() {
+        self.array_index.set(0);
+        if let Some(amplitude) = self.amp_funct_array.first() {
             amplitude.restart();
         }
+    }
+
+    fn apply_parent_timing(&self, parent_timing: TimingOption) -> SoundResult<()> {
+        try!(self.timer.apply_parent_timing(parent_timing));
+        self.restart();
+        Ok(())
     }
 }
 
@@ -582,7 +605,7 @@ impl AmplitudeJoinable for AmplitudeSequence {
 
     fn get_max(&self) -> SampleCalc {
         let mut amplitude_max: SampleCalc = 0.0;
-        for item in &self.amplitudes {
+        for item in &self.amp_funct_array {
             amplitude_max = amplitude_max.max(item.get_max());
         }
         amplitude_max

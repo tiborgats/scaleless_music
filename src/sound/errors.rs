@@ -8,6 +8,8 @@ use sound::backend_rsoundio::*;
 /// Return type for the sound module functions.
 pub type SoundResult<T> = Result<T, Error>;
 
+// TODO: use [quick-error](https://github.com/tailhook/quick-error)
+
 /// Error types of the sound module.
 #[derive(Debug, Copy, Clone)]
 pub enum Error {
@@ -59,6 +61,8 @@ pub enum Error {
     SequenceEmpty,
     /// Item at the given index does not exist.
     ItemInvalid,
+    /// Overflow occured during calculations.
+    Overflow,
 }
 
 impl fmt::Display for Error {
@@ -96,6 +100,7 @@ impl error::Error for Error {
             ItemsCompleted(_) => "",
             SequenceEmpty => "sequence has no items",
             ItemInvalid => "the item does not exist",
+            Overflow => "overflow",
         }
     }
 

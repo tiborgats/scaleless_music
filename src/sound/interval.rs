@@ -11,7 +11,7 @@ pub const INTERVAL_UNISON: Interval = Interval {
     reciprocal: 1.0,
 };
 
-/// Harmonic musical interval, represented by a rational number.
+/// Harmonic musical interval (of frequencies), represented by a rational number.
 #[derive(Debug, Copy, Clone)]
 pub struct Interval {
     numerator: u16,

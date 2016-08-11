@@ -1,5 +1,7 @@
-scaleless_music [![Build Status](https://travis-ci.org/tiborgats/scaleless_music.svg?branch=master)](https://travis-ci.org/tiborgats/scaleless_music) [![Dependency Status](https://dependencyci.com/github/tiborgats/scaleless_music/badge)](https://dependencyci.com/github/tiborgats/scaleless_music) [![License](https://img.shields.io/badge/License-WTFPL-green.svg)](https://github.com/tiborgats/scaleless_music/blob/master/COPYING)
+scaleless_music [![Crates.io](https://img.shields.io/crates/v/scaleless_music.svg)](https://crates.io/crates/scaleless_music) [![Build Status](https://travis-ci.org/tiborgats/scaleless_music.svg?branch=master)](https://travis-ci.org/tiborgats/scaleless_music) [![Dependency Status](https://dependencyci.com/github/tiborgats/scaleless_music/badge)](https://dependencyci.com/github/tiborgats/scaleless_music) [![Crates.io](https://img.shields.io/crates/l/scaleless_music.svg)](https://github.com/tiborgats/scaleless_music/blob/master/COPYING)
 =====
+A library for building music with precise harmonies, without the limitations of any musical scale.
+
 I was always annoyed by the slightly false notes that came out from electronic musical instruments. When I wanted to compose some overtone flute music I also realized, that music composing software (MIDI editors) are limited to the western chromatic music scale. They miss not only some harmonies of the overtone flute, but also many of those, which are present in other types of music (e.g. Arabic). And so this project was born...
 
 :construction: It is in a very early stage, but will change a lot as soon as I have some free time.

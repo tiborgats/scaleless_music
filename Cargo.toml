@@ -1,14 +1,14 @@
 [package]
 
 name = "scaleless_music"
-description = "Scaleless music."
+description = "A library for building music with precise harmonies, without the limitations of musical scales."
 version = "0.0.6"
 authors = ["Tibor Gáts <tibor.gats@gmail.com>"]
 readme = "README.md"
 keywords = ["music", "scaleless", "sound", "audio"]
 license = "WTFPL"
+license-file = "COPYING"
 repository = "https://github.com/tiborgats/scaleless_music"
-homepage = ""
 documentation = "https://tiborgats.github.io/scaleless_music"
 
 [features]

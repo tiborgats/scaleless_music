@@ -2,11 +2,11 @@
 //!
 //! # Usage
 //!
-//! Add **music** to your project by adding the dependency to your Cargo.toml as follows:
+//! Add **scaleless_music** to your project by adding the dependency to your Cargo.toml as follows:
 //!
 //! ```toml
 //! [dependencies]
-//! music = { git = "https://github.com/tiborgats/music" }
+//! music = { git = "https://github.com/tiborgats/scaleless_music" }
 //! ```
 //!
 //!

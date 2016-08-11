@@ -2,30 +2,25 @@
 //! The tone is a very simple function (nothing like a real instrument). It's purpose is
 //! only testing.
 //! See also: [Overtone flute](https://en.wikipedia.org/wiki/Overtone_flute)
-extern crate music;
+extern crate scaleless_music;
 
 #[macro_use]
 extern crate conrod;
 extern crate piston_window;
 extern crate piston;
 
-use music::sound::*;
-use std::rc::Rc;
 use piston_window::*;
+use scaleless_music::sound::*;
+use std::rc::Rc;
 
 /// Commands of the messages from the UI thread to the playback thread.
 pub enum GeneratorCommand {
     /// Mute
     Mute,
     /// Keyboard event
-    Keypress {
-        key: keyboard::Key,
-    },
+    Keypress { key: keyboard::Key },
     /// Multiply frequency by a rational number
-    FrequencyMultiple {
-        numerator: u16,
-        denominator: u16,
-    },
+    FrequencyMultiple { numerator: u16, denominator: u16 },
 }
 
 pub struct InstrumentBasic {
@@ -62,7 +57,7 @@ impl InstrumentBasic {
         };
         let timbre2 =
             Rc::new(try!(Timbre::new(sample_rate, BUFFER_SIZE_DEFAULT, Rc::new(amplitude), 4)));
-        let mixer = Rc::new(try!(Mixer::new(BUFFER_SIZE_DEFAULT)));
+        let mixer = Rc::new(try!(Mixer::new(sample_rate, BUFFER_SIZE_DEFAULT)));
         try!(mixer.add(try!(Interval::new(1, 1)), timbre1, 4.0));
         try!(mixer.add(try!(Interval::new(1, 1)), timbre2, 1.0));
 
@@ -133,7 +128,7 @@ impl SoundGenerator for InstrumentBasic {
 }
 
 fn main() {
-    use music::sound::backend_portaudio::*;
+    use scaleless_music::sound::backend_portaudio::*;
     println!("scaleless_music v{} example: overtone instrument\n",
              env!("CARGO_PKG_VERSION"));
     let sound_generator = Box::new(InstrumentBasic::new(48000.0)

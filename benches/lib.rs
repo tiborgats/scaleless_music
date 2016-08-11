@@ -1,11 +1,11 @@
 #![feature(test)]
 
 extern crate test;
-extern crate music;
+extern crate scaleless_music;
 
-use test::Bencher;
-use music::sound::*;
+use scaleless_music::sound::*;
 use std::rc::Rc;
+use test::Bencher;
 
 const BENCH_SAMPLE_RATE: SampleCalc = 192_000.0;
 const BENCH_BUFFER_SIZE: usize = 256;
@@ -71,21 +71,21 @@ fn tremolo(bencher: &mut Bencher) {
 // AmplitudeConstOvertones
 #[bench]
 fn ampconst_overtone(bencher: &mut Bencher) {
-    let mut amplitude_buffer: Vec<SampleCalc> = vec![0.0; BENCH_BUFFER_SIZE];
+    let mut amplitude_buffer: Vec<SampleCalc> = vec![1.0; BENCH_BUFFER_SIZE];
     let amplitude = {
         let overtones_amplitude: Vec<SampleCalc> = vec![1.0, 0.5];
         AmplitudeConstOvertones::new(BENCH_SAMPLE_RATE, 1, &overtones_amplitude).unwrap()
     };
 
     bencher.iter(|| {
-        amplitude.get(0, &mut amplitude_buffer).unwrap();
+        amplitude.apply(0, &mut amplitude_buffer).unwrap();
     });
 }
 
 // AmplitudeDecayExpOvertones
 #[bench]
 fn ampdec_overtone(bencher: &mut Bencher) {
-    let mut amplitude_buffer: Vec<SampleCalc> = vec![0.0; BENCH_BUFFER_SIZE];
+    let mut amplitude_buffer: Vec<SampleCalc> = vec![1.0; BENCH_BUFFER_SIZE];
     let amplitude = {
         let overtones_amplitude: Vec<SampleCalc> = vec![1.0, 0.5];
         let overtones_dec_rate: Vec<SampleCalc> = vec![1.0, 0.5];
@@ -97,7 +97,7 @@ fn ampdec_overtone(bencher: &mut Bencher) {
     };
 
     bencher.iter(|| {
-        amplitude.get(0, &mut amplitude_buffer).unwrap();
+        amplitude.apply(0, &mut amplitude_buffer).unwrap();
     });
 }
 
@@ -174,7 +174,7 @@ fn mixer4_timbre_freqconst_ampdec_overtones4(bencher: &mut Bencher) {
     });
     let timbre1 = Rc::new(Timbre::new(BENCH_SAMPLE_RATE, BENCH_BUFFER_SIZE, amplitude.clone(), 4)
         .unwrap());
-    let mixer = Mixer::new(BENCH_BUFFER_SIZE).unwrap();
+    let mixer = Mixer::new(BENCH_SAMPLE_RATE, BENCH_BUFFER_SIZE).unwrap();
     mixer.add(Interval::new(1, 1).unwrap(), timbre1.clone(), 2.0)
         .unwrap()
         .add(Interval::new(1, 2).unwrap(), timbre1.clone(), 3.0)

@@ -1,8 +1,8 @@
-music [![Build Status](https://travis-ci.org/tiborgats/music.svg?branch=master)](https://travis-ci.org/tiborgats/music) [![Dependency Status](https://dependencyci.com/github/tiborgats/music/badge)](https://dependencyci.com/github/tiborgats/music) [![License](https://img.shields.io/badge/License-WTFPL-green.svg)](https://github.com/tiborgats/music/blob/master/COPYING)
+scaleless_music [![Build Status](https://travis-ci.org/tiborgats/scaleless_music.svg?branch=master)](https://travis-ci.org/tiborgats/scaleless_music) [![Dependency Status](https://dependencyci.com/github/tiborgats/scaleless_music/badge)](https://dependencyci.com/github/tiborgats/scaleless_music) [![License](https://img.shields.io/badge/License-WTFPL-green.svg)](https://github.com/tiborgats/scaleless_music/blob/master/COPYING)
 =====
 I was always annoyed by the slightly false notes that came out from electronic musical instruments. When I wanted to compose some overtone flute music I also realized, that music composing software (MIDI editors) are limited to the western chromatic music scale. They miss not only some harmonies of the overtone flute, but also many of those, which are present in other types of music (e.g. Arabic). And so this project was born...
 
-:construction: It is in a very early stage, but will change a lot as soon as I have some free time. It is still not published in crates.io, I'm not even sure what should be the name of this crate ("music" is too general).
+:construction: It is in a very early stage, but will change a lot as soon as I have some free time.
 
 # Overview
 The aim of this software is to create music according to the following perfectionist principles:
@@ -20,7 +20,7 @@ The realization of these conditions is mathematically impossible when using musi
 Counterexample: the popular [equal temperament](https://en.wikipedia.org/wiki/Equal_temperament) (used by [MIDI](https://en.wikipedia.org/wiki/MIDI)) contains only one type of pure harmonic interval: the octave, all the other frequency intervals are slightly disharmonic in it (multiplies of ¹²√2). It is also limited to a small set of intervals. For a deeper understanding of the problem of equal temperament and musical scales in general, you can read about the [just intonation](https://en.wikipedia.org/wiki/Just_intonation) approach.
 
 ## Sound synthesis
-**music** uses [additive synthesis](https://en.wikipedia.org/wiki/Additive_synthesis), with an additional rule:
+**scaleless_music** uses [additive synthesis](https://en.wikipedia.org/wiki/Additive_synthesis), with an additional rule:
 * Frequency can be time-varying, but the intervals must remain harmonic.
 
 Note: this kind of synthesis is very resource demanding. So, for real-time sound generation smaller sample rate (eg. 48kHz) and lower number of overtones are desirable (to prevent buffer underrun). This can change after the speed optimization of the algorithm.
@@ -32,17 +32,17 @@ Later on I would like to complement it with [sample-based synthesis](https://en.
 Henceforward, I plan to create a tool for analyzing recorded samples, finding closest mathematical representation, and building harmonic sound structures with similar output. This way we can eliminate noise and have the option to use precise 3D spacial effects.
 
 # Installation
-**music** can be built with different sound output backends:
+**scaleless_music** can be built with different sound output backends:
 - `cargo build` (or `cargo build --features "be-portaudio"`) for the default PortAudio backend. If for some reason the building of [rust-portaudio](https://github.com/RustAudio/rust-portaudio) fails, you can check it's [README](https://github.com/RustAudio/rust-portaudio/blob/master/README.md) for further instructions.
 - `cargo build --features "be-rsoundio"` for [rsoundio](https://github.com/klingtnet/rsoundio) ([libsoundio](http://libsound.io/)) backend - not available yet
 
-## [Examples](https://github.com/tiborgats/music/tree/master/examples)
+## [Examples](https://github.com/tiborgats/scaleless_music/tree/master/examples)
 
-## [Documentation](https://tiborgats.github.io/music/)
+## [Documentation](https://tiborgats.github.io/scaleless_music/)
 
 # Todo Items
 - [ ] basic effects, building blocks of music structure
-	- [x] note
+	- [ ] note
 	- [ ] amplitude functions
 		- [x] [exponential decay](https://en.wikipedia.org/wiki/Exponential_decay)
 		- [x] faders
@@ -57,7 +57,6 @@ Henceforward, I plan to create a tool for analyzing recorded samples, finding cl
 - [ ] speed optimization of the playback routines
 	- [x] benchmark routines
 	- [ ] parallel processing, SIMD
-	- [ ] GPU (I did some benchmarks using the [ArrayFire](https://github.com/arrayfire/arrayfire-rust) library, it is promising, but there is a long latency due to the buffer copying from GPU to CPU memory)
 - [ ] backends for sound output
 	- [x] [rust-portaudio](https://github.com/RustAudio/rust-portaudio)
 	- [ ] [rsoundio](https://github.com/klingtnet/rsoundio)

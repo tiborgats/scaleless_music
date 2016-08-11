@@ -6,30 +6,25 @@
 //! the keys from <kbd>A</kbd> to <kbd>L</kbd> changes the frequency to be lower.
 /// Other keys play the previous frequency. To quit press <kbd>Esc</kbd>.
 
-extern crate music;
+extern crate scaleless_music;
 
 #[macro_use]
 extern crate conrod;
 extern crate piston_window;
 extern crate piston;
 
-use music::sound::*;
-use std::rc::Rc;
 use piston_window::*;
+use scaleless_music::sound::*;
+use std::rc::Rc;
 
 /// Commands of the messages from the UI thread to the playback thread.
 pub enum GeneratorCommand {
     /// Mute
     Mute,
     /// Keyboard event
-    Keypress {
-        key: keyboard::Key,
-    },
+    Keypress { key: keyboard::Key },
     /// Multiply frequency by a rational number
-    FrequencyMultiple {
-        numerator: u16,
-        denominator: u16,
-    },
+    FrequencyMultiple { numerator: u16, denominator: u16 },
 }
 
 pub struct InstrumentBasic {
@@ -124,7 +119,7 @@ impl SoundGenerator for InstrumentBasic {
 }
 
 fn main() {
-    use music::sound::backend_portaudio::*;
+    use scaleless_music::sound::backend_portaudio::*;
     println!("scaleless_music v{} example", env!("CARGO_PKG_VERSION"));
     let sound_generator = Box::new(InstrumentBasic::new(48000.0)
         .expect("InstrumentBasic construction shouldn't fail."));

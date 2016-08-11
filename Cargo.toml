@@ -1,15 +1,15 @@
 [package]
 
-name = "music"
+name = "scaleless_music"
 description = "Scaleless music."
-version = "0.0.5"
+version = "0.0.6"
 authors = ["Tibor Gáts <tibor.gats@gmail.com>"]
 readme = "README.md"
-keywords = ["music", "sound", "audio"]
+keywords = ["music", "scaleless", "sound", "audio"]
 license = "WTFPL"
-repository = "https://github.com/tiborgats/music"
+repository = "https://github.com/tiborgats/scaleless_music"
 homepage = ""
-documentation = ""
+documentation = "https://tiborgats.github.io/scaleless_music"
 
 [features]
 default = ["be-portaudio"]

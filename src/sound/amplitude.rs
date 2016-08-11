@@ -4,12 +4,6 @@ use std::rc::Rc;
 
 /// Provides time dependent amlitude changes.
 pub trait AmplitudeProvider {
-    // Provides the results of the amplitude calculations.
-    // fn get(&self, result: &mut [SampleCalc]) -> SoundResult<()>;
-
-    // Provides the results of the amplitude calculations. Tempo is given in beats per second.
-    // fn get_rhythmic(&self, tempo: &[SampleCalc], result: &mut [SampleCalc]) -> SoundResult<()>;
-
     /// Applies the amplitude function over already existing samples. It multiplies each sample
     /// with it's new amplitude.
     fn apply(&self, samples: &mut [SampleCalc]) -> SoundResult<()>;
@@ -379,7 +373,7 @@ pub struct Tremolo {
     progress: ProgressOption,
     /// The ratio of maximum shift away from the base amplitude (must be > 1.0).
     extent_ratio: SampleCalc,
-    /// The phase of the sine function.
+    /// The average amplitude. It is calculated in a way that the peak amplitude will be 1.0.
     amplitude_normalized: SampleCalc,
 }
 
@@ -560,8 +554,44 @@ impl AmplitudeProvider for AmplitudeSequence {
         if tempo.len() != samples.len() {
             return Err(Error::BufferSize);
         }
-        // TODO: implementation
-        Ok(())
+        if self.amp_funct_array.is_empty() {
+            return Err(Error::SequenceEmpty);
+        }
+        let buffer: &mut [SampleCalc];
+        let timer_result = self.timer.jump_by_time(samples.len());
+        match timer_result {
+            Ok(()) => buffer = samples,
+            Err(Error::ItemsCompleted(completed)) => buffer = &mut samples[0..completed],
+            Err(_) => return timer_result,
+        }
+        let mut index_from: usize = 0;
+        loop {
+            let amp_funct_act =
+                try!(self.amp_funct_array.get(self.array_index.get()).ok_or(Error::ItemInvalid));
+            let child_result = amp_funct_act.apply_rhythmic(tempo, &mut buffer[index_from..]);
+            match child_result {
+                Ok(()) => {
+                    self.amplitude.set(amp_funct_act.get_amplitude());
+                    return timer_result;
+                }
+                Err(Error::ItemsCompleted(completed)) => {
+                    index_from = completed;
+                    let array_index = self.array_index.get() + 1;
+                    if array_index >= self.amp_funct_array.len() {
+                        return Err(Error::ItemInvalid);
+                    } else {
+                        self.array_index.set(array_index);
+                        self.amplitude.set(amp_funct_act.get_amplitude());
+                        let amp_funct_next = try!(self.amp_funct_array
+                            .get(array_index)
+                            .ok_or(Error::ItemInvalid));
+                        try!(amp_funct_next.set_amplitude_start(self.amplitude.get()));
+                        try!(amp_funct_next.apply_parent_timing(self.timer.get_timing()));
+                    }
+                }
+                Err(_) => return child_result,
+            }
+        }
     }
 }
 

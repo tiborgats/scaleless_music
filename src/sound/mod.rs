@@ -80,11 +80,9 @@ pub trait SoundGenerator {
 }
 
 /// A sound component. Can be a simple wave or a complex structure of waves.
-pub trait SoundStructure {
+pub trait SoundStructure: HasTimer {
     /// Returns the calculated samples in the `result` buffer.
     fn get(&self, base_frequency: &[SampleCalc], result: &mut [SampleCalc]) -> SoundResult<()>;
-    /// Resets the internal time.
-    fn restart(&self);
 }
 
 /// A structure of music.

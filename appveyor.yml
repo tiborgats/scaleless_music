@@ -51,7 +51,7 @@ test_script:
 #- curl -kLO https://github.com/adfernandes/precompiled-portaudio-windows/raw/master/portaudio-r1891-build.zip
 #- 7z x portaudio-r1891-build.zip
 - cmd: nuget install portaudio -OutputDirectory deps -ExcludeVersion
-- cmd: set PATH=C:\projects\scaleless_music\deps\portaudio.redist\build\native\bin\x64\v120\Release;%PATH%
-- cmd: set LIB=C:\projects\scaleless_music\deps\portaudio\build\native\lib\x64\v120\Release;%LIB%
+- cmd: set PATH=C:\projects\scaleless-music\deps\portaudio.redist\build\native\bin\x64\v120\Release;%PATH%
+- cmd: set LIB=C:\projects\scaleless-music\deps\portaudio\build\native\lib\x64\v120\Release;%LIB%
 #- cmd: set PORTAUDIO_ONLY_STATIC
 - cmd: cargo test --verbose

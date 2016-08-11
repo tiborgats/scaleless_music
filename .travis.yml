@@ -40,8 +40,8 @@ after_success:
   #- travis-cargo coveralls --no-sudo --verify
   # package for crates.io deployment and publish
   - |
-    travis-cargo package &&
-    travis-cargo publish -- --token $CRATES_TOKEN
+    travis-cargo --only stable package &&
+    travis-cargo --only stable publish -- --token $CRATESIO_TOKEN
 env:
   global:
     # encrypted github token for doc upload

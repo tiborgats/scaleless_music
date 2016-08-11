@@ -106,6 +106,26 @@ impl Timbre {
     }
 }
 
+impl HasTimer for Timbre {
+    fn set_timing(&self, timing: TimingOption) -> SoundResult<()> {
+        try!(self.amplitude_overtones.set_timing(timing));
+        self.restart();
+        Ok(())
+    }
+
+    fn get_timing(&self) -> TimingOption {
+        self.amplitude_overtones.get_timing()
+    }
+
+    fn restart(&self) {
+        self.amplitude_overtones.restart();
+    }
+
+    fn apply_parent_timing(&self, parent_timing: TimingOption) -> SoundResult<()> {
+        self.amplitude_overtones.apply_parent_timing(parent_timing)
+    }
+}
+
 impl SoundStructure for Timbre {
     // TODO: filtering out frequencies from the calculations which are out of range
     fn get(&self, base_frequency: &[SampleCalc], result: &mut [SampleCalc]) -> SoundResult<()> {
@@ -131,10 +151,6 @@ impl SoundStructure for Timbre {
         }
         Ok(())
     }
-
-    fn restart(&self) {
-        self.amplitude_overtones.restart();
-    }
 }
 
 /// Channel structure used for mixing sound structures.
@@ -153,14 +169,16 @@ struct MixerChannel {
 /// Mixes sound channels (structures).
 #[derive(Clone)]
 pub struct Mixer {
+    timer: Timer,
     buffer_size: usize,
     channels: RefCell<Vec<MixerChannel>>,
 }
 
 impl Mixer {
     /// custom constructor
-    pub fn new(buffer_size: usize) -> SoundResult<Mixer> {
+    pub fn new(sample_rate: SampleCalc, buffer_size: usize) -> SoundResult<Mixer> {
         Ok(Mixer {
+            timer: try!(Timer::new(sample_rate)),
             buffer_size: buffer_size,
             channels: RefCell::new(Vec::new()),
         })
@@ -175,6 +193,7 @@ impl Mixer {
         if volume < 0.0 {
             return Err(Error::AmplitudeInvalid);
         }
+        try!(sound.apply_parent_timing(self.timer.get_timing()));
         let channel = MixerChannel {
             interval: interval,
             sound: sound,
@@ -231,6 +250,36 @@ impl Mixer {
     }
 }
 
+impl HasTimer for Mixer {
+    fn set_timing(&self, timing: TimingOption) -> SoundResult<()> {
+        try!(self.timer.set_timing(timing));
+        for channel in self.channels.borrow().iter() {
+            try!(channel.sound.apply_parent_timing(self.timer.get_timing()));
+        }
+        self.restart();
+        Ok(())
+    }
+
+    fn get_timing(&self) -> TimingOption {
+        self.timer.get_timing()
+    }
+
+    fn restart(&self) {
+        self.timer.restart();
+        for channel in self.channels.borrow().iter() {
+            channel.sound.restart();
+        }
+    }
+
+    fn apply_parent_timing(&self, parent_timing: TimingOption) -> SoundResult<()> {
+        try!(self.timer.apply_parent_timing(parent_timing));
+        for channel in self.channels.borrow().iter() {
+            try!(channel.sound.apply_parent_timing(self.timer.get_timing()));
+        }
+        Ok(())
+    }
+}
+
 impl SoundStructure for Mixer {
     fn get(&self, base_frequency: &[SampleCalc], result: &mut [SampleCalc]) -> SoundResult<()> {
         if base_frequency.len() != result.len() {
@@ -248,12 +297,6 @@ impl SoundStructure for Mixer {
             }
         }
         Ok(())
-    }
-
-    fn restart(&self) {
-        for channel in self.channels.borrow().iter() {
-            channel.sound.restart();
-        }
     }
 }
 

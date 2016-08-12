@@ -1,4 +1,4 @@
-scaleless_music [![Crates.io](https://img.shields.io/crates/v/scaleless_music.svg)](https://crates.io/crates/scaleless_music) [![Build Status](https://travis-ci.org/tiborgats/scaleless_music.svg?branch=master)](https://travis-ci.org/tiborgats/scaleless_music) [![Dependency Status](https://dependencyci.com/github/tiborgats/scaleless_music/badge)](https://dependencyci.com/github/tiborgats/scaleless_music) [![Crates.io](https://img.shields.io/crates/l/scaleless_music.svg)](https://github.com/tiborgats/scaleless_music/blob/master/COPYING)
+scaleless_music [![Crates.io](https://img.shields.io/crates/v/scaleless_music.svg)](https://crates.io/crates/scaleless_music) [![Build Status](https://travis-ci.org/tiborgats/scaleless_music.svg?branch=master)](https://travis-ci.org/tiborgats/scaleless_music) [![Build status](https://ci.appveyor.com/api/projects/status/wrnpsl8fxfko94h8?svg=true)](https://ci.appveyor.com/project/tiborgats/scaleless-music) [![Dependency Status](https://dependencyci.com/github/tiborgats/scaleless_music/badge)](https://dependencyci.com/github/tiborgats/scaleless_music) [![Crates.io](https://img.shields.io/crates/l/scaleless_music.svg)](https://github.com/tiborgats/scaleless_music/blob/master/COPYING)
 =====
 A library for building music with precise harmonies, without the limitations of any musical scale.
 
@@ -64,7 +64,7 @@ Henceforward, I plan to create a tool for analyzing recorded samples, finding cl
 	- [ ] [rsoundio](https://github.com/klingtnet/rsoundio)
 - [ ] OS support
 	- [x] Linux
-	- [ ] Windows (it should work already, but I've not tested yet)
+	- [x] Windows
 	- [ ] OS X
 	- [ ] Android
 	- [ ] iOS

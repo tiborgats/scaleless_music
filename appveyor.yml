@@ -53,5 +53,6 @@ test_script:
 - cmd: nuget install portaudio -OutputDirectory deps -ExcludeVersion
 - cmd: set PATH=C:\projects\scaleless-music\deps\portaudio.redist\build\native\bin\x64\v120\Release;%PATH%
 - cmd: set LIB=C:\projects\scaleless-music\deps\portaudio\build\native\lib\x64\v120\Release;%LIB%
+- cmd: rename C:\projects\scaleless-music\deps\portaudio\build\native\lib\x64\v120\Release\portaudio_x64.lib portaudio.lib
 #- cmd: set PORTAUDIO_ONLY_STATIC
 - cmd: cargo test --verbose

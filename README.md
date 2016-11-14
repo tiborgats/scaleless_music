@@ -1,12 +1,15 @@
-scaleless_music [![Crates.io](https://img.shields.io/crates/v/scaleless_music.svg)](https://crates.io/crates/scaleless_music) [![Build Status](https://travis-ci.org/tiborgats/scaleless_music.svg?branch=master)](https://travis-ci.org/tiborgats/scaleless_music) [![Build status](https://ci.appveyor.com/api/projects/status/wrnpsl8fxfko94h8?svg=true)](https://ci.appveyor.com/project/tiborgats/scaleless-music) [![Dependency Status](https://dependencyci.com/github/tiborgats/scaleless_music/badge)](https://dependencyci.com/github/tiborgats/scaleless_music) [![Crates.io](https://img.shields.io/crates/l/scaleless_music.svg)](https://github.com/tiborgats/scaleless_music/blob/master/COPYING)
+scaleless_music
 =====
-A library for building music with precise harmonies, without the limitations of any musical scale.
+*A library for building music with precise harmonies, without the limitations of any musical scale.*
 
-I was always annoyed by the slightly false notes that came out from electronic musical instruments. When I wanted to compose some overtone flute music I also realized, that music composing software (MIDI editors) are limited to the western chromatic music scale. They miss not only some harmonies of the overtone flute, but also many of those, which are present in other types of music (e.g. Arabic). And so this project was born...
+[![Crates.io](https://img.shields.io/crates/v/scaleless_music.svg)](https://crates.io/crates/scaleless_music) [![Linux & OS X build status](https://img.shields.io/travis/tiborgats/scaleless_music.svg?label=Linux%20%26%20OS%20X%20build)](https://travis-ci.org/tiborgats/scaleless_music) [![Windows build status](https://img.shields.io/appveyor/ci/tiborgats/scaleless-music.svg?label=Windows%20build)](https://ci.appveyor.com/project/tiborgats/scaleless-music) [![Dependency Status](https://dependencyci.com/github/tiborgats/scaleless_music/badge)](https://dependencyci.com/github/tiborgats/scaleless_music) [![Crates.io](https://img.shields.io/crates/l/scaleless_music.svg)](https://github.com/tiborgats/scaleless_music/blob/master/COPYING) [![Docs](https://docs.rs/scaleless_music/badge.svg)](https://docs.rs/scaleless_music)
 
 :construction: It is in a very early stage, but will change a lot as soon as I have some free time.
 
 # Overview
+
+I was always annoyed by the slightly false notes that came out from electronic musical instruments. When I wanted to compose some overtone flute music I also realized, that music composing software (MIDI editors) are limited to the western chromatic music scale. They miss not only some harmonies of the overtone flute, but also many of those, which are present in other types of music (e.g. Arabic). And so this project was born...
+
 The aim of this software is to create music according to the following perfectionist principles:
 
 1. Music shall contain only [harmonic](https://en.wikipedia.org/wiki/Harmony) intervals between notes.
@@ -44,30 +47,30 @@ Henceforward, I plan to create a tool for analyzing recorded samples, finding cl
 
 # Todo Items
 - [ ] basic effects, building blocks of music structure
-	- [ ] note
-	- [ ] amplitude functions
-		- [x] [exponential decay](https://en.wikipedia.org/wiki/Exponential_decay)
-		- [x] faders
-		- [x] [tremolo](https://en.wikipedia.org/wiki/Tremolo) - as sinusoidal variation of amplitude
-		- [ ] [equal-loudness contour](https://en.wikipedia.org/wiki/Equal-loudness_contour)
-	- [ ] frequency functions
-		- [x] [vibrato](https://en.wikipedia.org/wiki/Vibrato)
-		- [ ] linearly changing (ascending or descending) pitch
-	- [ ] sequences of notes, rhythm functions
-	- [x] polyphony (mixer)
-	- [ ] smooth start and end of sine waves, which are physically possible (no zero time jumps in amplitude, to avoid infinite acceleration of the speaker membrane)
+  - [ ] note
+  - [ ] amplitude functions
+    - [x] [exponential decay](https://en.wikipedia.org/wiki/Exponential_decay)
+    - [x] faders
+    - [x] [tremolo](https://en.wikipedia.org/wiki/Tremolo) - as sinusoidal variation of amplitude
+    - [ ] [equal-loudness contour](https://en.wikipedia.org/wiki/Equal-loudness_contour)
+  - [ ] frequency functions
+    - [x] [vibrato](https://en.wikipedia.org/wiki/Vibrato)
+    - [ ] linearly changing (ascending or descending) pitch
+  - [ ] sequences of notes, rhythm functions
+  - [x] polyphony (mixer)
+  - [ ] smooth start and end of sine waves, which are physically possible (no zero time jumps in amplitude, to avoid infinite acceleration of the speaker membrane)
 - [ ] speed optimization of the playback routines
-	- [x] benchmark routines
-	- [ ] parallel processing, SIMD
+  - [x] benchmark routines
+  - [ ] parallel processing, SIMD
 - [ ] backends for sound output
-	- [x] [rust-portaudio](https://github.com/RustAudio/rust-portaudio)
-	- [ ] [rsoundio](https://github.com/klingtnet/rsoundio)
+  - [x] [rust-portaudio](https://github.com/RustAudio/rust-portaudio)
+  - [ ] [rsoundio](https://github.com/klingtnet/rsoundio)
 - [ ] OS support
-	- [x] Linux
-	- [x] Windows
-	- [ ] OS X
-	- [ ] Android
-	- [ ] iOS
+  - [x] Linux
+  - [x] Windows
+  - [x] OS X
+  - [ ] Android
+  - [ ] iOS
 - [ ] test coverages
 - [ ] more examples
 
@@ -77,6 +80,6 @@ Henceforward, I plan to create a tool for analyzing recorded samples, finding cl
 - [ ] a software for finding the closest mathematical representation of sound samples (from real instruments)
 - [ ] editor, with a correct, user friendly visual representation of music structure (not sheet music)
 - [ ] handling some low-latency input devices
-	- [ ] midi keyboard
+  - [ ] midi keyboard
 - [ ] 3D audio space, instrument location effects, echo
 - [ ] a lot of other stuff

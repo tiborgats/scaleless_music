@@ -22,11 +22,11 @@ impl<T> SoundInterface<T> {
                -> BackendResult<SoundInterface<T>> {
         println!("PortAudio version : {}", pa::version());
         println!("PortAudio version text : {:?}", pa::version_text());
-        let pa = try!(pa::PortAudio::new());
-        println!("host count: {}", try!(pa.host_api_count()));
-        let mut settings = try!(pa.default_output_stream_settings(channel_count as i32,
-                                                                  sample_rate as f64,
-                                                                  buffer_size as u32));
+        let pa = pa::PortAudio::new()?;
+        println!("host count: {}", pa.host_api_count()?);
+        let mut settings = pa.default_output_stream_settings(channel_count as i32,
+                                            sample_rate as f64,
+                                            buffer_size as u32)?;
         // we won't output out of range samples so don't bother clipping them.
         settings.flags = pa::stream_flags::CLIP_OFF;
 
@@ -56,7 +56,7 @@ impl<T> SoundInterface<T> {
         };
 
         // Open a non-blocking stream.
-        let stream = try!(pa.open_non_blocking_stream(settings, callback_fn));
+        let stream = pa.open_non_blocking_stream(settings, callback_fn)?;
         println!("Stream is created.");
 
         Ok(SoundInterface {
@@ -68,7 +68,7 @@ impl<T> SoundInterface<T> {
     }
     /// Starts the sound output stream.
     pub fn start(&mut self) -> BackendResult<()> {
-        try!(self.stream.start());
+        self.stream.start()?;
         println!("Successfully started the stream.");
         Ok(())
     }

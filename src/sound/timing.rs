@@ -1,6 +1,6 @@
+use num::*;
 use sound::*;
 use std::cell::Cell;
-use num::*;
 
 /// It provides the timing functionality required for making sequences.
 pub trait HasTimer {
@@ -62,7 +62,7 @@ pub struct Timer {
 impl Timer {
     /// custom constructor
     pub fn new(sample_rate: SampleCalc) -> SoundResult<Timer> {
-        let sample_time = try!(get_sample_time(sample_rate));
+        let sample_time = get_sample_time(sample_rate)?;
         Ok(Timer {
             sample_time: sample_time,
             timing: Cell::new(TimingOption::None),
@@ -230,8 +230,8 @@ impl HasTimer for Timer {
                     TimingOption::TempoConst(duration) |
                     TimingOption::TempoRatio { duration, .. } => duration,
                 };
-                let new_duration = try!(duration.checked_mul(&parent_duration)
-                    .ok_or(Error::Overflow));
+                let new_duration = duration.checked_mul(&parent_duration)
+                    .ok_or(Error::Overflow)?;
                 self.timing.set(TimingOption::TempoRatio {
                     ratio: ratio,
                     duration: new_duration,

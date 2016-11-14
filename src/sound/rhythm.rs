@@ -1,7 +1,7 @@
-use sound::*;
 use num::*;
-use std::ops::{Add, Mul};
+use sound::*;
 use std::fmt;
+use std::ops::{Add, Mul};
 
 /// See: [RFC #1394](https://github.com/rust-lang/rfcs/pull/1394),
 /// [RFC #1465](https://github.com/rust-lang/rfcs/pull/1465)
@@ -119,7 +119,7 @@ impl TempoChangeLinear {
                tempo_end: Tempo,
                duration: SampleCalc)
                -> SoundResult<TempoChangeLinear> {
-        let sample_time = try!(get_sample_time(sample_rate));
+        let sample_time = get_sample_time(sample_rate)?;
         let beat_duration_change_rate = (tempo_end.beat_duration - tempo_start.beat_duration) /
                                         duration;
         let bps_change_rate = -1.0 / beat_duration_change_rate;
@@ -203,7 +203,7 @@ impl NoteValue {
     /// custom constructor
     pub fn new(numerator: u16, denominator: u16) -> SoundResult<NoteValue> {
         let mut note_value = NoteValue::default();
-        try!(note_value.set(numerator, denominator));
+        note_value.set(numerator, denominator)?;
         Ok(note_value)
     }
 

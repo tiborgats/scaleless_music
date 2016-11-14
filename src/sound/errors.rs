@@ -1,14 +1,15 @@
-use std::{error, fmt};
 
 #[cfg(feature = "be-portaudio")]
 use sound::backend_portaudio::*;
 #[cfg(feature = "be-rsoundio")]
 use sound::backend_rsoundio::*;
+use std::{error, fmt};
 
 /// Return type for the sound module functions.
 pub type SoundResult<T> = Result<T, Error>;
 
-// TODO: use [quick-error](https://github.com/tailhook/quick-error)
+// TODO: use [error-chain](https://github.com/brson/error-chain)
+// or [quick-error](https://github.com/tailhook/quick-error)
 
 /// Error types of the sound module.
 #[derive(Debug, Copy, Clone)]

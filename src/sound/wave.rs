@@ -1,6 +1,6 @@
 use sound::*;
-use std::rc::Rc;
 use std::cell::RefCell;
+use std::rc::Rc;
 // use rayon::prelude::*;
 
 /// A sinusoidal wave generator, with variable frequency.
@@ -20,7 +20,7 @@ pub struct Wave {
 impl Wave {
     /// custom constructor
     pub fn new(sample_rate: SampleCalc, overtone: usize) -> SoundResult<Wave> {
-        let sample_time = try!(get_sample_time(sample_rate));
+        let sample_time = get_sample_time(sample_rate)?;
         Ok(Wave {
             sample_time: sample_time,
             interval: INTERVAL_UNISON,
@@ -78,7 +78,7 @@ impl Timbre {
                -> SoundResult<Timbre> {
         let mut wave_vec = Vec::with_capacity(overtone_max + 1);
         for overtone in 0..overtone_max {
-            wave_vec.push(try!(Wave::new(sample_rate, overtone)));
+            wave_vec.push(Wave::new(sample_rate, overtone)?);
         }
         Ok(Timbre {
             interval: INTERVAL_UNISON,
@@ -108,7 +108,7 @@ impl Timbre {
 
 impl HasTimer for Timbre {
     fn set_timing(&self, timing: TimingOption) -> SoundResult<()> {
-        try!(self.amplitude_overtones.set_timing(timing));
+        self.amplitude_overtones.set_timing(timing)?;
         self.restart();
         Ok(())
     }
@@ -141,9 +141,8 @@ impl SoundStructure for Timbre {
             *item = 0.0;
         }
         for (overtone, wave) in self.waves.borrow_mut().iter_mut().enumerate() {
-            try!(wave.get(base_frequency, &mut wave_buffer));
-            try!(self.amplitude_overtones
-                .apply(overtone, &mut wave_buffer));
+            wave.get(base_frequency, &mut wave_buffer)?;
+            self.amplitude_overtones.apply(overtone, &mut wave_buffer)?;
             for (item, wave) in result.iter_mut()
                 .zip(wave_buffer.iter()) {
                 *item += *wave;
@@ -178,7 +177,7 @@ impl Mixer {
     /// custom constructor
     pub fn new(sample_rate: SampleCalc, buffer_size: usize) -> SoundResult<Mixer> {
         Ok(Mixer {
-            timer: try!(Timer::new(sample_rate)),
+            timer: Timer::new(sample_rate)?,
             buffer_size: buffer_size,
             channels: RefCell::new(Vec::new()),
         })
@@ -193,7 +192,7 @@ impl Mixer {
         if volume < 0.0 {
             return Err(Error::AmplitudeInvalid);
         }
-        try!(sound.apply_parent_timing(self.timer.get_timing()));
+        sound.apply_parent_timing(self.timer.get_timing())?;
         let channel = MixerChannel {
             interval: interval,
             sound: sound,
@@ -252,9 +251,9 @@ impl Mixer {
 
 impl HasTimer for Mixer {
     fn set_timing(&self, timing: TimingOption) -> SoundResult<()> {
-        try!(self.timer.set_timing(timing));
+        self.timer.set_timing(timing)?;
         for channel in self.channels.borrow().iter() {
-            try!(channel.sound.apply_parent_timing(self.timer.get_timing()));
+            channel.sound.apply_parent_timing(self.timer.get_timing())?;
         }
         self.restart();
         Ok(())
@@ -272,9 +271,9 @@ impl HasTimer for Mixer {
     }
 
     fn apply_parent_timing(&self, parent_timing: TimingOption) -> SoundResult<()> {
-        try!(self.timer.apply_parent_timing(parent_timing));
+        self.timer.apply_parent_timing(parent_timing)?;
         for channel in self.channels.borrow().iter() {
-            try!(channel.sound.apply_parent_timing(self.timer.get_timing()));
+            channel.sound.apply_parent_timing(self.timer.get_timing())?;
         }
         Ok(())
     }
@@ -289,9 +288,8 @@ impl SoundStructure for Mixer {
             *item = 0.0;
         }
         for channel in self.channels.borrow_mut().iter_mut() {
-            try!(channel.interval
-                .transpose(base_frequency, &mut channel.frequency_buffer));
-            try!(channel.sound.get(&channel.frequency_buffer, &mut channel.wave_buffer));
+            channel.interval.transpose(base_frequency, &mut channel.frequency_buffer)?;
+            channel.sound.get(&channel.frequency_buffer, &mut channel.wave_buffer)?;
             for (item, wave) in result.iter_mut().zip(channel.wave_buffer.iter()) {
                 *item += *wave * channel.volume_normalized;
             }
@@ -326,12 +324,12 @@ impl Crossfader {
                sound_fade_out: Rc<SoundStructure>,
                sound_fade_in: Rc<SoundStructure>)
                -> SoundResult<Crossfader> {
-        let amplitude_fade_out = try!(FadeLinear::new_with_time(sample_rate, duration, 0.0));
-        try!(amplitude_fade_out.set_amplitude_start(1.0));
-        let amplitude_fade_in = try!(FadeLinear::new_with_time(sample_rate, duration, 1.0));
+        let amplitude_fade_out = FadeLinear::new_with_time(sample_rate, duration, 0.0)?;
+        amplitude_fade_out.set_amplitude_start(1.0)?;
+        let amplitude_fade_in = FadeLinear::new_with_time(sample_rate, duration, 1.0)?;
         Ok(Crossfader {
             duration: duration,
-            interval: try!(Interval::new(1, 1)),
+            interval: Interval::new(1, 1)?,
             sound_fade_out: sound_fade_out,
             sound_fade_in: sound_fade_in,
             amplitude_fade_out: amplitude_fade_out,

@@ -50,11 +50,11 @@ impl ProgressTime {
     /// Custom constructor with duration. The default duration is the period.
     /// The default period unit is π x 2.
     pub fn new(sample_rate: SampleCalc, period: SampleCalc) -> SoundResult<ProgressTime> {
-        let timer = try!(Timer::new(sample_rate));
+        let timer = Timer::new(sample_rate)?;
         if period <= 0.0 {
             return Err(Error::PeriodInvalid);
         }
-        try!(timer.set_timing(TimingOption::TimeConst(period)));
+        timer.set_timing(TimingOption::TimeConst(period))?;
         let period_unit = PI2;
         let phase_change = (timer.get_sample_time() / period) * period_unit;
         Ok(ProgressTime {
@@ -88,7 +88,7 @@ impl ProgressTime {
 
 impl HasTimer for ProgressTime {
     fn set_timing(&self, timing: TimingOption) -> SoundResult<()> {
-        try!(self.timer.set_timing(timing));
+        self.timer.set_timing(timing)?;
         self.restart();
         Ok(())
     }
@@ -105,7 +105,7 @@ impl HasTimer for ProgressTime {
     }
 
     fn apply_parent_timing(&self, parent_timing: TimingOption) -> SoundResult<()> {
-        try!(self.timer.apply_parent_timing(parent_timing));
+        self.timer.apply_parent_timing(parent_timing)?;
         self.restart();
         Ok(())
     }
@@ -127,14 +127,14 @@ impl Progress for ProgressTime {
     }
 
     fn next_by_time(&self) -> SoundResult<SampleCalc> {
-        try!(self.timer.next_by_time());
+        self.timer.next_by_time()?;
         self.phase.set(self.phase.get() + self.phase_change.get());
         Ok(self.phase.get())
     }
 
     /// Note: it means: the duration is tempo dependent, but the phase change is time dependent.
     fn next_by_tempo(&self, tempo: SampleCalc) -> SoundResult<SampleCalc> {
-        try!(self.timer.next_by_tempo(tempo));
+        self.timer.next_by_tempo(tempo)?;
         self.phase.set(self.phase.get() + self.phase_change.get());
         Ok(self.phase.get())
     }
@@ -174,7 +174,7 @@ impl ProgressTempo {
     /// The default period unit is π x 2.
     pub fn new(sample_rate: SampleCalc, period: NoteValue) -> SoundResult<ProgressTempo> {
         let timer = try!(Timer::new(sample_rate));
-        try!(timer.set_timing(TimingOption::TempoConst(period)));
+        timer.set_timing(TimingOption::TempoConst(period))?;
         let period_unit = PI2;
         let phase_change = timer.get_sample_time() * period.get_notes_per_beat() * period_unit;
         Ok(ProgressTempo {
@@ -196,7 +196,7 @@ impl ProgressTempo {
 
 impl HasTimer for ProgressTempo {
     fn set_timing(&self, timing: TimingOption) -> SoundResult<()> {
-        try!(self.timer.set_timing(timing));
+        self.timer.set_timing(timing)?;
         self.restart();
         Ok(())
     }
@@ -214,7 +214,7 @@ impl HasTimer for ProgressTempo {
     }
 
     fn apply_parent_timing(&self, parent_timing: TimingOption) -> SoundResult<()> {
-        try!(self.timer.apply_parent_timing(parent_timing));
+        self.timer.apply_parent_timing(parent_timing)?;
         self.restart();
         Ok(())
     }
@@ -244,7 +244,7 @@ impl Progress for ProgressTempo {
     }
 
     fn next_by_tempo(&self, tempo: SampleCalc) -> SoundResult<SampleCalc> {
-        try!(self.timer.next_by_tempo(tempo));
+        self.timer.next_by_tempo(tempo)?;
         self.phase.set(self.phase.get() + self.phase_change.get() * tempo);
         Ok(self.phase.get())
     }

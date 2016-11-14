@@ -34,7 +34,7 @@ pub struct InstrumentBasic {
 impl InstrumentBasic {
     /// Custom constructor
     pub fn new(sample_rate: SampleCalc) -> SoundResult<InstrumentBasic> {
-        let frequency1 = Rc::new(try!(FrequencyConst::new(110.0)));
+        let frequency1 = Rc::new(FrequencyConst::new(110.0)?);
         let amplitude = {
             let overtones_amplitude: Vec<SampleCalc> = vec![10.0, 1.0, 1.0, 0.95, 0.9, 0.9, 0.86,
                                                             0.83, 0.80, 0.78, 0.76, 0.74, 0.73,
@@ -42,24 +42,24 @@ impl InstrumentBasic {
             let overtones_half_life: Vec<SampleCalc> = vec![1.0, 0.2, 0.1, 0.06, 0.04, 0.03, 0.02,
                                                             0.015, 0.01, 0.008, 0.007, 0.006,
                                                             0.005, 0.004, 0.002, 0.001];
-            try!(AmplitudeDecayExpOvertones::new(sample_rate,
-                                                 4,
-                                                 &overtones_amplitude,
-                                                 &overtones_half_life))
+            AmplitudeDecayExpOvertones::new(sample_rate,
+                                            4,
+                                            &overtones_amplitude,
+                                            &overtones_half_life)?
         };
         let timbre1 =
-            Rc::new(try!(Timbre::new(sample_rate, BUFFER_SIZE_DEFAULT, Rc::new(amplitude), 4)));
+            Rc::new(Timbre::new(sample_rate, BUFFER_SIZE_DEFAULT, Rc::new(amplitude), 4)?);
         let amplitude = {
             let overtones_amplitude: Vec<SampleCalc> = vec![1.0, 0.1, 0.1, 0.1, 0.2, 0.5, 0.1,
                                                             0.1, 0.1, 0.1, 0.1, 0.1, 0.1, 0.1,
                                                             0.1, 0.1, 0.1, 0.1, 0.1, 0.1];
-            try!(AmplitudeConstOvertones::new(sample_rate, 4, &overtones_amplitude))
+            AmplitudeConstOvertones::new(sample_rate, 4, &overtones_amplitude)?
         };
         let timbre2 =
-            Rc::new(try!(Timbre::new(sample_rate, BUFFER_SIZE_DEFAULT, Rc::new(amplitude), 4)));
-        let mixer = Rc::new(try!(Mixer::new(sample_rate, BUFFER_SIZE_DEFAULT)));
-        try!(mixer.add(try!(Interval::new(1, 1)), timbre1, 4.0));
-        try!(mixer.add(try!(Interval::new(1, 1)), timbre2, 1.0));
+            Rc::new(Timbre::new(sample_rate, BUFFER_SIZE_DEFAULT, Rc::new(amplitude), 4)?);
+        let mixer = Rc::new(Mixer::new(sample_rate, BUFFER_SIZE_DEFAULT)?);
+        mixer.add(Interval::new(1, 1)?, timbre1, 4.0)?;
+        mixer.add(Interval::new(1, 1)?, timbre2, 1.0)?;
 
         Ok(InstrumentBasic {
             sample_rate: sample_rate,
@@ -73,8 +73,8 @@ impl InstrumentBasic {
     /// Change frequency in harmony with the previous value
     #[allow(dead_code)]
     pub fn change_frequency(&mut self, numerator: u16, denominator: u16) -> SoundResult<()> {
-        let interval = try!(Interval::new(numerator, denominator));
-        try!(self.mixer.set_interval(0, interval));
+        let interval = Interval::new(numerator, denominator)?;
+        self.mixer.set_interval(0, interval)?;
         self.time = 0.0;
         self.mixer.restart();
         println!("{}", interval);
@@ -105,7 +105,6 @@ impl SoundGenerator for InstrumentBasic {
                     Key::I => self.change_frequency(15, 2),
                     Key::O => self.change_frequency(17, 2),
                     Key::P => self.change_frequency(19, 2),
-                    Key::A => self.change_frequency(1, 1),
                     Key::S => self.change_frequency(2, 1),
                     Key::D => self.change_frequency(3, 1),
                     Key::F => self.change_frequency(4, 1),
@@ -114,7 +113,8 @@ impl SoundGenerator for InstrumentBasic {
                     Key::J => self.change_frequency(7, 1),
                     Key::K => self.change_frequency(8, 1),
                     Key::L => self.change_frequency(9, 1),
-                    _ => self.change_frequency(1, 1),
+                    Key::A | _ => self.change_frequency(1, 1),
+                    // _ => self.change_frequency(1, 1),
                 };
             }
             GeneratorCommand::Mute => {

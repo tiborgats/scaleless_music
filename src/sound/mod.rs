@@ -27,16 +27,16 @@ pub mod backend_portaudio;
 #[cfg(feature = "be-rsoundio")]
 pub mod backend_rsoundio;
 
-pub use self::errors::*;
-pub use self::interval::*;
-pub use self::frequency::*;
 pub use self::amplitude::*;
 pub use self::amplitude_overtones::*;
-pub use self::wave::*;
-pub use self::rhythm::*;
-pub use self::progress::*;
-pub use self::timing::*;
+pub use self::errors::*;
+pub use self::frequency::*;
+pub use self::interval::*;
 pub use self::note::*;
+pub use self::progress::*;
+pub use self::rhythm::*;
+pub use self::timing::*;
+pub use self::wave::*;
 
 /// Precision of the finally produced samples.
 pub type SampleOutput = f32;

@@ -27,7 +27,7 @@ impl FrequencyConst {
 
     /// Change frequency in harmony with it's previous value.
     pub fn change(&self, interval: Interval) -> SoundResult<&FrequencyConst> {
-        self.frequency.set(try!(interval.change_frequency(self.frequency.get())));
+        self.frequency.set(interval.change_frequency(self.frequency.get())?);
         Ok(self)
     }
 }
@@ -92,7 +92,7 @@ impl Vibrato {
                note_value: NoteValue,
                extent_ratio: SampleCalc)
                -> SoundResult<Vibrato> {
-        let sample_time = try!(get_sample_time(sample_rate));
+        let sample_time = get_sample_time(sample_rate)?;
         if extent_ratio <= 0.0 {
             return Err(Error::FrequencyTooLow);
         }

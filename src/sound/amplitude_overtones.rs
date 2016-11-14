@@ -1,16 +1,12 @@
 use sound::*;
-use std::rc::Rc;
-use std::cell::RefCell;
 use std::cell::Cell;
+use std::cell::RefCell;
+use std::rc::Rc;
 
 /// Provides time dependent amlitude changes both for the fundamental tone and for overtones.
 pub trait AmplitudeOvertonesProvider: HasTimer {
     /// It is only for measuring time lapse. Does nothing else.
     fn next_chunk(&self, samples: usize) -> SoundResult<()>;
-
-    // Provides the results of the amplitude calculations for a given overtone.
-    // For the fundamental tone `overtone = 0`.
-    // fn get(&self, overtone: usize, result: &mut [SampleCalc]) -> SoundResult<()>;
 
     /// Applies the amplitude function over existing samples for a given overtone.
     /// For the fundamental tone `overtone = 0`. It multiplies each sample with it's new amplitude.
@@ -20,13 +16,11 @@ pub trait AmplitudeOvertonesProvider: HasTimer {
 /// The `AmplitudeOvertonesJoinable` trait is used to specify the ability of joining
 /// amplitude structures (with overtones) together, forming a sequence of them.
 pub trait AmplitudeOvertonesJoinable: AmplitudeOvertonesProvider {
-    /// Sets the initial amplitude, and resets time.
-    fn set_amplitude_start(&self, amplitude: &[SampleCalc]) -> SoundResult<()>;
+    /// Sets the initial amplitudes, and resets time.
+    fn set_amplitudes_start(&self, amplitude: &[SampleCalc]) -> SoundResult<()>;
+
     /// Provides the actual amplitude values.
     fn get_amplitudes(&self, result: &mut [SampleCalc]) -> SoundResult<()>;
-    // fn get_duration(&self) -> Option<SampleCalc>;
-
-    // fn set_duration(&self, duration: SampleCalc);
 }
 
 
@@ -62,7 +56,7 @@ impl AmplitudeConstOvertones {
             *item = amplitude_old / amplitude_sum;
         }
         Ok(AmplitudeConstOvertones {
-            timer: try!(Timer::new(sample_rate)),
+            timer: Timer::new(sample_rate)?,
             amplitude: RefCell::new(amplitude_new),
         })
     }
@@ -90,7 +84,7 @@ impl AmplitudeOvertonesProvider for AmplitudeConstOvertones {
 
 impl HasTimer for AmplitudeConstOvertones {
     fn set_timing(&self, timing: TimingOption) -> SoundResult<()> {
-        try!(self.timer.set_timing(timing));
+        self.timer.set_timing(timing)?;
         self.restart();
         Ok(())
     }
@@ -109,7 +103,7 @@ impl HasTimer for AmplitudeConstOvertones {
 }
 
 impl AmplitudeOvertonesJoinable for AmplitudeConstOvertones {
-    fn set_amplitude_start(&self, amplitude: &[SampleCalc]) -> SoundResult<()> {
+    fn set_amplitudes_start(&self, amplitude: &[SampleCalc]) -> SoundResult<()> {
         let mut self_amplitude = self.amplitude.borrow_mut();
         // checking the input data
         if amplitude.len() > self_amplitude.len() {
@@ -176,7 +170,7 @@ impl AmplitudeDecayExpOvertones {
                amplitude: &[SampleCalc],
                half_life: &[SampleCalc])
                -> SoundResult<AmplitudeDecayExpOvertones> {
-        let sample_time = try!(get_sample_time(sample_rate));
+        let sample_time = get_sample_time(sample_rate)?;
         let mut amplitude_sum: SampleCalc = 0.0;
         for amplitude_check in amplitude.iter().take(overtone_count + 1) {
             if *amplitude_check < 0.0 {
@@ -204,7 +198,7 @@ impl AmplitudeDecayExpOvertones {
             *item = half.powf(sample_time / hl);
         }
         Ok(AmplitudeDecayExpOvertones {
-            timer: try!(Timer::new(sample_rate)),
+            timer: Timer::new(sample_rate)?,
             sample_time: sample_time,
             amplitude_init: amplitude_new.clone(),
             multiplier: multiplier,
@@ -237,7 +231,7 @@ impl AmplitudeOvertonesProvider for AmplitudeDecayExpOvertones {
 
 impl HasTimer for AmplitudeDecayExpOvertones {
     fn set_timing(&self, timing: TimingOption) -> SoundResult<()> {
-        try!(self.timer.set_timing(timing));
+        self.timer.set_timing(timing)?;
         self.restart();
         Ok(())
     }
@@ -262,7 +256,7 @@ impl HasTimer for AmplitudeDecayExpOvertones {
 }
 
 impl AmplitudeOvertonesJoinable for AmplitudeDecayExpOvertones {
-    fn set_amplitude_start(&self, amplitude: &[SampleCalc]) -> SoundResult<()> {
+    fn set_amplitudes_start(&self, amplitude: &[SampleCalc]) -> SoundResult<()> {
         let mut self_amplitude = self.amplitude.borrow_mut();
         // checking the input data
         if amplitude.len() > self_amplitude.len() {
@@ -319,7 +313,7 @@ impl AmplitudeOvertonesSequence {
     /// custom constructor
     pub fn new(sample_rate: SampleCalc) -> SoundResult<AmplitudeOvertonesSequence> {
         Ok(AmplitudeOvertonesSequence {
-            timer: try!(Timer::new(sample_rate)),
+            timer: Timer::new(sample_rate)?,
             amplitudes: Vec::new(),
             amplitude_index: Cell::new(0),
         })
@@ -328,7 +322,7 @@ impl AmplitudeOvertonesSequence {
 
 impl HasTimer for AmplitudeOvertonesSequence {
     fn set_timing(&self, timing: TimingOption) -> SoundResult<()> {
-        try!(self.timer.set_timing(timing));
+        self.timer.set_timing(timing)?;
         self.restart();
         Ok(())
     }

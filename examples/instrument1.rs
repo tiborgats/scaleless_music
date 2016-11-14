@@ -38,7 +38,7 @@ pub struct InstrumentBasic {
 impl InstrumentBasic {
     /// Custom constructor
     pub fn new(sample_rate: SampleCalc) -> SoundResult<InstrumentBasic> {
-        let frequency1 = Rc::new(try!(FrequencyConst::new(220.0)));
+        let frequency1 = Rc::new(FrequencyConst::new(220.0)?);
         let amplitude = {
             let overtones_amplitude: Vec<SampleCalc> = vec![10.0, 1.0, 1.0, 0.95, 0.9, 0.9, 0.86,
                                                             0.83, 0.80, 0.78, 0.76, 0.74, 0.73,
@@ -46,12 +46,12 @@ impl InstrumentBasic {
             let overtones_half_life: Vec<SampleCalc> = vec![1.0, 0.2, 0.1, 0.06, 0.04, 0.03, 0.02,
                                                             0.015, 0.01, 0.008, 0.007, 0.006,
                                                             0.005, 0.004, 0.002, 0.001];
-            try!(AmplitudeDecayExpOvertones::new(sample_rate,
-                                                 4,
-                                                 &overtones_amplitude,
-                                                 &overtones_half_life))
+            AmplitudeDecayExpOvertones::new(sample_rate,
+                                            4,
+                                            &overtones_amplitude,
+                                            &overtones_half_life)?
         };
-        let timbre1 = try!(Timbre::new(sample_rate, BUFFER_SIZE_DEFAULT, Rc::new(amplitude), 4));
+        let timbre1 = Timbre::new(sample_rate, BUFFER_SIZE_DEFAULT, Rc::new(amplitude), 4)?;
         Ok(InstrumentBasic {
             sample_rate: sample_rate,
             timbre1: timbre1,
@@ -64,8 +64,8 @@ impl InstrumentBasic {
     /// Change frequency in harmony with the previous value
     #[allow(dead_code)]
     pub fn change_frequency(&mut self, numerator: u16, denominator: u16) -> SoundResult<()> {
-        let interval = try!(Interval::new(numerator, denominator));
-        try!(self.frequency1.change(interval));
+        let interval = Interval::new(numerator, denominator)?;
+        self.frequency1.change(interval)?;
         self.time = 0.0;
         self.timbre1.restart();
         println!("{}  {}", interval, interval.get_name());

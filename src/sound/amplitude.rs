@@ -48,7 +48,7 @@ impl AmplitudeConst {
     /// Custom constructor.
     pub fn new(sample_rate: SampleCalc) -> SoundResult<AmplitudeConst> {
         Ok(AmplitudeConst {
-            timer: try!(Timer::new(sample_rate)),
+            timer: Timer::new(sample_rate)?,
             amplitude: Cell::new(1.0),
         })
     }
@@ -97,7 +97,7 @@ impl AmplitudeProvider for AmplitudeConst {
 
 impl HasTimer for AmplitudeConst {
     fn set_timing(&self, timing: TimingOption) -> SoundResult<()> {
-        try!(self.timer.set_timing(timing));
+        self.timer.set_timing(timing)?;
         self.restart();
         Ok(())
     }
@@ -117,7 +117,7 @@ impl HasTimer for AmplitudeConst {
 
 impl AmplitudeJoinable for AmplitudeConst {
     fn set_amplitude_start(&self, amplitude: SampleCalc) -> SoundResult<()> {
-        try!(is_valid_amplitude(amplitude));
+        is_valid_amplitude(amplitude)?;
         self.amplitude.set(amplitude);
         self.timer.restart();
         Ok(())
@@ -144,7 +144,7 @@ pub struct FadeLinear {
 impl FadeLinear {
     /// Custom constructor.
     pub fn new(progress: ProgressOption, amplitude_end: SampleCalc) -> SoundResult<FadeLinear> {
-        try!(is_valid_amplitude(amplitude_end));
+        is_valid_amplitude(amplitude_end)?;
         let amplitude_start = 0.0;
         progress.set_period_unit(amplitude_end - amplitude_start);
         Ok(FadeLinear {
@@ -159,7 +159,7 @@ impl FadeLinear {
                          duration: SampleCalc,
                          amplitude_end: SampleCalc)
                          -> SoundResult<FadeLinear> {
-        let progress = try!(ProgressTime::new(sample_rate, duration));
+        let progress = ProgressTime::new(sample_rate, duration)?;
         Self::new(ProgressOption::Time(progress), amplitude_end)
     }
 
@@ -169,7 +169,7 @@ impl FadeLinear {
                           note_value: NoteValue,
                           amplitude_end: SampleCalc)
                           -> SoundResult<FadeLinear> {
-        let progress = try!(ProgressTempo::new(sample_rate, note_value));
+        let progress = ProgressTempo::new(sample_rate, note_value)?;
         Self::new(ProgressOption::Tempo(progress), amplitude_end)
     }
 }
@@ -215,7 +215,7 @@ impl AmplitudeProvider for FadeLinear {
 
 impl HasTimer for FadeLinear {
     fn set_timing(&self, timing: TimingOption) -> SoundResult<()> {
-        try!(self.progress.set_timing(timing));
+        self.progress.set_timing(timing)?;
         self.restart();
         Ok(())
     }
@@ -235,7 +235,7 @@ impl HasTimer for FadeLinear {
 
 impl AmplitudeJoinable for FadeLinear {
     fn set_amplitude_start(&self, amplitude: SampleCalc) -> SoundResult<()> {
-        try!(is_valid_amplitude(amplitude));
+        is_valid_amplitude(amplitude)?;
         self.amplitude_start.set(amplitude);
         self.progress.set_phase_init(self.amplitude_start.get());
         self.progress.set_period_unit(self.amplitude_end - self.amplitude_start.get());
@@ -266,14 +266,14 @@ impl AmplitudeDecayExp {
     /// custom constructor
     /// `half_life` is the time required to reduce the amplitude to it's half.
     pub fn new(sample_rate: SampleCalc, half_life: SampleCalc) -> SoundResult<AmplitudeDecayExp> {
-        let sample_time = try!(get_sample_time(sample_rate));
+        let sample_time = get_sample_time(sample_rate)?;
         if half_life <= 0.0 {
             return Err(Error::AmplitudeRateInvalid);
         }
         let half: SampleCalc = 0.5;
         let multiplier = half.powf(sample_time / half_life);
         Ok(AmplitudeDecayExp {
-            timer: try!(Timer::new(sample_rate)),
+            timer: Timer::new(sample_rate)?,
             sample_time: sample_time,
             multiplier: multiplier,
             amplitude: Cell::new(1.0),
@@ -331,7 +331,7 @@ impl AmplitudeProvider for AmplitudeDecayExp {
 
 impl HasTimer for AmplitudeDecayExp {
     fn set_timing(&self, timing: TimingOption) -> SoundResult<()> {
-        try!(self.timer.set_timing(timing));
+        self.timer.set_timing(timing)?;
         self.restart();
         Ok(())
     }
@@ -351,7 +351,7 @@ impl HasTimer for AmplitudeDecayExp {
 
 impl AmplitudeJoinable for AmplitudeDecayExp {
     fn set_amplitude_start(&self, amplitude: SampleCalc) -> SoundResult<()> {
-        try!(is_valid_amplitude(amplitude));
+        is_valid_amplitude(amplitude)?;
         self.amplitude.set(amplitude);
         self.timer.restart();
         Ok(())
@@ -399,8 +399,8 @@ impl Tremolo {
                          period: SampleCalc,
                          extent_ratio: SampleCalc)
                          -> SoundResult<Tremolo> {
-        let progress = try!(ProgressTime::new(sample_rate, period));
-        try!(progress.set_timing(timing));
+        let progress = ProgressTime::new(sample_rate, period)?;
+        progress.set_timing(timing)?;
         Self::new(ProgressOption::Time(progress), extent_ratio)
     }
 
@@ -410,8 +410,8 @@ impl Tremolo {
                           period: NoteValue,
                           extent_ratio: SampleCalc)
                           -> SoundResult<Tremolo> {
-        let progress = try!(ProgressTempo::new(sample_rate, period));
-        try!(progress.set_timing(timing));
+        let progress = ProgressTempo::new(sample_rate, period)?;
+        progress.set_timing(timing)?;
         Self::new(ProgressOption::Tempo(progress), extent_ratio)
     }
 }
@@ -463,7 +463,7 @@ impl AmplitudeProvider for Tremolo {
 
 impl HasTimer for Tremolo {
     fn set_timing(&self, timing: TimingOption) -> SoundResult<()> {
-        try!(self.progress.set_timing(timing));
+        self.progress.set_timing(timing)?;
         self.restart();
         Ok(())
     }
@@ -495,7 +495,7 @@ impl AmplitudeSequence {
     pub fn new(sample_rate: SampleCalc) -> SoundResult<AmplitudeSequence> {
         let v = Vec::new();
         Ok(AmplitudeSequence {
-            timer: try!(Timer::new(sample_rate)),
+            timer: Timer::new(sample_rate)?,
             amp_funct_array: v,
             array_index: Cell::new(0),
             amplitude: Cell::new(1.0),
@@ -523,7 +523,7 @@ impl AmplitudeProvider for AmplitudeSequence {
         let mut index_from: usize = 0;
         loop {
             let amp_funct_act =
-                try!(self.amp_funct_array.get(self.array_index.get()).ok_or(Error::ItemInvalid));
+                self.amp_funct_array.get(self.array_index.get()).ok_or(Error::ItemInvalid)?;
             let child_result = amp_funct_act.apply(&mut buffer[index_from..]);
             match child_result {
                 Ok(()) => {
@@ -538,11 +538,11 @@ impl AmplitudeProvider for AmplitudeSequence {
                     } else {
                         self.array_index.set(array_index);
                         self.amplitude.set(amp_funct_act.get_amplitude());
-                        let amp_funct_next = try!(self.amp_funct_array
+                        let amp_funct_next = self.amp_funct_array
                             .get(array_index)
-                            .ok_or(Error::ItemInvalid));
-                        try!(amp_funct_next.set_amplitude_start(self.amplitude.get()));
-                        try!(amp_funct_next.apply_parent_timing(self.timer.get_timing()));
+                            .ok_or(Error::ItemInvalid)?;
+                        amp_funct_next.set_amplitude_start(self.amplitude.get())?;
+                        amp_funct_next.apply_parent_timing(self.timer.get_timing())?;
                     }
                 }
                 Err(_) => return child_result,
@@ -567,7 +567,7 @@ impl AmplitudeProvider for AmplitudeSequence {
         let mut index_from: usize = 0;
         loop {
             let amp_funct_act =
-                try!(self.amp_funct_array.get(self.array_index.get()).ok_or(Error::ItemInvalid));
+                self.amp_funct_array.get(self.array_index.get()).ok_or(Error::ItemInvalid)?;
             let child_result = amp_funct_act.apply_rhythmic(tempo, &mut buffer[index_from..]);
             match child_result {
                 Ok(()) => {
@@ -582,11 +582,11 @@ impl AmplitudeProvider for AmplitudeSequence {
                     } else {
                         self.array_index.set(array_index);
                         self.amplitude.set(amp_funct_act.get_amplitude());
-                        let amp_funct_next = try!(self.amp_funct_array
+                        let amp_funct_next = self.amp_funct_array
                             .get(array_index)
-                            .ok_or(Error::ItemInvalid));
-                        try!(amp_funct_next.set_amplitude_start(self.amplitude.get()));
-                        try!(amp_funct_next.apply_parent_timing(self.timer.get_timing()));
+                            .ok_or(Error::ItemInvalid)?;
+                        amp_funct_next.set_amplitude_start(self.amplitude.get())?;
+                        amp_funct_next.apply_parent_timing(self.timer.get_timing())?;
                     }
                 }
                 Err(_) => return child_result,
@@ -597,7 +597,7 @@ impl AmplitudeProvider for AmplitudeSequence {
 
 impl HasTimer for AmplitudeSequence {
     fn set_timing(&self, timing: TimingOption) -> SoundResult<()> {
-        try!(self.timer.set_timing(timing));
+        self.timer.set_timing(timing)?;
         self.restart();
         Ok(())
     }
@@ -615,7 +615,7 @@ impl HasTimer for AmplitudeSequence {
     }
 
     fn apply_parent_timing(&self, parent_timing: TimingOption) -> SoundResult<()> {
-        try!(self.timer.apply_parent_timing(parent_timing));
+        self.timer.apply_parent_timing(parent_timing)?;
         self.restart();
         Ok(())
     }
@@ -623,7 +623,7 @@ impl HasTimer for AmplitudeSequence {
 
 impl AmplitudeJoinable for AmplitudeSequence {
     fn set_amplitude_start(&self, amplitude: SampleCalc) -> SoundResult<()> {
-        try!(is_valid_amplitude(amplitude));
+        is_valid_amplitude(amplitude)?;
         self.amplitude.set(amplitude);
         self.timer.restart();
         Ok(())

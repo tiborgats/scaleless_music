@@ -1,5 +1,5 @@
-use sound::*;
 use num::*;
+use sound::*;
 use std::fmt;
 use std::ops::{Div, Mul};
 
@@ -35,7 +35,7 @@ impl Interval {
     /// custom constructor
     pub fn new(numerator: u16, denominator: u16) -> SoundResult<Interval> {
         let mut interval = Interval::default();
-        try!(interval.set(numerator, denominator));
+        interval.set(numerator, denominator)?;
         Ok(interval)
     }
 

@@ -2,7 +2,7 @@ scaleless_music
 =====
 *A library for building music with precise harmonies, without the limitations of any musical scale.*
 
-[![Crates.io](https://img.shields.io/crates/v/scaleless_music.svg)](https://crates.io/crates/scaleless_music) [![Linux & OS X build status](https://img.shields.io/travis/tiborgats/scaleless_music.svg?label=Linux%20%26%20OS%20X%20build)](https://travis-ci.org/tiborgats/scaleless_music) [![Windows build status](https://img.shields.io/appveyor/ci/tiborgats/scaleless-music.svg?label=Windows%20build)](https://ci.appveyor.com/project/tiborgats/scaleless-music) [![Dependency Status](https://dependencyci.com/github/tiborgats/scaleless_music/badge)](https://dependencyci.com/github/tiborgats/scaleless_music) [![Crates.io](https://img.shields.io/crates/l/scaleless_music.svg)](https://github.com/tiborgats/scaleless_music/blob/master/COPYING) [![Docs](https://docs.rs/scaleless_music/badge.svg)](https://docs.rs/scaleless_music)
+[![Crates.io](https://img.shields.io/crates/v/scaleless_music.svg)](https://crates.io/crates/scaleless_music) [![Linux & OS X build status](https://img.shields.io/travis/tiborgats/scaleless_music.svg?label=Linux%20build)](https://travis-ci.org/tiborgats/scaleless_music) [![Windows build status](https://img.shields.io/appveyor/ci/tiborgats/scaleless-music.svg?label=Windows%20build)](https://ci.appveyor.com/project/tiborgats/scaleless-music) [![Dependency Status](https://dependencyci.com/github/tiborgats/scaleless_music/badge)](https://dependencyci.com/github/tiborgats/scaleless_music) [![Crates.io](https://img.shields.io/crates/l/scaleless_music.svg)](https://github.com/tiborgats/scaleless_music/blob/master/COPYING) [![Docs](https://docs.rs/scaleless_music/badge.svg)](https://docs.rs/scaleless_music)
 
 :construction: It is in a very early stage, but will change a lot as soon as I have some free time.
 
@@ -68,7 +68,7 @@ Henceforward, I plan to create a tool for analyzing recorded samples, finding cl
 - [ ] OS support
   - [x] Linux
   - [x] Windows
-  - [x] OS X
+  - [ ] OS X
   - [ ] Android
   - [ ] iOS
 - [ ] test coverages

@@ -17,7 +17,7 @@ matrix:
   - rust: nightly
 os:
 - linux
-- osx
+# - osx
 notifications:
   email:
   - tibor.gats@gmail.com

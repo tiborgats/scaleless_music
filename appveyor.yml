@@ -56,4 +56,4 @@ test_script:
 - cmd: set LIB=C:\projects\scaleless-music\deps\portaudio\build\native\lib\x64\v120\Release;%LIB%
 - cmd: rename C:\projects\scaleless-music\deps\portaudio\build\native\lib\x64\v120\Release\portaudio_x64.lib portaudio.lib
 #- cmd: set PORTAUDIO_ONLY_STATIC
-- cmd: cargo test --verbose
+- cmd: cargo test --features "be-portaudio" --verbose

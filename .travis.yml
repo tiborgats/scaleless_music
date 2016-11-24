@@ -30,7 +30,7 @@ script:
   travis-cargo build &&
   travis-cargo test &&
   travis-cargo bench &&
-  travis-cargo --only stable doc -- --no-deps --features "be-portaudio be-rsoundio"
+  travis-cargo --only stable doc -- --no-deps --features "be-portaudio"
 after_success:
   # upload the documentation from the build with stable (automatically only actually
   # runs on the master branch, not individual PRs)

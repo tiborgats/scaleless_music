@@ -4,11 +4,11 @@ Both of them are under construction, will be changed later.
 ## `instrument1`
 Build with PortAudio backend:
 
-`cargo run --example instrument1 --features "be-portaudio examples"`
+`cargo run --example instrument1 --features "be-portaudio"`
 
 Build with SDL2 backend:
 
-`cargo run --example instrument1 --features "be-sdl2 examples"`
+`cargo run --example instrument1 --features "be-sdl2"`
 
 
 
@@ -20,11 +20,11 @@ The keys from <kbd>Q</kbd> to <kbd>O</kbd> changes the frequency to be higher, t
 ## `instrument_overtone`
 Build with PortAudio backend:
 
-`cargo run --example instrument_overtone --features "be-portaudio examples"`
+`cargo run --example instrument_overtone --features "be-portaudio"`
 
 Build with SDL2 backend:
 
-`cargo run --example instrument_overtone --features "be-sdl2 examples"`
+`cargo run --example instrument_overtone --features "be-sdl2"`
 
 
 

@@ -68,7 +68,7 @@ impl AmplitudeProvider for AmplitudeConst {
                     *item *= self.amplitude.get();
                 }
             }
-            Err(_e) => {}
+            Err(ref _e) => {}
         }
         timer_result
     }
@@ -89,7 +89,7 @@ impl AmplitudeProvider for AmplitudeConst {
                     *item *= self.amplitude.get();
                 }
             }
-            Err(_e) => {}
+            Err(ref _e) => {}
         }
         timer_result
     }
@@ -197,9 +197,10 @@ impl AmplitudeProvider for FadeLinear {
         }
         match self.progress {
             ProgressOption::Tempo(ref p) => {
-                for ((index, item), beats_per_second) in samples.iter_mut()
-                    .enumerate()
-                    .zip(tempo) {
+                for ((index, item), beats_per_second) in
+                    samples.iter_mut()
+                        .enumerate()
+                        .zip(tempo) {
                     match p.next_by_tempo(*beats_per_second) {
                         Ok(phase) => *item *= phase,
                         Err(Error::ProgressCompleted) => return Err(Error::ItemsCompleted(index)),
@@ -300,7 +301,7 @@ impl AmplitudeProvider for AmplitudeDecayExp {
                     *item = self.amplitude.get();
                 }
             }
-            Err(_e) => {}
+            Err(ref _e) => {}
         }
         timer_result
     }
@@ -323,7 +324,7 @@ impl AmplitudeProvider for AmplitudeDecayExp {
                     *item *= self.amplitude.get();
                 }
             }
-            Err(_e) => {}
+            Err(ref _e) => {}
         }
         timer_result
     }

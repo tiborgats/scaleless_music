@@ -1,0 +1,1 @@
+initSidebarItems({"struct":[["Mixer","Mixes sound channels (structures)."],["Timbre","A tone with optional overtones and amplitude modulation. Some examples: https://youtu.be/VRAXK4QKJ1Q?t=25s"],["Wave","A sinusoidal wave generator, with variable frequency."]]});

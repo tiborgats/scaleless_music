@@ -1,0 +1,1 @@
+initSidebarItems({"enum":[["BackendError","Wrapper for the propagation of backend specific errors."]],"struct":[["SoundInterface","This is a wrapper around the sound output backend"]],"type":[["BackendResult","Return type for the backend functions."]]});

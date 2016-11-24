@@ -1,0 +1,1 @@
+initSidebarItems({"constant":[["INTERVAL_UNISON","unison (1:1)"]],"struct":[["Interval","Harmonic musical interval (of frequencies), represented by a rational number."]]});

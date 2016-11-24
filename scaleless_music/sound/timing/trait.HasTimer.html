@@ -1,0 +1,147 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="generator" content="rustdoc">
+    <meta name="description" content="API documentation for the Rust `HasTimer` trait in crate `scaleless_music`.">
+    <meta name="keywords" content="rust, rustlang, rust-lang, HasTimer">
+
+    <title>scaleless_music::sound::timing::HasTimer - Rust</title>
+
+    <link rel="stylesheet" type="text/css" href="../../../rustdoc.css">
+    <link rel="stylesheet" type="text/css" href="../../../main.css">
+    
+
+    
+    
+</head>
+<body class="rustdoc">
+    <!--[if lte IE 8]>
+    <div class="warning">
+        This old browser is unsupported and will most likely display funky
+        things.
+    </div>
+    <![endif]-->
+
+    
+
+    <nav class="sidebar">
+        
+        <p class='location'><a href='../../index.html'>scaleless_music</a>::<wbr><a href='../index.html'>sound</a>::<wbr><a href='index.html'>timing</a></p><script>window.sidebarCurrent = {name: 'HasTimer', ty: 'trait', relpath: ''};</script><script defer src="sidebar-items.js"></script>
+    </nav>
+
+    <nav class="sub">
+        <form class="search-form js-only">
+            <div class="search-container">
+                <input class="search-input" name="search"
+                       autocomplete="off"
+                       placeholder="Click or press ‘S’ to search, ‘?’ for more options…"
+                       type="search">
+            </div>
+        </form>
+    </nav>
+
+    <section id='main' class="content trait">
+<h1 class='fqn'><span class='in-band'>Trait <a href='../../index.html'>scaleless_music</a>::<wbr><a href='../index.html'>sound</a>::<wbr><a href='index.html'>timing</a>::<wbr><a class='trait' href=''>HasTimer</a></span><span class='out-of-band'><span id='render-detail'>
+                   <a id="toggle-all-docs" href="javascript:void(0)" title="collapse all docs">
+                       [<span class='inner'>&#x2212;</span>]
+                   </a>
+               </span><a id='src-1468' class='srclink' href='../../../src/scaleless_music/src/sound/timing.rs.html#6-19' title='goto source code'>[src]</a></span></h1>
+<pre class='rust trait'>pub trait HasTimer {
+    fn <a href='#tymethod.set_timing' class='fnname'>set_timing</a>(&amp;self, timing: <a class='enum' href='../../../scaleless_music/sound/timing/enum.TimingOption.html' title='scaleless_music::sound::timing::TimingOption'>TimingOption</a>) -&gt; <a class='type' href='../../../scaleless_music/sound/errors/type.SoundResult.html' title='scaleless_music::sound::errors::SoundResult'>SoundResult</a>&lt;<a class='primitive' href='https://doc.rust-lang.org/nightly/std/primitive.tuple.html'>()</a>&gt;;
+    fn <a href='#tymethod.get_timing' class='fnname'>get_timing</a>(&amp;self) -&gt; <a class='enum' href='../../../scaleless_music/sound/timing/enum.TimingOption.html' title='scaleless_music::sound::timing::TimingOption'>TimingOption</a>;
+    fn <a href='#tymethod.restart' class='fnname'>restart</a>(&amp;self);
+    fn <a href='#tymethod.apply_parent_timing' class='fnname'>apply_parent_timing</a>(&amp;self, parent_timing: <a class='enum' href='../../../scaleless_music/sound/timing/enum.TimingOption.html' title='scaleless_music::sound::timing::TimingOption'>TimingOption</a>) -&gt; <a class='type' href='../../../scaleless_music/sound/errors/type.SoundResult.html' title='scaleless_music::sound::errors::SoundResult'>SoundResult</a>&lt;<a class='primitive' href='https://doc.rust-lang.org/nightly/std/primitive.tuple.html'>()</a>&gt;;
+}</pre><div class='docblock'><p>It provides the timing functionality required for making sequences.</p>
+</div>
+            <h2 id='required-methods'>Required Methods</h2>
+            <div class='methods'>
+        <h3 id='tymethod.set_timing' class='method stab '><span id='set_timing.v' class='invisible'><code>fn <a href='#tymethod.set_timing' class='fnname'>set_timing</a>(&amp;self, timing: <a class='enum' href='../../../scaleless_music/sound/timing/enum.TimingOption.html' title='scaleless_music::sound::timing::TimingOption'>TimingOption</a>) -&gt; <a class='type' href='../../../scaleless_music/sound/errors/type.SoundResult.html' title='scaleless_music::sound::errors::SoundResult'>SoundResult</a>&lt;<a class='primitive' href='https://doc.rust-lang.org/nightly/std/primitive.tuple.html'>()</a>&gt;</code></span></h3><div class='docblock'><p>Sets the timing (duration) of the sequence item, and restarts the internal timer.</p>
+</div><h3 id='tymethod.get_timing' class='method stab '><span id='get_timing.v' class='invisible'><code>fn <a href='#tymethod.get_timing' class='fnname'>get_timing</a>(&amp;self) -&gt; <a class='enum' href='../../../scaleless_music/sound/timing/enum.TimingOption.html' title='scaleless_music::sound::timing::TimingOption'>TimingOption</a></code></span></h3><div class='docblock'><p>Provides the <code>TimingOption</code>.</p>
+</div><h3 id='tymethod.restart' class='method stab '><span id='restart.v' class='invisible'><code>fn <a href='#tymethod.restart' class='fnname'>restart</a>(&amp;self)</code></span></h3><div class='docblock'><p>Restarts the internal timer.</p>
+</div><h3 id='tymethod.apply_parent_timing' class='method stab '><span id='apply_parent_timing.v' class='invisible'><code>fn <a href='#tymethod.apply_parent_timing' class='fnname'>apply_parent_timing</a>(&amp;self, parent_timing: <a class='enum' href='../../../scaleless_music/sound/timing/enum.TimingOption.html' title='scaleless_music::sound::timing::TimingOption'>TimingOption</a>) -&gt; <a class='type' href='../../../scaleless_music/sound/errors/type.SoundResult.html' title='scaleless_music::sound::errors::SoundResult'>SoundResult</a>&lt;<a class='primitive' href='https://doc.rust-lang.org/nightly/std/primitive.tuple.html'>()</a>&gt;</code></span></h3><div class='docblock'><p>Applies the parent&#39;s timing to calculate it&#39;s own relative timing.
+It is used for sequence items.</p>
+</div></div>
+        <h2 id='implementors'>Implementors</h2>
+        <ul class='item-list' id='implementors-list'>
+    <li><code>impl HasTimer for <a class='struct' href='../../../scaleless_music/sound/amplitude/struct.AmplitudeConst.html' title='scaleless_music::sound::amplitude::AmplitudeConst'>AmplitudeConst</a></code></li>
+<li><code>impl HasTimer for <a class='struct' href='../../../scaleless_music/sound/amplitude/struct.FadeLinear.html' title='scaleless_music::sound::amplitude::FadeLinear'>FadeLinear</a></code></li>
+<li><code>impl HasTimer for <a class='struct' href='../../../scaleless_music/sound/amplitude/struct.AmplitudeDecayExp.html' title='scaleless_music::sound::amplitude::AmplitudeDecayExp'>AmplitudeDecayExp</a></code></li>
+<li><code>impl HasTimer for <a class='struct' href='../../../scaleless_music/sound/amplitude/struct.Tremolo.html' title='scaleless_music::sound::amplitude::Tremolo'>Tremolo</a></code></li>
+<li><code>impl HasTimer for <a class='struct' href='../../../scaleless_music/sound/amplitude/struct.AmplitudeSequence.html' title='scaleless_music::sound::amplitude::AmplitudeSequence'>AmplitudeSequence</a></code></li>
+<li><code>impl HasTimer for <a class='struct' href='../../../scaleless_music/sound/amplitude_overtones/struct.AmplitudeConstOvertones.html' title='scaleless_music::sound::amplitude_overtones::AmplitudeConstOvertones'>AmplitudeConstOvertones</a></code></li>
+<li><code>impl HasTimer for <a class='struct' href='../../../scaleless_music/sound/amplitude_overtones/struct.AmplitudeDecayExpOvertones.html' title='scaleless_music::sound::amplitude_overtones::AmplitudeDecayExpOvertones'>AmplitudeDecayExpOvertones</a></code></li>
+<li><code>impl HasTimer for <a class='struct' href='../../../scaleless_music/sound/amplitude_overtones/struct.AmplitudeOvertonesSequence.html' title='scaleless_music::sound::amplitude_overtones::AmplitudeOvertonesSequence'>AmplitudeOvertonesSequence</a></code></li>
+<li><code>impl HasTimer for <a class='struct' href='../../../scaleless_music/sound/wave/struct.Timbre.html' title='scaleless_music::sound::wave::Timbre'>Timbre</a></code></li>
+<li><code>impl HasTimer for <a class='struct' href='../../../scaleless_music/sound/wave/struct.Mixer.html' title='scaleless_music::sound::wave::Mixer'>Mixer</a></code></li>
+<li><code>impl HasTimer for <a class='struct' href='../../../scaleless_music/sound/progress/struct.ProgressTime.html' title='scaleless_music::sound::progress::ProgressTime'>ProgressTime</a></code></li>
+<li><code>impl HasTimer for <a class='struct' href='../../../scaleless_music/sound/progress/struct.ProgressTempo.html' title='scaleless_music::sound::progress::ProgressTempo'>ProgressTempo</a></code></li>
+<li><code>impl HasTimer for <a class='enum' href='../../../scaleless_music/sound/progress/enum.ProgressOption.html' title='scaleless_music::sound::progress::ProgressOption'>ProgressOption</a></code></li>
+<li><code>impl HasTimer for <a class='struct' href='../../../scaleless_music/sound/timing/struct.Timer.html' title='scaleless_music::sound::timing::Timer'>Timer</a></code></li>
+</ul><script type="text/javascript" async
+                         src="../../../implementors/scaleless_music/sound/timing/trait.HasTimer.js">
+                 </script></section>
+    <section id='search' class="content hidden"></section>
+
+    <section class="footer"></section>
+
+    <aside id="help" class="hidden">
+        <div>
+            <h1 class="hidden">Help</h1>
+
+            <div class="shortcuts">
+                <h2>Keyboard Shortcuts</h2>
+
+                <dl>
+                    <dt>?</dt>
+                    <dd>Show this help dialog</dd>
+                    <dt>S</dt>
+                    <dd>Focus the search field</dd>
+                    <dt>&larrb;</dt>
+                    <dd>Move up in search results</dd>
+                    <dt>&rarrb;</dt>
+                    <dd>Move down in search results</dd>
+                    <dt>&#9166;</dt>
+                    <dd>Go to active search result</dd>
+                    <dt>+</dt>
+                    <dd>Collapse/expand all sections</dd>
+                </dl>
+            </div>
+
+            <div class="infos">
+                <h2>Search Tricks</h2>
+
+                <p>
+                    Prefix searches with a type followed by a colon (e.g.
+                    <code>fn:</code>) to restrict the search to a given type.
+                </p>
+
+                <p>
+                    Accepted types are: <code>fn</code>, <code>mod</code>,
+                    <code>struct</code>, <code>enum</code>,
+                    <code>trait</code>, <code>type</code>, <code>macro</code>,
+                    and <code>const</code>.
+                </p>
+
+                <p>
+                    Search functions by type signature (e.g.
+                    <code>vec -> usize</code> or <code>* -> vec</code>)
+                </p>
+            </div>
+        </div>
+    </aside>
+
+    
+
+    <script>
+        window.rootPath = "../../../";
+        window.currentCrate = "scaleless_music";
+        window.playgroundUrl = "";
+    </script>
+    <script src="../../../jquery.js"></script>
+    <script src="../../../main.js"></script>
+    
+    <script defer src="../../../search-index.js"></script>
+</body>
+</html>

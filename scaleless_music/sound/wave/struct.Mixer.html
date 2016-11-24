@@ -1,0 +1,141 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="generator" content="rustdoc">
+    <meta name="description" content="API documentation for the Rust `Mixer` struct in crate `scaleless_music`.">
+    <meta name="keywords" content="rust, rustlang, rust-lang, Mixer">
+
+    <title>scaleless_music::sound::wave::Mixer - Rust</title>
+
+    <link rel="stylesheet" type="text/css" href="../../../rustdoc.css">
+    <link rel="stylesheet" type="text/css" href="../../../main.css">
+    
+
+    
+    
+</head>
+<body class="rustdoc">
+    <!--[if lte IE 8]>
+    <div class="warning">
+        This old browser is unsupported and will most likely display funky
+        things.
+    </div>
+    <![endif]-->
+
+    
+
+    <nav class="sidebar">
+        
+        <p class='location'><a href='../../index.html'>scaleless_music</a>::<wbr><a href='../index.html'>sound</a>::<wbr><a href='index.html'>wave</a></p><script>window.sidebarCurrent = {name: 'Mixer', ty: 'struct', relpath: ''};</script><script defer src="sidebar-items.js"></script>
+    </nav>
+
+    <nav class="sub">
+        <form class="search-form js-only">
+            <div class="search-container">
+                <input class="search-input" name="search"
+                       autocomplete="off"
+                       placeholder="Click or press ‘S’ to search, ‘?’ for more options…"
+                       type="search">
+            </div>
+        </form>
+    </nav>
+
+    <section id='main' class="content struct">
+<h1 class='fqn'><span class='in-band'>Struct <a href='../../index.html'>scaleless_music</a>::<wbr><a href='../index.html'>sound</a>::<wbr><a href='index.html'>wave</a>::<wbr><a class='struct' href=''>Mixer</a></span><span class='out-of-band'><span id='render-detail'>
+                   <a id="toggle-all-docs" href="javascript:void(0)" title="collapse all docs">
+                       [<span class='inner'>&#x2212;</span>]
+                   </a>
+               </span><a id='src-963' class='srclink' href='../../../src/scaleless_music/src/sound/wave.rs.html#170-174' title='goto source code'>[src]</a></span></h1>
+<pre class='rust struct'>pub struct Mixer { /* fields omitted */ }</pre><div class='docblock'><p>Mixes sound channels (structures).</p>
+</div><h2 id='methods'>Methods</h2><h3 class='impl'><span class='in-band'><code>impl <a class='struct' href='../../../scaleless_music/sound/wave/struct.Mixer.html' title='scaleless_music::sound::wave::Mixer'>Mixer</a></code></span><span class='out-of-band'><div class='ghost'></div><a id='src-973' class='srclink' href='../../../src/scaleless_music/src/sound/wave.rs.html#176-250' title='goto source code'>[src]</a></span></h3>
+<div class='impl-items'><h4 id='method.new' class='method'><span id='new.v' class='invisible'><code>fn <a href='#method.new' class='fnname'>new</a>(sample_rate: <a class='type' href='../../../scaleless_music/sound/type.SampleCalc.html' title='scaleless_music::sound::SampleCalc'>SampleCalc</a>, buffer_size: <a class='primitive' href='https://doc.rust-lang.org/nightly/std/primitive.usize.html'>usize</a>) -&gt; <a class='type' href='../../../scaleless_music/sound/errors/type.SoundResult.html' title='scaleless_music::sound::errors::SoundResult'>SoundResult</a>&lt;<a class='struct' href='../../../scaleless_music/sound/wave/struct.Mixer.html' title='scaleless_music::sound::wave::Mixer'>Mixer</a>&gt;</code></span></h4>
+<div class='docblock'><p>custom constructor</p>
+</div><h4 id='method.add' class='method'><span id='add.v' class='invisible'><code>fn <a href='#method.add' class='fnname'>add</a>(&amp;self, interval: <a class='struct' href='../../../scaleless_music/sound/interval/struct.Interval.html' title='scaleless_music::sound::interval::Interval'>Interval</a>, sound: <a class='struct' href='https://doc.rust-lang.org/nightly/alloc/rc/struct.Rc.html' title='alloc::rc::Rc'>Rc</a>&lt;<a class='trait' href='../../../scaleless_music/sound/trait.SoundStructure.html' title='scaleless_music::sound::SoundStructure'>SoundStructure</a>&gt;, volume: <a class='type' href='../../../scaleless_music/sound/type.SampleCalc.html' title='scaleless_music::sound::SampleCalc'>SampleCalc</a>) -&gt; <a class='type' href='../../../scaleless_music/sound/errors/type.SoundResult.html' title='scaleless_music::sound::errors::SoundResult'>SoundResult</a>&lt;&amp;<a class='struct' href='../../../scaleless_music/sound/wave/struct.Mixer.html' title='scaleless_music::sound::wave::Mixer'>Mixer</a>&gt;</code></span></h4>
+<div class='docblock'><p>Add a new channel to the mixer.</p>
+</div><h4 id='method.set_interval' class='method'><span id='set_interval.v' class='invisible'><code>fn <a href='#method.set_interval' class='fnname'>set_interval</a>(&amp;self, channel: <a class='primitive' href='https://doc.rust-lang.org/nightly/std/primitive.usize.html'>usize</a>, interval: <a class='struct' href='../../../scaleless_music/sound/interval/struct.Interval.html' title='scaleless_music::sound::interval::Interval'>Interval</a>) -&gt; <a class='type' href='../../../scaleless_music/sound/errors/type.SoundResult.html' title='scaleless_music::sound::errors::SoundResult'>SoundResult</a>&lt;<a class='primitive' href='https://doc.rust-lang.org/nightly/std/primitive.tuple.html'>()</a>&gt;</code></span></h4>
+<div class='docblock'><p>Sets a new interval for the channel, relative to the base frequency of the mixer.</p>
+</div><h4 id='method.set_volume' class='method'><span id='set_volume.v' class='invisible'><code>fn <a href='#method.set_volume' class='fnname'>set_volume</a>(&amp;self, channel: <a class='primitive' href='https://doc.rust-lang.org/nightly/std/primitive.usize.html'>usize</a>, volume: <a class='type' href='../../../scaleless_music/sound/type.SampleCalc.html' title='scaleless_music::sound::SampleCalc'>SampleCalc</a>) -&gt; <a class='type' href='../../../scaleless_music/sound/errors/type.SoundResult.html' title='scaleless_music::sound::errors::SoundResult'>SoundResult</a>&lt;<a class='primitive' href='https://doc.rust-lang.org/nightly/std/primitive.tuple.html'>()</a>&gt;</code></span></h4>
+<div class='docblock'><p>Sets the relative volume of the channel.</p>
+</div></div><h2 id='implementations'>Trait Implementations</h2><h3 class='impl'><span class='in-band'><code>impl <a class='trait' href='https://doc.rust-lang.org/nightly/core/clone/trait.Clone.html' title='core::clone::Clone'>Clone</a> for <a class='struct' href='../../../scaleless_music/sound/wave/struct.Mixer.html' title='scaleless_music::sound::wave::Mixer'>Mixer</a></code></span><span class='out-of-band'><div class='ghost'></div><a id='src-967' class='srclink' href='../../../src/scaleless_music/src/sound/wave.rs.html#169' title='goto source code'>[src]</a></span></h3>
+<div class='impl-items'><h4 id='method.clone' class='method'><span id='clone.v' class='invisible'><code>fn <a href='https://doc.rust-lang.org/nightly/core/clone/trait.Clone.html#tymethod.clone' class='fnname'>clone</a>(&amp;self) -&gt; <a class='struct' href='../../../scaleless_music/sound/wave/struct.Mixer.html' title='scaleless_music::sound::wave::Mixer'>Mixer</a></code></span></h4>
+<div class='docblock'><p>Returns a copy of the value. <a href="https://doc.rust-lang.org/nightly/core/clone/trait.Clone.html#tymethod.clone">Read more</a></p>
+</div><h4 id='method.clone_from' class='method'><span id='clone_from.v' class='invisible'><code>fn <a href='https://doc.rust-lang.org/nightly/core/clone/trait.Clone.html#method.clone_from' class='fnname'>clone_from</a>(&amp;mut self, source: &amp;Self)</code><div class='since' title='Stable since Rust version 1.0.0'>1.0.0</div></span></h4>
+<div class='docblock'><p>Performs copy-assignment from <code>source</code>. <a href="https://doc.rust-lang.org/nightly/core/clone/trait.Clone.html#method.clone_from">Read more</a></p>
+</div></div><h3 class='impl'><span class='in-band'><code>impl <a class='trait' href='../../../scaleless_music/sound/timing/trait.HasTimer.html' title='scaleless_music::sound::timing::HasTimer'>HasTimer</a> for <a class='struct' href='../../../scaleless_music/sound/wave/struct.Mixer.html' title='scaleless_music::sound::wave::Mixer'>Mixer</a></code></span><span class='out-of-band'><div class='ghost'></div><a id='src-1000' class='srclink' href='../../../src/scaleless_music/src/sound/wave.rs.html#252-280' title='goto source code'>[src]</a></span></h3>
+<div class='impl-items'><h4 id='method.set_timing' class='method'><span id='set_timing.v' class='invisible'><code>fn <a href='../../../scaleless_music/sound/timing/trait.HasTimer.html#tymethod.set_timing' class='fnname'>set_timing</a>(&amp;self, timing: <a class='enum' href='../../../scaleless_music/sound/timing/enum.TimingOption.html' title='scaleless_music::sound::timing::TimingOption'>TimingOption</a>) -&gt; <a class='type' href='../../../scaleless_music/sound/errors/type.SoundResult.html' title='scaleless_music::sound::errors::SoundResult'>SoundResult</a>&lt;<a class='primitive' href='https://doc.rust-lang.org/nightly/std/primitive.tuple.html'>()</a>&gt;</code></span></h4>
+<div class='docblock'><p>Sets the timing (duration) of the sequence item, and restarts the internal timer.</p>
+</div><h4 id='method.get_timing' class='method'><span id='get_timing.v' class='invisible'><code>fn <a href='../../../scaleless_music/sound/timing/trait.HasTimer.html#tymethod.get_timing' class='fnname'>get_timing</a>(&amp;self) -&gt; <a class='enum' href='../../../scaleless_music/sound/timing/enum.TimingOption.html' title='scaleless_music::sound::timing::TimingOption'>TimingOption</a></code></span></h4>
+<div class='docblock'><p>Provides the <code>TimingOption</code>.</p>
+</div><h4 id='method.restart' class='method'><span id='restart.v' class='invisible'><code>fn <a href='../../../scaleless_music/sound/timing/trait.HasTimer.html#tymethod.restart' class='fnname'>restart</a>(&amp;self)</code></span></h4>
+<div class='docblock'><p>Restarts the internal timer.</p>
+</div><h4 id='method.apply_parent_timing' class='method'><span id='apply_parent_timing.v' class='invisible'><code>fn <a href='../../../scaleless_music/sound/timing/trait.HasTimer.html#tymethod.apply_parent_timing' class='fnname'>apply_parent_timing</a>(&amp;self, parent_timing: <a class='enum' href='../../../scaleless_music/sound/timing/enum.TimingOption.html' title='scaleless_music::sound::timing::TimingOption'>TimingOption</a>) -&gt; <a class='type' href='../../../scaleless_music/sound/errors/type.SoundResult.html' title='scaleless_music::sound::errors::SoundResult'>SoundResult</a>&lt;<a class='primitive' href='https://doc.rust-lang.org/nightly/std/primitive.tuple.html'>()</a>&gt;</code></span></h4>
+<div class='docblock'><p>Applies the parent&#39;s timing to calculate it&#39;s own relative timing. It is used for sequence items. <a href="../../../scaleless_music/sound/timing/trait.HasTimer.html#tymethod.apply_parent_timing">Read more</a></p>
+</div></div><h3 class='impl'><span class='in-band'><code>impl <a class='trait' href='../../../scaleless_music/sound/trait.SoundStructure.html' title='scaleless_music::sound::SoundStructure'>SoundStructure</a> for <a class='struct' href='../../../scaleless_music/sound/wave/struct.Mixer.html' title='scaleless_music::sound::wave::Mixer'>Mixer</a></code></span><span class='out-of-band'><div class='ghost'></div><a id='src-1014' class='srclink' href='../../../src/scaleless_music/src/sound/wave.rs.html#282-299' title='goto source code'>[src]</a></span></h3>
+<div class='impl-items'><h4 id='method.get' class='method'><span id='get.v' class='invisible'><code>fn <a href='../../../scaleless_music/sound/trait.SoundStructure.html#tymethod.get' class='fnname'>get</a>(&amp;self, base_frequency: <a class='primitive' href='https://doc.rust-lang.org/nightly/std/primitive.slice.html'>&amp;[</a><a class='type' href='../../../scaleless_music/sound/type.SampleCalc.html' title='scaleless_music::sound::SampleCalc'>SampleCalc</a><a class='primitive' href='https://doc.rust-lang.org/nightly/std/primitive.slice.html'>]</a>, result: <a class='primitive' href='https://doc.rust-lang.org/nightly/std/primitive.slice.html'>&amp;mut [</a><a class='type' href='../../../scaleless_music/sound/type.SampleCalc.html' title='scaleless_music::sound::SampleCalc'>SampleCalc</a><a class='primitive' href='https://doc.rust-lang.org/nightly/std/primitive.slice.html'>]</a>) -&gt; <a class='type' href='../../../scaleless_music/sound/errors/type.SoundResult.html' title='scaleless_music::sound::errors::SoundResult'>SoundResult</a>&lt;<a class='primitive' href='https://doc.rust-lang.org/nightly/std/primitive.tuple.html'>()</a>&gt;</code></span></h4>
+<div class='docblock'><p>Returns the calculated samples in the <code>result</code> buffer.</p>
+</div></div></section>
+    <section id='search' class="content hidden"></section>
+
+    <section class="footer"></section>
+
+    <aside id="help" class="hidden">
+        <div>
+            <h1 class="hidden">Help</h1>
+
+            <div class="shortcuts">
+                <h2>Keyboard Shortcuts</h2>
+
+                <dl>
+                    <dt>?</dt>
+                    <dd>Show this help dialog</dd>
+                    <dt>S</dt>
+                    <dd>Focus the search field</dd>
+                    <dt>&larrb;</dt>
+                    <dd>Move up in search results</dd>
+                    <dt>&rarrb;</dt>
+                    <dd>Move down in search results</dd>
+                    <dt>&#9166;</dt>
+                    <dd>Go to active search result</dd>
+                    <dt>+</dt>
+                    <dd>Collapse/expand all sections</dd>
+                </dl>
+            </div>
+
+            <div class="infos">
+                <h2>Search Tricks</h2>
+
+                <p>
+                    Prefix searches with a type followed by a colon (e.g.
+                    <code>fn:</code>) to restrict the search to a given type.
+                </p>
+
+                <p>
+                    Accepted types are: <code>fn</code>, <code>mod</code>,
+                    <code>struct</code>, <code>enum</code>,
+                    <code>trait</code>, <code>type</code>, <code>macro</code>,
+                    and <code>const</code>.
+                </p>
+
+                <p>
+                    Search functions by type signature (e.g.
+                    <code>vec -> usize</code> or <code>* -> vec</code>)
+                </p>
+            </div>
+        </div>
+    </aside>
+
+    
+
+    <script>
+        window.rootPath = "../../../";
+        window.currentCrate = "scaleless_music";
+        window.playgroundUrl = "";
+    </script>
+    <script src="../../../jquery.js"></script>
+    <script src="../../../main.js"></script>
+    
+    <script defer src="../../../search-index.js"></script>
+</body>
+</html>

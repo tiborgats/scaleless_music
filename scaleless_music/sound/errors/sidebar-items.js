@@ -1,0 +1,1 @@
+initSidebarItems({"enum":[["Error","Error types of the sound module."]],"type":[["SoundResult","Return type for the sound module functions."]]});

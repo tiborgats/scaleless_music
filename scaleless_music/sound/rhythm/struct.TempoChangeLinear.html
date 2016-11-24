@@ -1,0 +1,133 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="generator" content="rustdoc">
+    <meta name="description" content="API documentation for the Rust `TempoChangeLinear` struct in crate `scaleless_music`.">
+    <meta name="keywords" content="rust, rustlang, rust-lang, TempoChangeLinear">
+
+    <title>scaleless_music::sound::rhythm::TempoChangeLinear - Rust</title>
+
+    <link rel="stylesheet" type="text/css" href="../../../rustdoc.css">
+    <link rel="stylesheet" type="text/css" href="../../../main.css">
+    
+
+    
+    
+</head>
+<body class="rustdoc">
+    <!--[if lte IE 8]>
+    <div class="warning">
+        This old browser is unsupported and will most likely display funky
+        things.
+    </div>
+    <![endif]-->
+
+    
+
+    <nav class="sidebar">
+        
+        <p class='location'><a href='../../index.html'>scaleless_music</a>::<wbr><a href='../index.html'>sound</a>::<wbr><a href='index.html'>rhythm</a></p><script>window.sidebarCurrent = {name: 'TempoChangeLinear', ty: 'struct', relpath: ''};</script><script defer src="sidebar-items.js"></script>
+    </nav>
+
+    <nav class="sub">
+        <form class="search-form js-only">
+            <div class="search-container">
+                <input class="search-input" name="search"
+                       autocomplete="off"
+                       placeholder="Click or press ‘S’ to search, ‘?’ for more options…"
+                       type="search">
+            </div>
+        </form>
+    </nav>
+
+    <section id='main' class="content struct">
+<h1 class='fqn'><span class='in-band'>Struct <a href='../../index.html'>scaleless_music</a>::<wbr><a href='../index.html'>sound</a>::<wbr><a href='index.html'>rhythm</a>::<wbr><a class='struct' href=''>TempoChangeLinear</a></span><span class='out-of-band'><span id='render-detail'>
+                   <a id="toggle-all-docs" href="javascript:void(0)" title="collapse all docs">
+                       [<span class='inner'>&#x2212;</span>]
+                   </a>
+               </span><a id='src-1102' class='srclink' href='../../../src/scaleless_music/src/sound/rhythm.rs.html#104-113' title='goto source code'>[src]</a></span></h1>
+<pre class='rust struct'>pub struct TempoChangeLinear { /* fields omitted */ }</pre><div class='docblock'><p>Linearly changing speed of the music.</p>
+</div><h2 id='methods'>Methods</h2><h3 class='impl'><span class='in-band'><code>impl <a class='struct' href='../../../scaleless_music/sound/rhythm/struct.TempoChangeLinear.html' title='scaleless_music::sound::rhythm::TempoChangeLinear'>TempoChangeLinear</a></code></span><span class='out-of-band'><div class='ghost'></div><a id='src-1124' class='srclink' href='../../../src/scaleless_music/src/sound/rhythm.rs.html#115-143' title='goto source code'>[src]</a></span></h3>
+<div class='impl-items'><h4 id='method.new' class='method'><span id='new.v' class='invisible'><code>fn <a href='#method.new' class='fnname'>new</a>(sample_rate: <a class='type' href='../../../scaleless_music/sound/type.SampleCalc.html' title='scaleless_music::sound::SampleCalc'>SampleCalc</a>, tempo_start: <a class='struct' href='../../../scaleless_music/sound/rhythm/struct.Tempo.html' title='scaleless_music::sound::rhythm::Tempo'>Tempo</a>, tempo_end: <a class='struct' href='../../../scaleless_music/sound/rhythm/struct.Tempo.html' title='scaleless_music::sound::rhythm::Tempo'>Tempo</a>, duration: <a class='type' href='../../../scaleless_music/sound/type.SampleCalc.html' title='scaleless_music::sound::SampleCalc'>SampleCalc</a>) -&gt; <a class='type' href='../../../scaleless_music/sound/errors/type.SoundResult.html' title='scaleless_music::sound::errors::SoundResult'>SoundResult</a>&lt;<a class='struct' href='../../../scaleless_music/sound/rhythm/struct.TempoChangeLinear.html' title='scaleless_music::sound::rhythm::TempoChangeLinear'>TempoChangeLinear</a>&gt;</code></span></h4>
+<div class='docblock'><p>custom constructor</p>
+</div><h4 id='method.set_note_value' class='method'><span id='set_note_value.v' class='invisible'><code>fn <a href='#method.set_note_value' class='fnname'>set_note_value</a>(&amp;mut self, note_value: <a class='struct' href='../../../scaleless_music/sound/rhythm/struct.NoteValue.html' title='scaleless_music::sound::rhythm::NoteValue'>NoteValue</a>)</code></span></h4>
+<div class='docblock'><p>Sets duration calculated from the given note value.</p>
+</div></div><h2 id='implementations'>Trait Implementations</h2><h3 class='impl'><span class='in-band'><code>impl <a class='trait' href='https://doc.rust-lang.org/nightly/core/fmt/trait.Debug.html' title='core::fmt::Debug'>Debug</a> for <a class='struct' href='../../../scaleless_music/sound/rhythm/struct.TempoChangeLinear.html' title='scaleless_music::sound::rhythm::TempoChangeLinear'>TempoChangeLinear</a></code></span><span class='out-of-band'><div class='ghost'></div><a id='src-1109' class='srclink' href='../../../src/scaleless_music/src/sound/rhythm.rs.html#103' title='goto source code'>[src]</a></span></h3>
+<div class='impl-items'><h4 id='method.fmt' class='method'><span id='fmt.v' class='invisible'><code>fn <a href='https://doc.rust-lang.org/nightly/core/fmt/trait.Debug.html#tymethod.fmt' class='fnname'>fmt</a>(&amp;self, __arg_0: &amp;mut <a class='struct' href='https://doc.rust-lang.org/nightly/core/fmt/struct.Formatter.html' title='core::fmt::Formatter'>Formatter</a>) -&gt; <a class='type' href='https://doc.rust-lang.org/nightly/core/fmt/type.Result.html' title='core::fmt::Result'>Result</a></code></span></h4>
+<div class='docblock'><p>Formats the value using the given formatter.</p>
+</div></div><h3 class='impl'><span class='in-band'><code>impl <a class='trait' href='https://doc.rust-lang.org/nightly/core/marker/trait.Copy.html' title='core::marker::Copy'>Copy</a> for <a class='struct' href='../../../scaleless_music/sound/rhythm/struct.TempoChangeLinear.html' title='scaleless_music::sound::rhythm::TempoChangeLinear'>TempoChangeLinear</a></code></span><span class='out-of-band'><div class='ghost'></div><a id='src-1120' class='srclink' href='../../../src/scaleless_music/src/sound/rhythm.rs.html#103' title='goto source code'>[src]</a></span></h3>
+<div class='impl-items'></div><h3 class='impl'><span class='in-band'><code>impl <a class='trait' href='https://doc.rust-lang.org/nightly/core/clone/trait.Clone.html' title='core::clone::Clone'>Clone</a> for <a class='struct' href='../../../scaleless_music/sound/rhythm/struct.TempoChangeLinear.html' title='scaleless_music::sound::rhythm::TempoChangeLinear'>TempoChangeLinear</a></code></span><span class='out-of-band'><div class='ghost'></div><a id='src-1121' class='srclink' href='../../../src/scaleless_music/src/sound/rhythm.rs.html#103' title='goto source code'>[src]</a></span></h3>
+<div class='impl-items'><h4 id='method.clone' class='method'><span id='clone.v' class='invisible'><code>fn <a href='https://doc.rust-lang.org/nightly/core/clone/trait.Clone.html#tymethod.clone' class='fnname'>clone</a>(&amp;self) -&gt; <a class='struct' href='../../../scaleless_music/sound/rhythm/struct.TempoChangeLinear.html' title='scaleless_music::sound::rhythm::TempoChangeLinear'>TempoChangeLinear</a></code></span></h4>
+<div class='docblock'><p>Returns a copy of the value. <a href="https://doc.rust-lang.org/nightly/core/clone/trait.Clone.html#tymethod.clone">Read more</a></p>
+</div><h4 id='method.clone_from' class='method'><span id='clone_from.v' class='invisible'><code>fn <a href='https://doc.rust-lang.org/nightly/core/clone/trait.Clone.html#method.clone_from' class='fnname'>clone_from</a>(&amp;mut self, source: &amp;Self)</code><div class='since' title='Stable since Rust version 1.0.0'>1.0.0</div></span></h4>
+<div class='docblock'><p>Performs copy-assignment from <code>source</code>. <a href="https://doc.rust-lang.org/nightly/core/clone/trait.Clone.html#method.clone_from">Read more</a></p>
+</div></div><h3 class='impl'><span class='in-band'><code>impl <a class='trait' href='../../../scaleless_music/sound/rhythm/trait.TempoProvider.html' title='scaleless_music::sound::rhythm::TempoProvider'>TempoProvider</a> for <a class='struct' href='../../../scaleless_music/sound/rhythm/struct.TempoChangeLinear.html' title='scaleless_music::sound::rhythm::TempoChangeLinear'>TempoChangeLinear</a></code></span><span class='out-of-band'><div class='ghost'></div><a id='src-1137' class='srclink' href='../../../src/scaleless_music/src/sound/rhythm.rs.html#145-171' title='goto source code'>[src]</a></span></h3>
+<div class='impl-items'><h4 id='method.get_beat_duration' class='method'><span id='get_beat_duration.v' class='invisible'><code>fn <a href='../../../scaleless_music/sound/rhythm/trait.TempoProvider.html#tymethod.get_beat_duration' class='fnname'>get_beat_duration</a>(&amp;self, time_start: <a class='type' href='../../../scaleless_music/sound/type.SampleCalc.html' title='scaleless_music::sound::SampleCalc'>SampleCalc</a>, result: <a class='primitive' href='https://doc.rust-lang.org/nightly/std/primitive.slice.html'>&amp;mut [</a><a class='type' href='../../../scaleless_music/sound/type.SampleCalc.html' title='scaleless_music::sound::SampleCalc'>SampleCalc</a><a class='primitive' href='https://doc.rust-lang.org/nightly/std/primitive.slice.html'>]</a>)</code></span></h4>
+<div class='docblock'><p>Returns the beat duration for each sample in the <code>result</code> buffer.</p>
+</div><h4 id='method.get_beats_per_second' class='method'><span id='get_beats_per_second.v' class='invisible'><code>fn <a href='../../../scaleless_music/sound/rhythm/trait.TempoProvider.html#tymethod.get_beats_per_second' class='fnname'>get_beats_per_second</a>(&amp;self, time_start: <a class='type' href='../../../scaleless_music/sound/type.SampleCalc.html' title='scaleless_music::sound::SampleCalc'>SampleCalc</a>, result: <a class='primitive' href='https://doc.rust-lang.org/nightly/std/primitive.slice.html'>&amp;mut [</a><a class='type' href='../../../scaleless_music/sound/type.SampleCalc.html' title='scaleless_music::sound::SampleCalc'>SampleCalc</a><a class='primitive' href='https://doc.rust-lang.org/nightly/std/primitive.slice.html'>]</a>)</code></span></h4>
+<div class='docblock'></div></div></section>
+    <section id='search' class="content hidden"></section>
+
+    <section class="footer"></section>
+
+    <aside id="help" class="hidden">
+        <div>
+            <h1 class="hidden">Help</h1>
+
+            <div class="shortcuts">
+                <h2>Keyboard Shortcuts</h2>
+
+                <dl>
+                    <dt>?</dt>
+                    <dd>Show this help dialog</dd>
+                    <dt>S</dt>
+                    <dd>Focus the search field</dd>
+                    <dt>&larrb;</dt>
+                    <dd>Move up in search results</dd>
+                    <dt>&rarrb;</dt>
+                    <dd>Move down in search results</dd>
+                    <dt>&#9166;</dt>
+                    <dd>Go to active search result</dd>
+                    <dt>+</dt>
+                    <dd>Collapse/expand all sections</dd>
+                </dl>
+            </div>
+
+            <div class="infos">
+                <h2>Search Tricks</h2>
+
+                <p>
+                    Prefix searches with a type followed by a colon (e.g.
+                    <code>fn:</code>) to restrict the search to a given type.
+                </p>
+
+                <p>
+                    Accepted types are: <code>fn</code>, <code>mod</code>,
+                    <code>struct</code>, <code>enum</code>,
+                    <code>trait</code>, <code>type</code>, <code>macro</code>,
+                    and <code>const</code>.
+                </p>
+
+                <p>
+                    Search functions by type signature (e.g.
+                    <code>vec -> usize</code> or <code>* -> vec</code>)
+                </p>
+            </div>
+        </div>
+    </aside>
+
+    
+
+    <script>
+        window.rootPath = "../../../";
+        window.currentCrate = "scaleless_music";
+        window.playgroundUrl = "";
+    </script>
+    <script src="../../../jquery.js"></script>
+    <script src="../../../main.js"></script>
+    
+    <script defer src="../../../search-index.js"></script>
+</body>
+</html>

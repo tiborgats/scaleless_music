@@ -1,0 +1,286 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="generator" content="rustdoc">
+    <meta name="description" content="API documentation for the Rust `sound` mod in crate `scaleless_music`.">
+    <meta name="keywords" content="rust, rustlang, rust-lang, sound">
+
+    <title>scaleless_music::sound - Rust</title>
+
+    <link rel="stylesheet" type="text/css" href="../../rustdoc.css">
+    <link rel="stylesheet" type="text/css" href="../../main.css">
+    
+
+    
+    
+</head>
+<body class="rustdoc">
+    <!--[if lte IE 8]>
+    <div class="warning">
+        This old browser is unsupported and will most likely display funky
+        things.
+    </div>
+    <![endif]-->
+
+    
+
+    <nav class="sidebar">
+        
+        <p class='location'><a href='../index.html'>scaleless_music</a></p><script>window.sidebarCurrent = {name: 'sound', ty: 'mod', relpath: '../'};</script><script defer src="../sidebar-items.js"></script>
+    </nav>
+
+    <nav class="sub">
+        <form class="search-form js-only">
+            <div class="search-container">
+                <input class="search-input" name="search"
+                       autocomplete="off"
+                       placeholder="Click or press ‘S’ to search, ‘?’ for more options…"
+                       type="search">
+            </div>
+        </form>
+    </nav>
+
+    <section id='main' class="content mod">
+<h1 class='fqn'><span class='in-band'>Module <a href='../index.html'>scaleless_music</a>::<wbr><a class='mod' href=''>sound</a></span><span class='out-of-band'><span id='render-detail'>
+                   <a id="toggle-all-docs" href="javascript:void(0)" title="collapse all docs">
+                       [<span class='inner'>&#x2212;</span>]
+                   </a>
+               </span><a id='src-6' class='srclink' href='../../src/scaleless_music/src/sound/mod.rs.html#1-116' title='goto source code'>[src]</a></span></h1>
+<div class='docblock'><p>Basic sound synthesizer routines.</p>
+</div><h2 id='reexports' class='section-header'><a href="#reexports">Reexports</a></h2>
+<table><tr><td><code>pub use self::<a class='mod' href='../../scaleless_music/sound/amplitude/index.html' title='scaleless_music::sound::amplitude'>amplitude</a>::*;</code></td></tr><tr><td><code>pub use self::<a class='mod' href='../../scaleless_music/sound/amplitude_overtones/index.html' title='scaleless_music::sound::amplitude_overtones'>amplitude_overtones</a>::*;</code></td></tr><tr><td><code>pub use self::<a class='mod' href='../../scaleless_music/sound/backend_portaudio/index.html' title='scaleless_music::sound::backend_portaudio'>backend_portaudio</a>::*;</code></td></tr><tr><td><code>pub use self::<a class='mod' href='../../scaleless_music/sound/errors/index.html' title='scaleless_music::sound::errors'>errors</a>::*;</code></td></tr><tr><td><code>pub use self::<a class='mod' href='../../scaleless_music/sound/frequency/index.html' title='scaleless_music::sound::frequency'>frequency</a>::*;</code></td></tr><tr><td><code>pub use self::<a class='mod' href='../../scaleless_music/sound/interval/index.html' title='scaleless_music::sound::interval'>interval</a>::*;</code></td></tr><tr><td><code>pub use self::<a class='mod' href='../../scaleless_music/sound/note/index.html' title='scaleless_music::sound::note'>note</a>::*;</code></td></tr><tr><td><code>pub use self::<a class='mod' href='../../scaleless_music/sound/progress/index.html' title='scaleless_music::sound::progress'>progress</a>::*;</code></td></tr><tr><td><code>pub use self::<a class='mod' href='../../scaleless_music/sound/rhythm/index.html' title='scaleless_music::sound::rhythm'>rhythm</a>::*;</code></td></tr><tr><td><code>pub use self::<a class='mod' href='../../scaleless_music/sound/timing/index.html' title='scaleless_music::sound::timing'>timing</a>::*;</code></td></tr><tr><td><code>pub use self::<a class='mod' href='../../scaleless_music/sound/wave/index.html' title='scaleless_music::sound::wave'>wave</a>::*;</code></td></tr></table><h2 id='modules' class='section-header'><a href="#modules">Modules</a></h2>
+<table>
+                       <tr class=' module-item'>
+                           <td><a class='mod' href='amplitude/index.html'
+                                  title='scaleless_music::sound::amplitude'>amplitude</a></td>
+                           <td class='docblock-short'>
+                                <p>Fuctions which provide amplitude changes.</p>
+                           </td>
+                       </tr>
+                       <tr class=' module-item'>
+                           <td><a class='mod' href='amplitude_overtones/index.html'
+                                  title='scaleless_music::sound::amplitude_overtones'>amplitude_overtones</a></td>
+                           <td class='docblock-short'>
+                                <p>Fuctions which provide amplitude changes for overtones also.</p>
+                           </td>
+                       </tr>
+                       <tr class=' module-item'>
+                           <td><a class='mod' href='backend_portaudio/index.html'
+                                  title='scaleless_music::sound::backend_portaudio'>backend_portaudio</a></td>
+                           <td class='docblock-short'>
+                                <p><a href="https://github.com/RustAudio/rust-portaudio"><code>PortAudio</code></a> backend for sound playback.</p>
+                           </td>
+                       </tr>
+                       <tr class=' module-item'>
+                           <td><a class='mod' href='errors/index.html'
+                                  title='scaleless_music::sound::errors'>errors</a></td>
+                           <td class='docblock-short'>
+                                <p>Error messages.</p>
+                           </td>
+                       </tr>
+                       <tr class=' module-item'>
+                           <td><a class='mod' href='frequency/index.html'
+                                  title='scaleless_music::sound::frequency'>frequency</a></td>
+                           <td class='docblock-short'>
+                                <p>Fuctions which provide frequency changes.</p>
+                           </td>
+                       </tr>
+                       <tr class=' module-item'>
+                           <td><a class='mod' href='interval/index.html'
+                                  title='scaleless_music::sound::interval'>interval</a></td>
+                           <td class='docblock-short'>
+                                <p>Frequency interval.</p>
+                           </td>
+                       </tr>
+                       <tr class=' module-item'>
+                           <td><a class='mod' href='note/index.html'
+                                  title='scaleless_music::sound::note'>note</a></td>
+                           <td class='docblock-short'>
+                                <p>Musical note structures.</p>
+                           </td>
+                       </tr>
+                       <tr class=' module-item'>
+                           <td><a class='mod' href='progress/index.html'
+                                  title='scaleless_music::sound::progress'>progress</a></td>
+                           <td class='docblock-short'>
+                                <p>Time and tempo based progress measurement.</p>
+                           </td>
+                       </tr>
+                       <tr class=' module-item'>
+                           <td><a class='mod' href='rhythm/index.html'
+                                  title='scaleless_music::sound::rhythm'>rhythm</a></td>
+                           <td class='docblock-short'>
+                                <p>Rhythm section.</p>
+                           </td>
+                       </tr>
+                       <tr class=' module-item'>
+                           <td><a class='mod' href='timing/index.html'
+                                  title='scaleless_music::sound::timing'>timing</a></td>
+                           <td class='docblock-short'>
+                                <p>Timing for the duration of sound components.</p>
+                           </td>
+                       </tr>
+                       <tr class=' module-item'>
+                           <td><a class='mod' href='wave/index.html'
+                                  title='scaleless_music::sound::wave'>wave</a></td>
+                           <td class='docblock-short'>
+                                <p>Fuctions which provide complete waveforms.</p>
+                           </td>
+                       </tr></table><h2 id='constants' class='section-header'><a href="#constants">Constants</a></h2>
+<table>
+                       <tr class=' module-item'>
+                           <td><a class='constant' href='constant.BUFFER_SIZE_DEFAULT.html'
+                                  title='scaleless_music::sound::BUFFER_SIZE_DEFAULT'>BUFFER_SIZE_DEFAULT</a></td>
+                           <td class='docblock-short'>
+                                <p>Sample count for calculations. It affects both latency and computation performance.
+Latency perception for musical instruments: over ~12ms is already disturbing for some players.</p>
+                           </td>
+                       </tr>
+                       <tr class=' module-item'>
+                           <td><a class='constant' href='constant.PI2.html'
+                                  title='scaleless_music::sound::PI2'>PI2</a></td>
+                           <td class='docblock-short'>
+                                <p>= π x 2</p>
+                           </td>
+                       </tr>
+                       <tr class=' module-item'>
+                           <td><a class='constant' href='constant.SAMPLE_RATE_DEFAULT.html'
+                                  title='scaleless_music::sound::SAMPLE_RATE_DEFAULT'>SAMPLE_RATE_DEFAULT</a></td>
+                           <td class='docblock-short'>
+                                <p>= 192 kHz, as humans can discern time differences of
+<a href="http://boson.physics.sc.edu/%7Ekunchur/papers/gradual.pdf">5 microseconds</a>.
+Humans can hear &lt; 1° difference in the location of the sound source, when it is in front of
+them. See also:
+<a href="https://en.wikipedia.org/wiki/Interaural_time_difference">interaural time difference</a></p>
+                           </td>
+                       </tr>
+                       <tr class=' module-item'>
+                           <td><a class='constant' href='constant.TONE_FREQUENCY_MAX.html'
+                                  title='scaleless_music::sound::TONE_FREQUENCY_MAX'>TONE_FREQUENCY_MAX</a></td>
+                           <td class='docblock-short'>
+                                <p>= 28 kHz, the highest hearable (feelable) frequency. Overtones above this frequency are
+filtered out from calculations.
+See: <a href="https://en.wikipedia.org/wiki/Hearing_range#Humans">hearing range</a></p>
+                           </td>
+                       </tr>
+                       <tr class=' module-item'>
+                           <td><a class='constant' href='constant.TONE_FREQUENCY_MIN.html'
+                                  title='scaleless_music::sound::TONE_FREQUENCY_MIN'>TONE_FREQUENCY_MIN</a></td>
+                           <td class='docblock-short'>
+                                <p>= 3 Hz, the lowest feelable frequency. Tones below it will not be calculated. The hearable
+lowest is 12 Hz.
+See: <a href="https://en.wikipedia.org/wiki/Hearing_range#Humans">hearing range</a></p>
+                           </td>
+                       </tr></table><h2 id='traits' class='section-header'><a href="#traits">Traits</a></h2>
+<table>
+                       <tr class=' module-item'>
+                           <td><a class='trait' href='trait.MusicStructure.html'
+                                  title='scaleless_music::sound::MusicStructure'>MusicStructure</a></td>
+                           <td class='docblock-short'>
+                                <p>A structure of music.</p>
+                           </td>
+                       </tr>
+                       <tr class=' module-item'>
+                           <td><a class='trait' href='trait.SoundGenerator.html'
+                                  title='scaleless_music::sound::SoundGenerator'>SoundGenerator</a></td>
+                           <td class='docblock-short'>
+                                <p>Sound sample generator for output (playback). It can also take real-time input (commands),
+thus musical instruments can be realized with it.</p>
+                           </td>
+                       </tr>
+                       <tr class=' module-item'>
+                           <td><a class='trait' href='trait.SoundStructure.html'
+                                  title='scaleless_music::sound::SoundStructure'>SoundStructure</a></td>
+                           <td class='docblock-short'>
+                                <p>A sound component. Can be a simple wave or a complex structure of waves.</p>
+                           </td>
+                       </tr></table><h2 id='functions' class='section-header'><a href="#functions">Functions</a></h2>
+<table>
+                       <tr class=' module-item'>
+                           <td><a class='fn' href='fn.get_sample_time.html'
+                                  title='scaleless_music::sound::get_sample_time'>get_sample_time</a></td>
+                           <td class='docblock-short'>
+                                <p>Calculates the period of one sample for the given sample rate.
+Sample rates below 1.0 are considered to be invalid.</p>
+                           </td>
+                       </tr></table><h2 id='types' class='section-header'><a href="#types">Type Definitions</a></h2>
+<table>
+                       <tr class=' module-item'>
+                           <td><a class='type' href='type.SampleCalc.html'
+                                  title='scaleless_music::sound::SampleCalc'>SampleCalc</a></td>
+                           <td class='docblock-short'>
+                                <p>Precision of calculations. Changing it to <code>f64</code> can slow down some calculations 4 times.</p>
+                           </td>
+                       </tr>
+                       <tr class=' module-item'>
+                           <td><a class='type' href='type.SampleOutput.html'
+                                  title='scaleless_music::sound::SampleOutput'>SampleOutput</a></td>
+                           <td class='docblock-short'>
+                                <p>Precision of the finally produced samples.</p>
+                           </td>
+                       </tr></table></section>
+    <section id='search' class="content hidden"></section>
+
+    <section class="footer"></section>
+
+    <aside id="help" class="hidden">
+        <div>
+            <h1 class="hidden">Help</h1>
+
+            <div class="shortcuts">
+                <h2>Keyboard Shortcuts</h2>
+
+                <dl>
+                    <dt>?</dt>
+                    <dd>Show this help dialog</dd>
+                    <dt>S</dt>
+                    <dd>Focus the search field</dd>
+                    <dt>&larrb;</dt>
+                    <dd>Move up in search results</dd>
+                    <dt>&rarrb;</dt>
+                    <dd>Move down in search results</dd>
+                    <dt>&#9166;</dt>
+                    <dd>Go to active search result</dd>
+                    <dt>+</dt>
+                    <dd>Collapse/expand all sections</dd>
+                </dl>
+            </div>
+
+            <div class="infos">
+                <h2>Search Tricks</h2>
+
+                <p>
+                    Prefix searches with a type followed by a colon (e.g.
+                    <code>fn:</code>) to restrict the search to a given type.
+                </p>
+
+                <p>
+                    Accepted types are: <code>fn</code>, <code>mod</code>,
+                    <code>struct</code>, <code>enum</code>,
+                    <code>trait</code>, <code>type</code>, <code>macro</code>,
+                    and <code>const</code>.
+                </p>
+
+                <p>
+                    Search functions by type signature (e.g.
+                    <code>vec -> usize</code> or <code>* -> vec</code>)
+                </p>
+            </div>
+        </div>
+    </aside>
+
+    
+
+    <script>
+        window.rootPath = "../../";
+        window.currentCrate = "scaleless_music";
+        window.playgroundUrl = "";
+    </script>
+    <script src="../../jquery.js"></script>
+    <script src="../../main.js"></script>
+    
+    <script defer src="../../search-index.js"></script>
+</body>
+</html>

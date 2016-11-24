@@ -1,0 +1,1 @@
+initSidebarItems({"enum":[["TimingOption","Optional duration type, for timings in sequences."]],"struct":[["Timer","Timer for sequence items, based on optional duration unit types."]],"trait":[["HasTimer","It provides the timing functionality required for making sequences."]]});

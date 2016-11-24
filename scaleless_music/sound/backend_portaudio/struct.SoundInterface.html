@@ -1,0 +1,130 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="generator" content="rustdoc">
+    <meta name="description" content="API documentation for the Rust `SoundInterface` struct in crate `scaleless_music`.">
+    <meta name="keywords" content="rust, rustlang, rust-lang, SoundInterface">
+
+    <title>scaleless_music::sound::backend_portaudio::SoundInterface - Rust</title>
+
+    <link rel="stylesheet" type="text/css" href="../../../rustdoc.css">
+    <link rel="stylesheet" type="text/css" href="../../../main.css">
+    
+
+    
+    
+</head>
+<body class="rustdoc">
+    <!--[if lte IE 8]>
+    <div class="warning">
+        This old browser is unsupported and will most likely display funky
+        things.
+    </div>
+    <![endif]-->
+
+    
+
+    <nav class="sidebar">
+        
+        <p class='location'><a href='../../index.html'>scaleless_music</a>::<wbr><a href='../index.html'>sound</a>::<wbr><a href='index.html'>backend_portaudio</a></p><script>window.sidebarCurrent = {name: 'SoundInterface', ty: 'struct', relpath: ''};</script><script defer src="sidebar-items.js"></script>
+    </nav>
+
+    <nav class="sub">
+        <form class="search-form js-only">
+            <div class="search-container">
+                <input class="search-input" name="search"
+                       autocomplete="off"
+                       placeholder="Click or press ‘S’ to search, ‘?’ for more options…"
+                       type="search">
+            </div>
+        </form>
+    </nav>
+
+    <section id='main' class="content struct">
+<h1 class='fqn'><span class='in-band'>Struct <a href='../../index.html'>scaleless_music</a>::<wbr><a href='../index.html'>sound</a>::<wbr><a href='index.html'>backend_portaudio</a>::<wbr><a class='struct' href=''>SoundInterface</a></span><span class='out-of-band'><span id='render-detail'>
+                   <a id="toggle-all-docs" href="javascript:void(0)" title="collapse all docs">
+                       [<span class='inner'>&#x2212;</span>]
+                   </a>
+               </span><a id='src-1632' class='srclink' href='../../../src/scaleless_music/src/sound/backend_portaudio.rs.html#8-13' title='goto source code'>[src]</a></span></h1>
+<pre class='rust struct'>pub struct SoundInterface&lt;T:&nbsp;'static&gt; { /* fields omitted */ }</pre><div class='docblock'><p>This is a wrapper around the sound output backend</p>
+</div><h2 id='methods'>Methods</h2><h3 class='impl'><span class='in-band'><code>impl&lt;T&gt; <a class='struct' href='../../../scaleless_music/sound/backend_portaudio/struct.SoundInterface.html' title='scaleless_music::sound::backend_portaudio::SoundInterface'>SoundInterface</a>&lt;T&gt;</code></span><span class='out-of-band'><div class='ghost'></div><a id='src-1638' class='srclink' href='../../../src/scaleless_music/src/sound/backend_portaudio.rs.html#15-95' title='goto source code'>[src]</a></span></h3>
+<div class='impl-items'><h4 id='method.new' class='method'><span id='new.v' class='invisible'><code>fn <a href='#method.new' class='fnname'>new</a>(sample_rate: <a class='primitive' href='https://doc.rust-lang.org/nightly/std/primitive.u32.html'>u32</a>, buffer_size: <a class='primitive' href='https://doc.rust-lang.org/nightly/std/primitive.usize.html'>usize</a>, channel_count: <a class='primitive' href='https://doc.rust-lang.org/nightly/std/primitive.u16.html'>u16</a>, generator: <a class='struct' href='https://doc.rust-lang.org/nightly/alloc/boxed/struct.Box.html' title='alloc::boxed::Box'>Box</a>&lt;<a class='trait' href='../../../scaleless_music/sound/trait.SoundGenerator.html' title='scaleless_music::sound::SoundGenerator'>SoundGenerator</a>&lt;Command=T&gt;&gt;) -&gt; <a class='type' href='../../../scaleless_music/sound/backend_portaudio/type.BackendResult.html' title='scaleless_music::sound::backend_portaudio::BackendResult'>BackendResult</a>&lt;<a class='struct' href='../../../scaleless_music/sound/backend_portaudio/struct.SoundInterface.html' title='scaleless_music::sound::backend_portaudio::SoundInterface'>SoundInterface</a>&lt;T&gt;&gt;</code></span></h4>
+<div class='docblock'><p>Creates a new backend for sound playback.
+At the moment all channels output the same sound.</p>
+</div><h4 id='method.start' class='method'><span id='start.v' class='invisible'><code>fn <a href='#method.start' class='fnname'>start</a>(&amp;mut self) -&gt; <a class='type' href='../../../scaleless_music/sound/backend_portaudio/type.BackendResult.html' title='scaleless_music::sound::backend_portaudio::BackendResult'>BackendResult</a>&lt;<a class='primitive' href='https://doc.rust-lang.org/nightly/std/primitive.tuple.html'>()</a>&gt;</code></span></h4>
+<div class='docblock'><p>Starts the sound output stream.</p>
+</div><h4 id='method.send_command' class='method'><span id='send_command.v' class='invisible'><code>fn <a href='#method.send_command' class='fnname'>send_command</a>(&amp;mut self, command: T) -&gt; <a class='type' href='../../../scaleless_music/sound/backend_portaudio/type.BackendResult.html' title='scaleless_music::sound::backend_portaudio::BackendResult'>BackendResult</a>&lt;<a class='primitive' href='https://doc.rust-lang.org/nightly/std/primitive.tuple.html'>()</a>&gt;</code></span></h4>
+<div class='docblock'><p>Sends a command to the sound generator.</p>
+</div><h4 id='method.get_sample_rate' class='method'><span id='get_sample_rate.v' class='invisible'><code>fn <a href='#method.get_sample_rate' class='fnname'>get_sample_rate</a>(&amp;self) -&gt; <a class='primitive' href='https://doc.rust-lang.org/nightly/std/primitive.u32.html'>u32</a></code></span></h4>
+<div class='docblock'><p>Returns the sample rate of the sond output</p>
+</div><h4 id='method.get_channel_count' class='method'><span id='get_channel_count.v' class='invisible'><code>fn <a href='#method.get_channel_count' class='fnname'>get_channel_count</a>(&amp;self) -&gt; <a class='primitive' href='https://doc.rust-lang.org/nightly/std/primitive.u16.html'>u16</a></code></span></h4>
+<div class='docblock'><p>Returns the channel count of the sond output</p>
+</div></div><h2 id='implementations'>Trait Implementations</h2><h3 class='impl'><span class='in-band'><code>impl&lt;T&gt; <a class='trait' href='https://doc.rust-lang.org/nightly/core/ops/trait.Drop.html' title='core::ops::Drop'>Drop</a> for <a class='struct' href='../../../scaleless_music/sound/backend_portaudio/struct.SoundInterface.html' title='scaleless_music::sound::backend_portaudio::SoundInterface'>SoundInterface</a>&lt;T&gt;</code></span><span class='out-of-band'><div class='ghost'></div><a id='src-1676' class='srclink' href='../../../src/scaleless_music/src/sound/backend_portaudio.rs.html#97-109' title='goto source code'>[src]</a></span></h3>
+<div class='impl-items'><h4 id='method.drop' class='method'><span id='drop.v' class='invisible'><code>fn <a href='https://doc.rust-lang.org/nightly/core/ops/trait.Drop.html#tymethod.drop' class='fnname'>drop</a>(&amp;mut self)</code></span></h4>
+<div class='docblock'><p>A method called when the value goes out of scope. <a href="https://doc.rust-lang.org/nightly/core/ops/trait.Drop.html#tymethod.drop">Read more</a></p>
+</div></div></section>
+    <section id='search' class="content hidden"></section>
+
+    <section class="footer"></section>
+
+    <aside id="help" class="hidden">
+        <div>
+            <h1 class="hidden">Help</h1>
+
+            <div class="shortcuts">
+                <h2>Keyboard Shortcuts</h2>
+
+                <dl>
+                    <dt>?</dt>
+                    <dd>Show this help dialog</dd>
+                    <dt>S</dt>
+                    <dd>Focus the search field</dd>
+                    <dt>&larrb;</dt>
+                    <dd>Move up in search results</dd>
+                    <dt>&rarrb;</dt>
+                    <dd>Move down in search results</dd>
+                    <dt>&#9166;</dt>
+                    <dd>Go to active search result</dd>
+                    <dt>+</dt>
+                    <dd>Collapse/expand all sections</dd>
+                </dl>
+            </div>
+
+            <div class="infos">
+                <h2>Search Tricks</h2>
+
+                <p>
+                    Prefix searches with a type followed by a colon (e.g.
+                    <code>fn:</code>) to restrict the search to a given type.
+                </p>
+
+                <p>
+                    Accepted types are: <code>fn</code>, <code>mod</code>,
+                    <code>struct</code>, <code>enum</code>,
+                    <code>trait</code>, <code>type</code>, <code>macro</code>,
+                    and <code>const</code>.
+                </p>
+
+                <p>
+                    Search functions by type signature (e.g.
+                    <code>vec -> usize</code> or <code>* -> vec</code>)
+                </p>
+            </div>
+        </div>
+    </aside>
+
+    
+
+    <script>
+        window.rootPath = "../../../";
+        window.currentCrate = "scaleless_music";
+        window.playgroundUrl = "";
+    </script>
+    <script src="../../../jquery.js"></script>
+    <script src="../../../main.js"></script>
+    
+    <script defer src="../../../search-index.js"></script>
+</body>
+</html>

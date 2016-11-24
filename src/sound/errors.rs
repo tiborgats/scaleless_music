@@ -1,8 +1,9 @@
-
 #[cfg(feature = "be-portaudio")]
 use sound::backend_portaudio::*;
 #[cfg(feature = "be-rsoundio")]
 use sound::backend_rsoundio::*;
+#[cfg(feature = "be-sdl2")]
+use sound::backend_sdl2::*;
 use std::{error, fmt};
 
 /// Return type for the sound module functions.
@@ -12,9 +13,10 @@ pub type SoundResult<T> = Result<T, Error>;
 // or [quick-error](https://github.com/tailhook/quick-error)
 
 /// Error types of the sound module.
-#[derive(Debug, Copy, Clone)]
+#[derive(Debug, Clone)]
 pub enum Error {
     /// Sound output backend error.
+    #[cfg(any(feature = "be-portaudio", feature = "be-rsoundio", feature = "be-sdl2"))]
     Backend(BackendError),
     /// Invalid sample rate.
     SampleRateInvalid,
@@ -77,6 +79,7 @@ impl error::Error for Error {
     fn description(&self) -> &str {
         use self::Error::*;
         match *self {
+            #[cfg(any(feature = "be-portaudio", feature = "be-rsoundio", feature = "be-sdl2"))]
             Backend(ref err) => err.description(),
             SampleRateInvalid => "invalid sample rate",
             BufferSize => "incorrect buffer size",
@@ -106,14 +109,15 @@ impl error::Error for Error {
     }
 
     fn cause(&self) -> Option<&error::Error> {
-        use self::Error::*;
         match *self {
-            Backend(ref err) => Some(err),
+            #[cfg(any(feature = "be-portaudio", feature = "be-rsoundio", feature = "be-sdl2"))]
+            self::Error::Backend(ref err) => Some(err),
             _ => None,
         }
     }
 }
 
+#[cfg(any(feature = "be-portaudio", feature = "be-rsoundio", feature = "be-sdl2"))]
 impl From<BackendError> for Error {
     fn from(e: BackendError) -> Self {
         Error::Backend(e)

@@ -4,7 +4,7 @@ scaleless_music
 
 [![Crates.io](https://img.shields.io/crates/v/scaleless_music.svg)](https://crates.io/crates/scaleless_music) [![Linux & OS X build status](https://img.shields.io/travis/tiborgats/scaleless_music.svg?label=Linux%20build)](https://travis-ci.org/tiborgats/scaleless_music) [![Windows build status](https://img.shields.io/appveyor/ci/tiborgats/scaleless-music.svg?label=Windows%20build)](https://ci.appveyor.com/project/tiborgats/scaleless-music) [![Dependency Status](https://dependencyci.com/github/tiborgats/scaleless_music/badge)](https://dependencyci.com/github/tiborgats/scaleless_music) [![Crates.io](https://img.shields.io/crates/l/scaleless_music.svg)](https://github.com/tiborgats/scaleless_music/blob/master/COPYING) [![Join the chat at https://gitter.im/tiborgats/scaleless_music](https://badges.gitter.im/tiborgats/scaleless_music.svg)](https://gitter.im/tiborgats/scaleless_music?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge&utm_content=badge)
 
-:construction: It is in a very early stage, but will change a lot as soon as I have some free time.
+:construction: It is in a very early stage, but will change a lot as soon as I have some free time. I would be happy to work on this full-time, but I don't know how can I get money for supporting my life at the same time. If you have any idea, please share it with me.
 
 # Overview
 
@@ -38,15 +38,18 @@ Henceforward, I plan to create a tool for analyzing recorded samples, finding cl
 
 # Installation
 **scaleless_music** can be built with different sound output backends:
-- `cargo build` (or `cargo build --features "be-portaudio"`) for the default PortAudio backend. If for some reason the building of [rust-portaudio](https://github.com/RustAudio/rust-portaudio) fails, you can check it's [README](https://github.com/RustAudio/rust-portaudio/blob/master/README.md) for further instructions.
-- `cargo build --features "be-rsoundio"` for [rsoundio](https://github.com/klingtnet/rsoundio) ([libsoundio](http://libsound.io/)) backend - not available yet
+- without backend: `cargo build`
+- with PortAudio: `cargo build --features "be-portaudio"`. If for some reason the building of [rust-portaudio](https://github.com/RustAudio/rust-portaudio) fails, you can check it's [README](https://github.com/RustAudio/rust-portaudio/blob/master/README.md) for further instructions.
+- with SDL2: `cargo build --features "be-sdl2"`
+- ~~with [rsoundio](https://github.com/klingtnet/rsoundio) ([libsoundio](http://libsound.io/)):~~ `cargo build --features "be-rsoundio"` - not available yet
 
 ## [Examples](https://github.com/tiborgats/scaleless_music/tree/master/examples)
 
 ## [Documentation](https://tiborgats.github.io/scaleless_music/)
 
 # Todo Items
-- [ ] basic effects, building blocks of music structure
+- [ ] thread safety
+- [ ]  basic effects, building blocks of music structure
   - [ ] note
   - [ ] amplitude functions
     - [x] [exponential decay](https://en.wikipedia.org/wiki/Exponential_decay)
@@ -64,6 +67,7 @@ Henceforward, I plan to create a tool for analyzing recorded samples, finding cl
   - [ ] parallel processing, SIMD
 - [ ] backends for sound output
   - [x] [rust-portaudio](https://github.com/RustAudio/rust-portaudio)
+  - [x] [rust-sdl2](https://github.com/AngryLawyer/rust-sdl2)
   - [ ] [rsoundio](https://github.com/klingtnet/rsoundio)
 - [ ] OS support
   - [x] Linux

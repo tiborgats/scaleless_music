@@ -127,8 +127,10 @@ impl SoundGenerator for InstrumentBasic {
     }
 }
 
+// TODO: making thread-safe as many components as possible.
+unsafe impl Send for InstrumentBasic {} // this is a temporary ugly workaround for the SDL2 backend
+
 fn main() {
-    use scaleless_music::sound::backend_portaudio::*;
     println!("scaleless_music v{} example: overtone instrument\n",
              env!("CARGO_PKG_VERSION"));
     let sound_generator = Box::new(InstrumentBasic::new(48000.0)

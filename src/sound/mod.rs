@@ -27,8 +27,18 @@ pub mod backend_portaudio;
 #[cfg(feature = "be-rsoundio")]
 pub mod backend_rsoundio;
 
+/// [`sdl2`](https://github.com/AngryLawyer/rust-sdl2) backend for sound playback.
+#[cfg(feature = "be-sdl2")]
+pub mod backend_sdl2;
+
 pub use self::amplitude::*;
 pub use self::amplitude_overtones::*;
+#[cfg(feature = "be-portaudio")]
+pub use self::backend_portaudio::*;
+#[cfg(feature = "be-rsoundio")]
+pub use self::backend_rsoundio::*;
+#[cfg(feature = "be-sdl2")]
+pub use self::backend_sdl2::*;
 pub use self::errors::*;
 pub use self::frequency::*;
 pub use self::interval::*;
@@ -70,7 +80,7 @@ pub const PI2: SampleCalc = ::std::f32::consts::PI * 2.0;
 
 /// Sound sample generator for output (playback). It can also take real-time input (commands),
 /// thus musical instruments can be realized with it.
-pub trait SoundGenerator {
+pub trait SoundGenerator: Send {
     /// Message type.
     type Command;
     /// Get the next `sample_count` amount of samples, put them in `result`

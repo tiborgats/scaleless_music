@@ -39,6 +39,9 @@ extern crate portaudio;
 extern crate rsoundio;
 #[cfg(feature = "be-rsoundio")]
 extern crate rb;
+#[cfg(feature = "be-sdl2")]
+extern crate sdl2;
+
 
 extern crate num;
 

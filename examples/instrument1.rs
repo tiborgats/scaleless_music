@@ -30,7 +30,7 @@ pub enum GeneratorCommand {
 pub struct InstrumentBasic {
     sample_rate: SampleCalc,
     timbre1: Timbre,
-    frequency1: Rc<FrequencyConst>,
+    frequency1: FrequencyConst,
     frequency1_buffer: Vec<SampleCalc>,
     time: SampleCalc,
 }
@@ -38,7 +38,7 @@ pub struct InstrumentBasic {
 impl InstrumentBasic {
     /// Custom constructor
     pub fn new(sample_rate: SampleCalc) -> SoundResult<InstrumentBasic> {
-        let frequency1 = Rc::new(FrequencyConst::new(220.0)?);
+        let frequency1 = FrequencyConst::new(220.0)?;
         let amplitude = {
             let overtones_amplitude: Vec<SampleCalc> = vec![10.0, 1.0, 1.0, 0.95, 0.9, 0.9, 0.86,
                                                             0.83, 0.80, 0.78, 0.76, 0.74, 0.73,
@@ -72,6 +72,10 @@ impl InstrumentBasic {
         Ok(())
     }
 }
+
+// TODO: making thread-safe as many components as possible.
+unsafe impl Send for InstrumentBasic {} // this is a temporary ugly workaround for the SDL2 backend
+
 // TODO: -unwrap()
 impl SoundGenerator for InstrumentBasic {
     type Command = GeneratorCommand;
@@ -119,7 +123,6 @@ impl SoundGenerator for InstrumentBasic {
 }
 
 fn main() {
-    use scaleless_music::sound::backend_portaudio::*;
     println!("scaleless_music v{} example", env!("CARGO_PKG_VERSION"));
     let sound_generator = Box::new(InstrumentBasic::new(48000.0)
         .expect("InstrumentBasic construction shouldn't fail."));

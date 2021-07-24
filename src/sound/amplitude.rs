@@ -1,4 +1,4 @@
-use sound::*;
+use crate::sound::*;
 use std::cell::Cell;
 use std::rc::Rc;
 
@@ -148,27 +148,29 @@ impl FadeLinear {
         let amplitude_start = 0.0;
         progress.set_period_unit(amplitude_end - amplitude_start);
         Ok(FadeLinear {
-            progress: progress,
+            progress,
             amplitude_start: Cell::new(amplitude_start),
-            amplitude_end: amplitude_end,
+            amplitude_end,
         })
     }
 
     /// Custom constructor with time based progress.
-    pub fn new_with_time(sample_rate: SampleCalc,
-                         duration: SampleCalc,
-                         amplitude_end: SampleCalc)
-                         -> SoundResult<FadeLinear> {
+    pub fn new_with_time(
+        sample_rate: SampleCalc,
+        duration: SampleCalc,
+        amplitude_end: SampleCalc,
+    ) -> SoundResult<FadeLinear> {
         let progress = ProgressTime::new(sample_rate, duration)?;
         Self::new(ProgressOption::Time(progress), amplitude_end)
     }
 
     /// Constructor with tempo based progress.
     /// `note_value` is the tempo relative fade duration.
-    pub fn new_with_tempo(sample_rate: SampleCalc,
-                          note_value: NoteValue,
-                          amplitude_end: SampleCalc)
-                          -> SoundResult<FadeLinear> {
+    pub fn new_with_tempo(
+        sample_rate: SampleCalc,
+        note_value: NoteValue,
+        amplitude_end: SampleCalc,
+    ) -> SoundResult<FadeLinear> {
         let progress = ProgressTempo::new(sample_rate, note_value)?;
         Self::new(ProgressOption::Tempo(progress), amplitude_end)
     }
@@ -197,10 +199,7 @@ impl AmplitudeProvider for FadeLinear {
         }
         match self.progress {
             ProgressOption::Tempo(ref p) => {
-                for ((index, item), beats_per_second) in
-                    samples.iter_mut()
-                        .enumerate()
-                        .zip(tempo) {
+                for ((index, item), beats_per_second) in samples.iter_mut().enumerate().zip(tempo) {
                     match p.next_by_tempo(*beats_per_second) {
                         Ok(phase) => *item *= phase,
                         Err(Error::ProgressCompleted) => return Err(Error::ItemsCompleted(index)),
@@ -239,7 +238,8 @@ impl AmplitudeJoinable for FadeLinear {
         is_valid_amplitude(amplitude)?;
         self.amplitude_start.set(amplitude);
         self.progress.set_phase_init(self.amplitude_start.get());
-        self.progress.set_period_unit(self.amplitude_end - self.amplitude_start.get());
+        self.progress
+            .set_period_unit(self.amplitude_end - self.amplitude_start.get());
         Ok(())
     }
 
@@ -275,8 +275,8 @@ impl AmplitudeDecayExp {
         let multiplier = half.powf(sample_time / half_life);
         Ok(AmplitudeDecayExp {
             timer: Timer::new(sample_rate)?,
-            sample_time: sample_time,
-            multiplier: multiplier,
+            sample_time,
+            multiplier,
             amplitude: Cell::new(1.0),
         })
     }
@@ -388,29 +388,31 @@ impl Tremolo {
         }
         let amplitude_normalized = 1.0 / extent_ratio;
         Ok(Tremolo {
-            progress: progress,
-            extent_ratio: extent_ratio,
-            amplitude_normalized: amplitude_normalized,
+            progress,
+            extent_ratio,
+            amplitude_normalized,
         })
     }
 
     /// Custom constructor with time based progress.
-    pub fn new_with_time(sample_rate: SampleCalc,
-                         timing: TimingOption,
-                         period: SampleCalc,
-                         extent_ratio: SampleCalc)
-                         -> SoundResult<Tremolo> {
+    pub fn new_with_time(
+        sample_rate: SampleCalc,
+        timing: TimingOption,
+        period: SampleCalc,
+        extent_ratio: SampleCalc,
+    ) -> SoundResult<Tremolo> {
         let progress = ProgressTime::new(sample_rate, period)?;
         progress.set_timing(timing)?;
         Self::new(ProgressOption::Time(progress), extent_ratio)
     }
 
     /// Constructor with tempo based progress.
-    pub fn new_with_tempo(sample_rate: SampleCalc,
-                          timing: TimingOption,
-                          period: NoteValue,
-                          extent_ratio: SampleCalc)
-                          -> SoundResult<Tremolo> {
+    pub fn new_with_tempo(
+        sample_rate: SampleCalc,
+        timing: TimingOption,
+        period: NoteValue,
+        extent_ratio: SampleCalc,
+    ) -> SoundResult<Tremolo> {
         let progress = ProgressTempo::new(sample_rate, period)?;
         progress.set_timing(timing)?;
         Self::new(ProgressOption::Tempo(progress), extent_ratio)
@@ -424,8 +426,8 @@ impl AmplitudeProvider for Tremolo {
                 for (index, item) in samples.iter_mut().enumerate() {
                     match p.next_by_time() {
                         Ok(phase) => {
-                            *item *= self.amplitude_normalized *
-                                     (self.extent_ratio.powf(phase.sin()))
+                            *item *=
+                                self.amplitude_normalized * (self.extent_ratio.powf(phase.sin()))
                         }
                         Err(Error::ProgressCompleted) => return Err(Error::ItemsCompleted(index)),
                         Err(e) => return Err(e),
@@ -447,8 +449,8 @@ impl AmplitudeProvider for Tremolo {
                 for ((index, item), beats_per_second) in samples.iter_mut().enumerate().zip(tempo) {
                     match p.next_by_tempo(*beats_per_second) {
                         Ok(phase) => {
-                            *item *= self.amplitude_normalized *
-                                     (self.extent_ratio.powf(phase.sin()))
+                            *item *=
+                                self.amplitude_normalized * (self.extent_ratio.powf(phase.sin()))
                         }
                         Err(Error::ProgressCompleted) => return Err(Error::ItemsCompleted(index)),
                         Err(e) => return Err(e),
@@ -486,7 +488,7 @@ impl HasTimer for Tremolo {
 #[derive(Clone)]
 pub struct AmplitudeSequence {
     timer: Timer,
-    amp_funct_array: Vec<Rc<AmplitudeJoinable>>,
+    amp_funct_array: Vec<Rc<dyn AmplitudeJoinable>>,
     array_index: Cell<usize>,
     amplitude: Cell<SampleCalc>, // the last amplitude value
 }
@@ -504,7 +506,7 @@ impl AmplitudeSequence {
     }
 
     /// Adds a new amplitude function to the sequence.
-    pub fn add(&mut self, amplitude: Rc<AmplitudeJoinable>) {
+    pub fn add(&mut self, amplitude: Rc<dyn AmplitudeJoinable>) {
         self.amp_funct_array.push(amplitude);
     }
 }
@@ -523,8 +525,10 @@ impl AmplitudeProvider for AmplitudeSequence {
         }
         let mut index_from: usize = 0;
         loop {
-            let amp_funct_act =
-                self.amp_funct_array.get(self.array_index.get()).ok_or(Error::ItemInvalid)?;
+            let amp_funct_act = self
+                .amp_funct_array
+                .get(self.array_index.get())
+                .ok_or(Error::ItemInvalid)?;
             let child_result = amp_funct_act.apply(&mut buffer[index_from..]);
             match child_result {
                 Ok(()) => {
@@ -539,7 +543,8 @@ impl AmplitudeProvider for AmplitudeSequence {
                     } else {
                         self.array_index.set(array_index);
                         self.amplitude.set(amp_funct_act.get_amplitude());
-                        let amp_funct_next = self.amp_funct_array
+                        let amp_funct_next = self
+                            .amp_funct_array
                             .get(array_index)
                             .ok_or(Error::ItemInvalid)?;
                         amp_funct_next.set_amplitude_start(self.amplitude.get())?;
@@ -567,8 +572,10 @@ impl AmplitudeProvider for AmplitudeSequence {
         }
         let mut index_from: usize = 0;
         loop {
-            let amp_funct_act =
-                self.amp_funct_array.get(self.array_index.get()).ok_or(Error::ItemInvalid)?;
+            let amp_funct_act = self
+                .amp_funct_array
+                .get(self.array_index.get())
+                .ok_or(Error::ItemInvalid)?;
             let child_result = amp_funct_act.apply_rhythmic(tempo, &mut buffer[index_from..]);
             match child_result {
                 Ok(()) => {
@@ -583,7 +590,8 @@ impl AmplitudeProvider for AmplitudeSequence {
                     } else {
                         self.array_index.set(array_index);
                         self.amplitude.set(amp_funct_act.get_amplitude());
-                        let amp_funct_next = self.amp_funct_array
+                        let amp_funct_next = self
+                            .amp_funct_array
                             .get(array_index)
                             .ok_or(Error::ItemInvalid)?;
                         amp_funct_next.set_amplitude_start(self.amplitude.get())?;
@@ -646,8 +654,7 @@ impl AmplitudeJoinable for AmplitudeSequence {
 /// Combination of several amplitude functions.
 pub struct AmplitudeCombination;
 
-
 /// [Equal-loudness contour](https://en.wikipedia.org/wiki/Equal-loudness_contour)
 /// data used is described by the ISO 226:2003 standard
-/// see also: https://plot.ly/~mrlyule/16/equal-loudness-contours-iso-226-2003/
+/// see also: <https://plot.ly/~mrlyule/16/equal-loudness-contours-iso-226-2003/>
 pub struct AmplitudeEqualLoudness;

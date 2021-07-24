@@ -1,6 +1,6 @@
-use sound::*;
-use std::rc::Rc;
+use crate::sound::*;
 use std::cell::RefCell;
+use std::rc::Rc;
 
 /// Musical note.
 #[derive(Clone)]
@@ -17,19 +17,12 @@ pub struct Note {
     /// It is used for the syncronization of some effects (e.g. vibrato, tremolo).
     tempo: Tempo,
     /// Sound structure.
-    sound: Rc<SoundStructure>,
+    sound: Rc<dyn SoundStructure>,
     volume_relative: SampleCalc,
     volume_normalized: SampleCalc,
     frequency_buffer: RefCell<Vec<SampleCalc>>,
     wave_buffer: RefCell<Vec<SampleCalc>>,
 }
-
-
-
-
-
-
-
 
 /// Sequence of musical notes.
 #[doc(hidden)]
@@ -43,18 +36,19 @@ impl NoteSequence {
     /// custom constructor
     pub fn new(buffer_size: usize) -> SoundResult<NoteSequence> {
         Ok(NoteSequence {
-            buffer_size: buffer_size,
+            buffer_size,
             notes: RefCell::new(Vec::new()),
         })
     }
 
     /// Add a new note to the sequence.
-    pub fn add(&self,
-               // interval: Interval,
-               // sound: Rc<SoundStructure>,
-               duration: SampleCalc,
-               volume: SampleCalc)
-               -> SoundResult<&NoteSequence> {
+    pub fn add(
+        &self,
+        // interval: Interval,
+        // sound: Rc<SoundStructure>,
+        duration: SampleCalc,
+        volume: SampleCalc,
+    ) -> SoundResult<&NoteSequence> {
         if duration <= 0.0 {
             return Err(Error::PeriodInvalid);
         }

@@ -155,7 +155,7 @@ fn main() {
                 println!("Pressed {:?}", button);
             }
         }
-        window.draw_2d(&event, |_c, g| {
+        window.draw_2d(&event, |_c, g, _| {
             clear([1.0, 1.0, 1.0, 1.0], g);
         });
     }

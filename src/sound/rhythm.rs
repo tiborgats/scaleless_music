@@ -1,5 +1,5 @@
+use crate::sound::*;
 use num::*;
-use sound::*;
 use std::fmt;
 use std::ops::{Add, Mul};
 
@@ -7,12 +7,12 @@ use std::ops::{Add, Mul};
 /// [RFC #1465](https://github.com/rust-lang/rfcs/pull/1465)
 // https://github.com/crumblingstatue/try_opt
 macro_rules! try_opt {
-    ($e:expr) =>(
+    ($e:expr) => {
         match $e {
             Some(v) => v,
             None => return None,
         }
-    )
+    };
 }
 
 /// The `TempoProvider` trait is used to provide tempo.
@@ -50,7 +50,7 @@ impl Tempo {
         let beat_duration = 60.0 / beats_per_minute;
         Ok(Tempo {
             beats_per_second: beats_per_minute / 60.0,
-            beat_duration: beat_duration,
+            beat_duration,
         })
     }
 
@@ -114,22 +114,23 @@ pub struct TempoChangeLinear {
 // TODO: build pattern for the possibility to use different input variable combinations
 impl TempoChangeLinear {
     /// custom constructor
-    pub fn new(sample_rate: SampleCalc,
-               tempo_start: Tempo,
-               tempo_end: Tempo,
-               duration: SampleCalc)
-               -> SoundResult<TempoChangeLinear> {
+    pub fn new(
+        sample_rate: SampleCalc,
+        tempo_start: Tempo,
+        tempo_end: Tempo,
+        duration: SampleCalc,
+    ) -> SoundResult<TempoChangeLinear> {
         let sample_time = get_sample_time(sample_rate)?;
-        let beat_duration_change_rate = (tempo_end.beat_duration - tempo_start.beat_duration) /
-                                        duration;
+        let beat_duration_change_rate =
+            (tempo_end.beat_duration - tempo_start.beat_duration) / duration;
         let bps_change_rate = -1.0 / beat_duration_change_rate;
         Ok(TempoChangeLinear {
-            sample_time: sample_time,
-            tempo_start: tempo_start,
-            tempo_end: tempo_end,
-            duration: duration,
-            beat_duration_change_rate: beat_duration_change_rate,
-            bps_change_rate: bps_change_rate,
+            sample_time,
+            tempo_start,
+            tempo_end,
+            duration,
+            beat_duration_change_rate,
+            bps_change_rate,
         })
     }
     /// Sets duration calculated from the given note value.
@@ -241,7 +242,6 @@ impl NoteValue {
     }
 }
 
-
 impl Add for NoteValue {
     type Output = NoteValue;
 
@@ -260,11 +260,15 @@ impl Add for NoteValue {
 
 impl CheckedAdd for NoteValue {
     fn checked_add(&self, v: &Self) -> Option<Self> {
-        let lowest_common_multiple = try_opt!(self.denominator
+        let lowest_common_multiple = try_opt!(self
+            .denominator
             .checked_mul(v.denominator / self.denominator.gcd(&v.denominator)));
-        let n1 = try_opt!(self.numerator
+        let n1 = try_opt!(self
+            .numerator
             .checked_mul(lowest_common_multiple / self.denominator));
-        let n2 = try_opt!(v.numerator.checked_mul(lowest_common_multiple / v.denominator));
+        let n2 = try_opt!(v
+            .numerator
+            .checked_mul(lowest_common_multiple / v.denominator));
         let n = try_opt!(n1.checked_add(n2));
         Some(NoteValue {
             numerator: n,

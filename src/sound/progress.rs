@@ -1,4 +1,4 @@
-use sound::*;
+use crate::sound::*;
 use std::cell::Cell;
 
 /// Common methods of the Progress types.
@@ -29,7 +29,6 @@ pub trait Progress: HasTimer {
     fn get_phase(&self) -> SampleCalc;
 }
 
-
 /// Time based progress measurement. It provides the sequence of phases (for sound functions) by
 /// calling `next_phase()`. The whole duration can be divided to periods, for periodic functions.
 #[derive(Debug, Clone)]
@@ -58,7 +57,7 @@ impl ProgressTime {
         let period_unit = PI2;
         let phase_change = (timer.get_sample_time() / period) * period_unit;
         Ok(ProgressTime {
-            timer: timer,
+            timer,
             period: Cell::new(period),
             period_unit: Cell::new(period_unit),
             phase_init: Cell::new(0.0),
@@ -173,12 +172,12 @@ impl ProgressTempo {
     /// Custom constructor. The default period is the whole duration.
     /// The default period unit is π x 2.
     pub fn new(sample_rate: SampleCalc, period: NoteValue) -> SoundResult<ProgressTempo> {
-        let timer = try!(Timer::new(sample_rate));
+        let timer = Timer::new(sample_rate)?;
         timer.set_timing(TimingOption::TempoConst(period))?;
         let period_unit = PI2;
         let phase_change = timer.get_sample_time() * period.get_notes_per_beat() * period_unit;
         Ok(ProgressTempo {
-            timer: timer,
+            timer,
             period: Cell::new(period),
             period_unit: Cell::new(period_unit),
             phase_init: Cell::new(0.0),
@@ -208,9 +207,11 @@ impl HasTimer for ProgressTempo {
     fn restart(&self) {
         self.timer.restart();
         self.phase.set(self.phase_init.get());
-        self.phase_change
-            .set(self.timer.get_sample_time() * self.period.get().get_notes_per_beat() *
-                 self.period_unit.get());
+        self.phase_change.set(
+            self.timer.get_sample_time()
+                * self.period.get().get_notes_per_beat()
+                * self.period_unit.get(),
+        );
     }
 
     fn apply_parent_timing(&self, parent_timing: TimingOption) -> SoundResult<()> {
@@ -237,7 +238,7 @@ impl Progress for ProgressTempo {
 
     fn next_by_time(&self) -> SoundResult<SampleCalc> {
         // TODO: investigate if we need this method implementation at all
-        // try!(self.timer.next_by_time());
+        // self.timer.next_by_time()?;
         // self.phase.set(self.phase.get() + self.phase_change.get() * tempo);
         // Ok(self.phase.get())
         Err(Error::ProgressInvalid)
@@ -245,7 +246,8 @@ impl Progress for ProgressTempo {
 
     fn next_by_tempo(&self, tempo: SampleCalc) -> SoundResult<SampleCalc> {
         self.timer.next_by_tempo(tempo)?;
-        self.phase.set(self.phase.get() + self.phase_change.get() * tempo);
+        self.phase
+            .set(self.phase.get() + self.phase_change.get() * tempo);
         Ok(self.phase.get())
     }
 

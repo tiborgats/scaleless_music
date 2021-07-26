@@ -1,4 +1,4 @@
-use rb::{RB, RbConsumer, RbProducer, SpscRb};
+use rb::{RbConsumer, RbProducer, SpscRb, RB};
 use sound::*;
 use std::sync::mpsc::Sender;
 

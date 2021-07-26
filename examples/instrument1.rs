@@ -5,15 +5,11 @@
 //! The keys from <kbd>Q</kbd> to <kbd>O</kbd> changes the frequency to be higher,
 //! the keys from <kbd>A</kbd> to <kbd>L</kbd> changes the frequency to be lower.
 /// Other keys play the previous frequency. To quit press <kbd>Esc</kbd>.
+use scaleless_music;
 
-extern crate scaleless_music;
-
-#[macro_use]
-extern crate conrod;
-extern crate piston_window;
-extern crate piston;
-
+use piston_window;
 use piston_window::*;
+
 use scaleless_music::sound::*;
 use std::rc::Rc;
 
@@ -40,16 +36,20 @@ impl InstrumentBasic {
     pub fn new(sample_rate: SampleCalc) -> SoundResult<InstrumentBasic> {
         let frequency1 = FrequencyConst::new(220.0)?;
         let amplitude = {
-            let overtones_amplitude: Vec<SampleCalc> = vec![10.0, 1.0, 1.0, 0.95, 0.9, 0.9, 0.86,
-                                                            0.83, 0.80, 0.78, 0.76, 0.74, 0.73,
-                                                            0.72, 0.71, 0.70];
-            let overtones_half_life: Vec<SampleCalc> = vec![1.0, 0.2, 0.1, 0.06, 0.04, 0.03, 0.02,
-                                                            0.015, 0.01, 0.008, 0.007, 0.006,
-                                                            0.005, 0.004, 0.002, 0.001];
-            AmplitudeDecayExpOvertones::new(sample_rate,
-                                            4,
-                                            &overtones_amplitude,
-                                            &overtones_half_life)?
+            let overtones_amplitude: Vec<SampleCalc> = vec![
+                10.0, 1.0, 1.0, 0.95, 0.9, 0.9, 0.86, 0.83, 0.80, 0.78, 0.76, 0.74, 0.73, 0.72,
+                0.71, 0.70,
+            ];
+            let overtones_half_life: Vec<SampleCalc> = vec![
+                1.0, 0.2, 0.1, 0.06, 0.04, 0.03, 0.02, 0.015, 0.01, 0.008, 0.007, 0.006, 0.005,
+                0.004, 0.002, 0.001,
+            ];
+            AmplitudeDecayExpOvertones::new(
+                sample_rate,
+                4,
+                &overtones_amplitude,
+                &overtones_half_life,
+            )?
         };
         let timbre1 = Timbre::new(sample_rate, BUFFER_SIZE_DEFAULT, Rc::new(amplitude), 4)?;
         Ok(InstrumentBasic {
@@ -81,7 +81,9 @@ impl SoundGenerator for InstrumentBasic {
     type Command = GeneratorCommand;
 
     fn get_samples(&mut self, sample_count: usize, result: &mut Vec<SampleCalc>) {
-        self.frequency1.get(self.time, None, &mut self.frequency1_buffer).unwrap();
+        self.frequency1
+            .get(self.time, None, &mut self.frequency1_buffer)
+            .unwrap();
         self.timbre1.get(&self.frequency1_buffer, result).unwrap();
         self.time += sample_count as SampleCalc / self.sample_rate;
     }
@@ -115,7 +117,10 @@ impl SoundGenerator for InstrumentBasic {
             GeneratorCommand::Mute => {
                 let _ = self.change_frequency(1, 1);
             }
-            GeneratorCommand::FrequencyMultiple { numerator, denominator } => {
+            GeneratorCommand::FrequencyMultiple {
+                numerator,
+                denominator,
+            } => {
                 let _ = self.change_frequency(numerator, denominator);
             }
         }
@@ -124,8 +129,9 @@ impl SoundGenerator for InstrumentBasic {
 
 fn main() {
     println!("scaleless_music v{} example", env!("CARGO_PKG_VERSION"));
-    let sound_generator = Box::new(InstrumentBasic::new(48000.0)
-        .expect("InstrumentBasic construction shouldn't fail."));
+    let sound_generator = Box::new(
+        InstrumentBasic::new(48000.0).expect("InstrumentBasic construction shouldn't fail."),
+    );
     let mut sound = SoundInterface::new(48000, BUFFER_SIZE_DEFAULT, 2, sound_generator)
         .expect("SoundInterface construction shouldn't fail.");
 
@@ -142,13 +148,14 @@ fn main() {
     while let Some(event) = window.next() {
         if let Some(button) = event.press_args() {
             if let Button::Keyboard(key) = button {
-                sound.send_command(GeneratorCommand::Keypress { key: key })
+                sound
+                    .send_command(GeneratorCommand::Keypress { key: key })
                     .expect("send_command failed.");
             } else {
                 println!("Pressed {:?}", button);
             }
         }
-        window.draw_2d(&event, |_c, g| {
+        window.draw_2d(&event, |_c, g, _| {
             clear([1.0, 1.0, 1.0, 1.0], g);
         });
     }

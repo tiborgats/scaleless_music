@@ -1,4 +1,4 @@
-use sound::*;
+use crate::sound::*;
 use std::cell::RefCell;
 use std::rc::Rc;
 // use rayon::prelude::*;
@@ -22,7 +22,7 @@ impl Wave {
     pub fn new(sample_rate: SampleCalc, overtone: usize) -> SoundResult<Wave> {
         let sample_time = get_sample_time(sample_rate)?;
         Ok(Wave {
-            sample_time: sample_time,
+            sample_time,
             interval: INTERVAL_UNISON,
             overtone: overtone as SampleCalc,
             frequency_multiplier: (overtone as SampleCalc + 1.0) * PI2 * sample_time,
@@ -31,10 +31,11 @@ impl Wave {
     }
 
     /// Gets the next samples of the wave.
-    pub fn get(&mut self,
-               base_frequency: &[SampleCalc],
-               result: &mut [SampleCalc])
-               -> SoundResult<()> {
+    pub fn get(
+        &mut self,
+        base_frequency: &[SampleCalc],
+        result: &mut [SampleCalc],
+    ) -> SoundResult<()> {
         for (item, frequency) in result.iter_mut().zip(base_frequency) {
             self.phase += frequency * self.frequency_multiplier;
             *item = (self.phase).sin();
@@ -46,8 +47,8 @@ impl Wave {
     /// Sets a new frequency interval.
     pub fn set_interval(&mut self, interval: Interval) {
         self.interval = interval;
-        self.frequency_multiplier = (self.overtone + 1.0) * PI2 * self.sample_time *
-                                    interval.get_ratio();
+        self.frequency_multiplier =
+            (self.overtone + 1.0) * PI2 * self.sample_time * interval.get_ratio();
     }
 
     /// Sets a new phase value.
@@ -57,25 +58,26 @@ impl Wave {
 }
 
 /// A tone with optional overtones and amplitude modulation.
-/// Some examples: https://youtu.be/VRAXK4QKJ1Q?t=25s
+/// Some examples: <https://youtu.be/VRAXK4QKJ1Q?t=25s>
 #[derive(Clone)]
 pub struct Timbre {
     // sample_time: SampleCalc,
     /// The interval is used for transposition of the input frequencies
     interval: Interval,
     waves: RefCell<Vec<Wave>>,
-    amplitude_overtones: Rc<AmplitudeOvertonesProvider>,
+    amplitude_overtones: Rc<dyn AmplitudeOvertonesProvider>,
     wave_buffer: RefCell<Vec<SampleCalc>>,
     overtone_max: usize,
 }
 
 impl Timbre {
     /// Custom constructor
-    pub fn new(sample_rate: SampleCalc,
-               buffer_size: usize,
-               amplitude_overtones: Rc<AmplitudeOvertonesProvider>,
-               overtone_max: usize)
-               -> SoundResult<Timbre> {
+    pub fn new(
+        sample_rate: SampleCalc,
+        buffer_size: usize,
+        amplitude_overtones: Rc<dyn AmplitudeOvertonesProvider>,
+        overtone_max: usize,
+    ) -> SoundResult<Timbre> {
         let mut wave_vec = Vec::with_capacity(overtone_max + 1);
         for overtone in 0..overtone_max {
             wave_vec.push(Wave::new(sample_rate, overtone)?);
@@ -83,9 +85,9 @@ impl Timbre {
         Ok(Timbre {
             interval: INTERVAL_UNISON,
             waves: RefCell::new(wave_vec),
-            amplitude_overtones: amplitude_overtones,
+            amplitude_overtones,
             wave_buffer: RefCell::new(vec![0.0; buffer_size]),
-            overtone_max: overtone_max,
+            overtone_max,
         })
     }
 
@@ -98,9 +100,10 @@ impl Timbre {
     }
 
     /// Set a new amplitude function
-    pub fn set_amplitude(&mut self,
-                         amplitude_overtones: Rc<AmplitudeOvertonesProvider>)
-                         -> &mut Timbre {
+    pub fn set_amplitude(
+        &mut self,
+        amplitude_overtones: Rc<dyn AmplitudeOvertonesProvider>,
+    ) -> &mut Timbre {
         self.amplitude_overtones = amplitude_overtones;
         self
     }
@@ -143,8 +146,7 @@ impl SoundStructure for Timbre {
         for (overtone, wave) in self.waves.borrow_mut().iter_mut().enumerate() {
             wave.get(base_frequency, &mut wave_buffer)?;
             self.amplitude_overtones.apply(overtone, &mut wave_buffer)?;
-            for (item, wave) in result.iter_mut()
-                .zip(wave_buffer.iter()) {
+            for (item, wave) in result.iter_mut().zip(wave_buffer.iter()) {
                 *item += *wave;
             }
         }
@@ -158,7 +160,7 @@ struct MixerChannel {
     /// The interval of the channel's frequency relative to the mixer's input frequency.
     interval: Interval,
     /// Sound structure.
-    sound: Rc<SoundStructure>,
+    sound: Rc<dyn SoundStructure>,
     volume_relative: SampleCalc,
     volume_normalized: SampleCalc,
     frequency_buffer: Vec<SampleCalc>,
@@ -178,24 +180,25 @@ impl Mixer {
     pub fn new(sample_rate: SampleCalc, buffer_size: usize) -> SoundResult<Mixer> {
         Ok(Mixer {
             timer: Timer::new(sample_rate)?,
-            buffer_size: buffer_size,
+            buffer_size,
             channels: RefCell::new(Vec::new()),
         })
     }
 
     /// Add a new channel to the mixer.
-    pub fn add(&self,
-               interval: Interval,
-               sound: Rc<SoundStructure>,
-               volume: SampleCalc)
-               -> SoundResult<&Mixer> {
+    pub fn add(
+        &self,
+        interval: Interval,
+        sound: Rc<dyn SoundStructure>,
+        volume: SampleCalc,
+    ) -> SoundResult<&Mixer> {
         if volume < 0.0 {
             return Err(Error::AmplitudeInvalid);
         }
         sound.apply_parent_timing(self.timer.get_timing())?;
         let channel = MixerChannel {
-            interval: interval,
-            sound: sound,
+            interval,
+            sound,
             volume_relative: volume,
             volume_normalized: 0.0,
             frequency_buffer: vec![1.0; self.buffer_size],
@@ -288,8 +291,12 @@ impl SoundStructure for Mixer {
             *item = 0.0;
         }
         for channel in self.channels.borrow_mut().iter_mut() {
-            channel.interval.transpose(base_frequency, &mut channel.frequency_buffer)?;
-            channel.sound.get(&channel.frequency_buffer, &mut channel.wave_buffer)?;
+            channel
+                .interval
+                .transpose(base_frequency, &mut channel.frequency_buffer)?;
+            channel
+                .sound
+                .get(&channel.frequency_buffer, &mut channel.wave_buffer)?;
             for (item, wave) in result.iter_mut().zip(channel.wave_buffer.iter()) {
                 *item += *wave * channel.volume_normalized;
             }
@@ -306,8 +313,8 @@ impl SoundStructure for Mixer {
 #[allow(dead_code)]
 pub struct Crossfader {
     duration: SampleCalc,
-    sound_fade_out: Rc<SoundStructure>,
-    sound_fade_in: Rc<SoundStructure>,
+    sound_fade_out: Rc<dyn SoundStructure>,
+    sound_fade_in: Rc<dyn SoundStructure>,
     interval: Interval,
     amplitude_fade_out: FadeLinear,
     amplitude_fade_in: FadeLinear,
@@ -318,22 +325,23 @@ pub struct Crossfader {
 
 impl Crossfader {
     /// custom constructor
-    pub fn new(sample_rate: SampleCalc,
-               buffer_size: usize,
-               duration: SampleCalc,
-               sound_fade_out: Rc<SoundStructure>,
-               sound_fade_in: Rc<SoundStructure>)
-               -> SoundResult<Crossfader> {
+    pub fn new(
+        sample_rate: SampleCalc,
+        buffer_size: usize,
+        duration: SampleCalc,
+        sound_fade_out: Rc<dyn SoundStructure>,
+        sound_fade_in: Rc<dyn SoundStructure>,
+    ) -> SoundResult<Crossfader> {
         let amplitude_fade_out = FadeLinear::new_with_time(sample_rate, duration, 0.0)?;
         amplitude_fade_out.set_amplitude_start(1.0)?;
         let amplitude_fade_in = FadeLinear::new_with_time(sample_rate, duration, 1.0)?;
         Ok(Crossfader {
-            duration: duration,
+            duration,
             interval: Interval::new(1, 1)?,
-            sound_fade_out: sound_fade_out,
-            sound_fade_in: sound_fade_in,
-            amplitude_fade_out: amplitude_fade_out,
-            amplitude_fade_in: amplitude_fade_in,
+            sound_fade_out,
+            sound_fade_in,
+            amplitude_fade_out,
+            amplitude_fade_in,
             frequency_buffer_in: RefCell::new(vec![0.0; buffer_size]),
             wave_fade_out_buffer: RefCell::new(vec![0.0; buffer_size]),
             wave_fade_in_buffer: RefCell::new(vec![0.0; buffer_size]),

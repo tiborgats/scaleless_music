@@ -1,4 +1,4 @@
-use sound::*;
+use crate::sound::*;
 use std::cell::Cell;
 // use std::fmt;
 // use rayon::prelude::*;
@@ -6,11 +6,12 @@ use std::cell::Cell;
 /// Input and output definition for the frequency functions.
 pub trait FrequencyFunction {
     /// Provides the results of the frequency calculations.
-    fn get(&self,
-           time_start: SampleCalc,
-           base_frequency: Option<&[SampleCalc]>,
-           result: &mut [SampleCalc])
-           -> SoundResult<()>;
+    fn get(
+        &self,
+        time_start: SampleCalc,
+        base_frequency: Option<&[SampleCalc]>,
+        result: &mut [SampleCalc],
+    ) -> SoundResult<()>;
 }
 
 /// Frequency is not changing by time.
@@ -22,22 +23,26 @@ pub struct FrequencyConst {
 impl FrequencyConst {
     /// custom constructor
     pub fn new(frequency: SampleCalc) -> SoundResult<FrequencyConst> {
-        Ok(FrequencyConst { frequency: Cell::new(frequency) })
+        Ok(FrequencyConst {
+            frequency: Cell::new(frequency),
+        })
     }
 
     /// Change frequency in harmony with it's previous value.
     pub fn change(&self, interval: Interval) -> SoundResult<&FrequencyConst> {
-        self.frequency.set(interval.change_frequency(self.frequency.get())?);
+        self.frequency
+            .set(interval.change_frequency(self.frequency.get())?);
         Ok(self)
     }
 }
 
 impl FrequencyFunction for FrequencyConst {
-    fn get(&self,
-           _time_begin: SampleCalc,
-           base_frequency: Option<&[SampleCalc]>,
-           result: &mut [SampleCalc])
-           -> SoundResult<()> {
+    fn get(
+        &self,
+        _time_begin: SampleCalc,
+        base_frequency: Option<&[SampleCalc]>,
+        result: &mut [SampleCalc],
+    ) -> SoundResult<()> {
         if base_frequency.is_some() {
             return Err(Error::FrequencySource);
         }
@@ -63,11 +68,12 @@ pub struct FrequencyChangeLinear {
 pub trait FrequencyModulator {
     /// Provides the results of the modulation of an array of frequencies.
     /// Tempo is given in beats per second.
-    fn get(&mut self,
-           tempo: &[SampleCalc],
-           base_frequency: &[SampleCalc],
-           result: &mut [SampleCalc])
-           -> SoundResult<()>;
+    fn get(
+        &mut self,
+        tempo: &[SampleCalc],
+        base_frequency: &[SampleCalc],
+        result: &mut [SampleCalc],
+    ) -> SoundResult<()>;
     /// Applies the modulation on an already existing array of frequencies. It multiplies
     /// each sample with it's new amplitude. Tempo is given in beats per second.
     fn apply(&mut self, tempo: &[SampleCalc], samples: &mut [SampleCalc]) -> SoundResult<()>;
@@ -88,21 +94,22 @@ pub struct Vibrato {
 
 impl Vibrato {
     /// custom constructor
-    pub fn new(sample_rate: SampleCalc,
-               note_value: NoteValue,
-               extent_ratio: SampleCalc)
-               -> SoundResult<Vibrato> {
+    pub fn new(
+        sample_rate: SampleCalc,
+        note_value: NoteValue,
+        extent_ratio: SampleCalc,
+    ) -> SoundResult<Vibrato> {
         let sample_time = get_sample_time(sample_rate)?;
         if extent_ratio <= 0.0 {
             return Err(Error::FrequencyTooLow);
         }
         let phase_change = sample_time * note_value.get_notes_per_beat() * PI2;
         Ok(Vibrato {
-            sample_time: sample_time,
-            note_value: note_value,
-            extent_ratio: extent_ratio,
+            sample_time,
+            note_value,
+            extent_ratio,
             phase: 0.0,
-            phase_change: phase_change,
+            phase_change,
         })
     }
 
@@ -114,20 +121,21 @@ impl Vibrato {
 }
 
 impl FrequencyModulator for Vibrato {
-    fn get(&mut self,
-           tempo: &[SampleCalc],
-           base_frequency: &[SampleCalc],
-           result: &mut [SampleCalc])
-           -> SoundResult<()> {
+    fn get(
+        &mut self,
+        tempo: &[SampleCalc],
+        base_frequency: &[SampleCalc],
+        result: &mut [SampleCalc],
+    ) -> SoundResult<()> {
         if tempo.len() != result.len() {
             return Err(Error::BufferSize);
         }
         if base_frequency.len() != result.len() {
             return Err(Error::BufferSize);
         }
-        for ((item, frequency), beats_per_second) in result.iter_mut()
-            .zip(base_frequency)
-            .zip(tempo) {
+        for ((item, frequency), beats_per_second) in
+            result.iter_mut().zip(base_frequency).zip(tempo)
+        {
             self.phase += self.phase_change * beats_per_second;
             *item = *frequency * (self.extent_ratio.powf(self.phase.sin()));
         }

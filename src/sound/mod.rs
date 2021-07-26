@@ -1,23 +1,23 @@
-/// Error messages.
-pub mod errors;
-/// Frequency interval.
-pub mod interval;
-/// Fuctions which provide frequency changes.
-pub mod frequency;
 /// Fuctions which provide amplitude changes.
 pub mod amplitude;
 /// Fuctions which provide amplitude changes for overtones also.
 pub mod amplitude_overtones;
-/// Fuctions which provide complete waveforms.
-pub mod wave;
-/// Rhythm section.
-pub mod rhythm;
-/// Time and tempo based progress measurement.
-pub mod progress;
-/// Timing for the duration of sound components.
-pub mod timing;
+/// Error messages.
+pub mod errors;
+/// Fuctions which provide frequency changes.
+pub mod frequency;
+/// Frequency interval.
+pub mod interval;
 /// Musical note structures.
 pub mod note;
+/// Time and tempo based progress measurement.
+pub mod progress;
+/// Rhythm section.
+pub mod rhythm;
+/// Timing for the duration of sound components.
+pub mod timing;
+/// Fuctions which provide complete waveforms.
+pub mod wave;
 
 /// [`PortAudio`](https://github.com/RustAudio/rust-portaudio) backend for sound playback.
 #[cfg(feature = "be-portaudio")]
@@ -98,11 +98,12 @@ pub trait SoundStructure: HasTimer {
 /// A structure of music.
 pub trait MusicStructure {
     /// Returns the calculated samples in the `result` buffer.
-    fn get(&self,
-           base_tempo: &[SampleCalc],
-           base_frequency: &[SampleCalc],
-           result: &mut [SampleCalc])
-           -> SoundResult<()>;
+    fn get(
+        &self,
+        base_tempo: &[SampleCalc],
+        base_frequency: &[SampleCalc],
+        result: &mut [SampleCalc],
+    ) -> SoundResult<()>;
 }
 
 /// Calculates the period of one sample for the given sample rate.
@@ -111,6 +112,6 @@ pub fn get_sample_time(sample_rate: SampleCalc) -> SoundResult<SampleCalc> {
     if sample_rate < 1.0 {
         Err(Error::SampleRateInvalid)
     } else {
-        Ok((1.0 / sample_rate))
+        Ok(1.0 / sample_rate)
     }
 }

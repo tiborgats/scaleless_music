@@ -1,5 +1,5 @@
+use crate::sound::*;
 use num::*;
-use sound::*;
 use std::cell::Cell;
 
 /// It provides the timing functionality required for making sequences.
@@ -64,7 +64,7 @@ impl Timer {
     pub fn new(sample_rate: SampleCalc) -> SoundResult<Timer> {
         let sample_time = get_sample_time(sample_rate)?;
         Ok(Timer {
-            sample_time: sample_time,
+            sample_time,
             timing: Cell::new(TimingOption::None),
             remaining: Cell::new(0.0),
         })
@@ -80,8 +80,7 @@ impl Timer {
     pub fn jump_by_time(&self, sample_count: usize) -> SoundResult<()> {
         match self.timing.get() {
             TimingOption::None => Ok(()),
-            TimingOption::TimeConst(_) |
-            TimingOption::TimeRatio { .. } => {
+            TimingOption::TimeConst(_) | TimingOption::TimeRatio { .. } => {
                 let time_change = (sample_count as SampleCalc) * self.sample_time;
                 if self.remaining.get() >= time_change {
                     self.remaining.set(self.remaining.get() - time_change);
@@ -91,8 +90,9 @@ impl Timer {
                 self.remaining.set(0.0);
                 Err(Error::ItemsCompleted(samples_left))
             }
-            TimingOption::TempoConst(_) |
-            TimingOption::TempoRatio { .. } => Err(Error::TimingInvalid),
+            TimingOption::TempoConst(_) | TimingOption::TempoRatio { .. } => {
+                Err(Error::TimingInvalid)
+            }
         }
     }
 
@@ -102,10 +102,10 @@ impl Timer {
     pub fn jump_by_tempo(&self, tempo: &[SampleCalc]) -> SoundResult<()> {
         match self.timing.get() {
             TimingOption::None => Ok(()),
-            TimingOption::TimeConst(_) |
-            TimingOption::TimeRatio { .. } => Err(Error::TimingInvalid),
-            TimingOption::TempoConst(_) |
-            TimingOption::TempoRatio { .. } => {
+            TimingOption::TimeConst(_) | TimingOption::TimeRatio { .. } => {
+                Err(Error::TimingInvalid)
+            }
+            TimingOption::TempoConst(_) | TimingOption::TempoRatio { .. } => {
                 for (index, beats_per_second) in tempo.iter().enumerate() {
                     self.remaining
                         .set(self.remaining.get() - (*beats_per_second * self.sample_time));
@@ -124,8 +124,7 @@ impl Timer {
     pub fn next_by_time(&self) -> SoundResult<()> {
         match self.timing.get() {
             TimingOption::None => Ok(()),
-            TimingOption::TimeConst(_) |
-            TimingOption::TimeRatio { .. } => {
+            TimingOption::TimeConst(_) | TimingOption::TimeRatio { .. } => {
                 if self.remaining.get() >= self.sample_time {
                     self.remaining.set(self.remaining.get() - self.sample_time);
                     return Ok(());
@@ -133,8 +132,9 @@ impl Timer {
                 self.remaining.set(0.0);
                 Err(Error::ProgressCompleted)
             }
-            TimingOption::TempoConst(_) |
-            TimingOption::TempoRatio { .. } => Err(Error::TimingInvalid),
+            TimingOption::TempoConst(_) | TimingOption::TempoRatio { .. } => {
+                Err(Error::TimingInvalid)
+            }
         }
     }
 
@@ -144,10 +144,10 @@ impl Timer {
     pub fn next_by_tempo(&self, tempo: SampleCalc) -> SoundResult<()> {
         match self.timing.get() {
             TimingOption::None => Ok(()),
-            TimingOption::TimeConst(_) |
-            TimingOption::TimeRatio { .. } => Err(Error::TimingInvalid),
-            TimingOption::TempoConst(_) |
-            TimingOption::TempoRatio { .. } => {
+            TimingOption::TimeConst(_) | TimingOption::TimeRatio { .. } => {
+                Err(Error::TimingInvalid)
+            }
+            TimingOption::TempoConst(_) | TimingOption::TempoRatio { .. } => {
                 self.remaining
                     .set(self.remaining.get() - (tempo * self.sample_time));
                 if self.remaining.get() <= 0.0 {
@@ -166,8 +166,7 @@ impl HasTimer for Timer {
             TimingOption::None => {
                 self.remaining.set(0.0);
             }
-            TimingOption::TimeConst(duration) |
-            TimingOption::TimeRatio { duration, .. } => {
+            TimingOption::TimeConst(duration) | TimingOption::TimeRatio { duration, .. } => {
                 if duration <= 0.0 {
                     return Err(Error::DurationInvalid);
                 }
@@ -191,8 +190,7 @@ impl HasTimer for Timer {
     fn restart(&self) {
         match self.timing.get() {
             TimingOption::None => {}
-            TimingOption::TimeConst(duration) |
-            TimingOption::TimeRatio { duration, .. } => {
+            TimingOption::TimeConst(duration) | TimingOption::TimeRatio { duration, .. } => {
                 self.remaining.set(duration);
             }
             TimingOption::TempoConst(note_value) => {
@@ -206,34 +204,33 @@ impl HasTimer for Timer {
 
     fn apply_parent_timing(&self, parent_timing: TimingOption) -> SoundResult<()> {
         match self.timing.get() {
-            TimingOption::None |
-            TimingOption::TimeConst(..) |
-            TimingOption::TempoConst(..) => {}
+            TimingOption::None | TimingOption::TimeConst(..) | TimingOption::TempoConst(..) => {}
             TimingOption::TimeRatio { ratio, duration } => {
                 let parent_duration = match parent_timing {
-                    TimingOption::None |
-                    TimingOption::TempoConst(_) |
-                    TimingOption::TempoRatio { .. } => return Err(Error::TimingInvalid),
-                    TimingOption::TimeConst(duration) |
-                    TimingOption::TimeRatio { duration, .. } => duration,
+                    TimingOption::None
+                    | TimingOption::TempoConst(_)
+                    | TimingOption::TempoRatio { .. } => return Err(Error::TimingInvalid),
+                    TimingOption::TimeConst(duration)
+                    | TimingOption::TimeRatio { duration, .. } => duration,
                 };
                 self.timing.set(TimingOption::TimeRatio {
-                    ratio: ratio,
+                    ratio,
                     duration: duration * parent_duration,
                 });
             }
             TimingOption::TempoRatio { ratio, duration } => {
                 let parent_duration = match parent_timing {
-                    TimingOption::None |
-                    TimingOption::TimeConst(_) |
-                    TimingOption::TimeRatio { .. } => return Err(Error::TimingInvalid),
-                    TimingOption::TempoConst(duration) |
-                    TimingOption::TempoRatio { duration, .. } => duration,
+                    TimingOption::None
+                    | TimingOption::TimeConst(_)
+                    | TimingOption::TimeRatio { .. } => return Err(Error::TimingInvalid),
+                    TimingOption::TempoConst(duration)
+                    | TimingOption::TempoRatio { duration, .. } => duration,
                 };
-                let new_duration = duration.checked_mul(&parent_duration)
+                let new_duration = duration
+                    .checked_mul(&parent_duration)
                     .ok_or(Error::Overflow)?;
                 self.timing.set(TimingOption::TempoRatio {
-                    ratio: ratio,
+                    ratio,
                     duration: new_duration,
                 });
             }

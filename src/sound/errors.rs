@@ -1,125 +1,92 @@
 #[cfg(feature = "be-portaudio")]
-use sound::backend_portaudio::*;
+use crate::sound::backend_portaudio::*;
 #[cfg(feature = "be-rsoundio")]
-use sound::backend_rsoundio::*;
+use crate::sound::backend_rsoundio::*;
 #[cfg(feature = "be-sdl2")]
-use sound::backend_sdl2::*;
-use std::{error, fmt};
+use crate::sound::backend_sdl2::*;
+
+use thiserror::Error;
 
 /// Return type for the sound module functions.
 pub type SoundResult<T> = Result<T, Error>;
 
-// TODO: use [error-chain](https://github.com/brson/error-chain)
-// or [quick-error](https://github.com/tailhook/quick-error)
-
 /// Error types of the sound module.
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, Error)]
 pub enum Error {
-    /// Sound output backend error.
     #[cfg(any(feature = "be-portaudio", feature = "be-rsoundio", feature = "be-sdl2"))]
-    Backend(BackendError),
+    /// Sound output backend error.
+    #[error("Backend error: {0}")]
+    Backend(#[from] BackendError),
     /// Invalid sample rate.
+    #[error("Invalid sample rate")]
     SampleRateInvalid,
     /// Invalid buffer size for the given sample count.
+    #[error("Incorrect buffer size")]
     BufferSize,
     /// Overtone count does not match the reserved array size.
+    #[error("Invalid overtone count")]
     OvertoneCountInvalid,
     /// Numerator cannot be 0, because frequencies can not be 0.
+    #[error("Invalid numerator")]
     NumeratorInvalid,
     /// Denominator cannot be 0 (division by zero error).
+    #[error("Invalid denominator")]
     DenominatorInvalid,
     /// The frequency is below the hearing range.
+    #[error("Frequency is below the hearing range")]
     FrequencyTooLow,
     /// The frequency exceeds the hearing range.
+    #[error("Frequency exceeds the hearing range")]
     FrequencyTooHigh,
     /// Frequency can not be zero or negative.
+    #[error("Frequency can not be zero or negative")]
     FrequencyInvalid,
     /// This frequency function is a source, it can not use an input frequency buffer.
+    #[error("Input frequency buffer can not be used")]
     FrequencySource,
     /// A rate must be positive.
+    #[error("Invalid rate")]
     RateInvalid,
     /// Amplitude cannot be negative.
+    #[error("Invalid amplitude")]
     AmplitudeInvalid,
     /// Amplitude change time is not positive.
+    #[error("Invalid amplitude change time")]
     AmplitudeTimeInvalid,
     /// Amplitude change rate is out of the range allowed for the given function.
+    #[error("Invalid amplitude decay rate")]
     AmplitudeRateInvalid,
     /// A time period must be positive.
+    #[error("Invalid period")]
     PeriodInvalid,
     /// A time duration must be positive.
+    #[error("Invalid duration")]
     DurationInvalid,
     /// Channel of the given number does not exist.
+    #[error("Invalid channel")]
     ChannelInvalid,
     /// Beats per minute must be positive.
+    #[error("Beats per minute must be positive")]
     TempoInvalid,
     /// Timing option does not match the method.
+    #[error("Invalid timing option")]
     TimingInvalid,
     /// The selected progress option is invalid for this case.
+    #[error("Invalid progress option")]
     ProgressInvalid,
     /// Progress is finished.
+    #[error("Progress completed")]
     ProgressCompleted,
     /// The number of items completed in an unfinished buffer operation.
+    #[error("The number of items completed in an unfinished buffer operation: {0}")]
     ItemsCompleted(usize),
     /// The Sequence has no items.
+    #[error("Sequence has no items")]
     SequenceEmpty,
     /// Item at the given index does not exist.
+    #[error("The item does not exist")]
     ItemInvalid,
     /// Overflow occured during calculations.
+    #[error("Overflow")]
     Overflow,
-}
-
-impl fmt::Display for Error {
-    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-        use std::error::Error;
-        f.write_str(self.description())
-    }
-}
-
-impl error::Error for Error {
-    fn description(&self) -> &str {
-        use self::Error::*;
-        match *self {
-            #[cfg(any(feature = "be-portaudio", feature = "be-rsoundio", feature = "be-sdl2"))]
-            Backend(ref err) => err.description(),
-            SampleRateInvalid => "invalid sample rate",
-            BufferSize => "incorrect buffer size",
-            OvertoneCountInvalid => "invalid overtone count",
-            NumeratorInvalid => "invalid numerator",
-            DenominatorInvalid => "invalid denominator",
-            FrequencyTooLow => "frequency is below the hearing range",
-            FrequencyTooHigh => "frequency exceeds the hearing range",
-            FrequencyInvalid => "frequency can not be zero or negative",
-            FrequencySource => "input frequency buffer can not be used",
-            RateInvalid => "invalid rate",
-            AmplitudeInvalid => "invalid amplitude",
-            AmplitudeTimeInvalid => "invalid amplitude change time",
-            AmplitudeRateInvalid => "invalid amplitude decay rate",
-            PeriodInvalid => "invalid period",
-            DurationInvalid => "invalid duration",
-            ChannelInvalid => "invalid channel",
-            TempoInvalid => "beats per minute must be positive",
-            TimingInvalid => "invalid timing option",
-            ProgressInvalid => "invalid progress option",
-            ProgressCompleted => "progress completed",
-            ItemsCompleted(_) => "",
-            SequenceEmpty => "sequence has no items",
-            ItemInvalid => "the item does not exist",
-            Overflow => "overflow",
-        }
-    }
-
-    fn cause(&self) -> Option<&error::Error> {
-        match *self {
-            #[cfg(any(feature = "be-portaudio", feature = "be-rsoundio", feature = "be-sdl2"))]
-            self::Error::Backend(ref err) => Some(err),
-            _ => None,
-        }
-    }
-}
-
-#[cfg(any(feature = "be-portaudio", feature = "be-rsoundio", feature = "be-sdl2"))]
-impl From<BackendError> for Error {
-    fn from(e: BackendError) -> Self {
-        Error::Backend(e)
-    }
 }

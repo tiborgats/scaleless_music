@@ -1,4 +1,4 @@
-use sound::*;
+use crate::sound::*;
 use std::cell::Cell;
 use std::cell::RefCell;
 use std::rc::Rc;
@@ -23,7 +23,6 @@ pub trait AmplitudeOvertonesJoinable: AmplitudeOvertonesProvider {
     fn get_amplitudes(&self, result: &mut [SampleCalc]) -> SoundResult<()>;
 }
 
-
 /// Amplitude is not changing by time, this function gives the overtone amplitudes too.
 #[derive(Debug, Clone)]
 pub struct AmplitudeConstOvertones {
@@ -35,10 +34,11 @@ impl AmplitudeConstOvertones {
     /// custom constructor
     /// It normalizes the amplitudes, so the sum of them will be 1.0.
     /// `overtone_count` is independent of the size of `amplitude`.
-    pub fn new(sample_rate: SampleCalc,
-               overtone_count: usize,
-               amplitude: &[SampleCalc])
-               -> SoundResult<AmplitudeConstOvertones> {
+    pub fn new(
+        sample_rate: SampleCalc,
+        overtone_count: usize,
+        amplitude: &[SampleCalc],
+    ) -> SoundResult<AmplitudeConstOvertones> {
         let mut amplitude_sum: SampleCalc = 0.0;
         for amplitude_check in amplitude.iter().take(overtone_count + 1) {
             if *amplitude_check < 0.0 {
@@ -165,11 +165,12 @@ impl AmplitudeDecayExpOvertones {
     /// It normalizes the amplitudes, so the sum of the starting amplitudes will be 1.0.
     /// `half_life` is the time required to reduce the amplitude to it's half.
     /// `overtone_count` is independent of the size of `amplitude` and `half_life` too.
-    pub fn new(sample_rate: SampleCalc,
-               overtone_count: usize,
-               amplitude: &[SampleCalc],
-               half_life: &[SampleCalc])
-               -> SoundResult<AmplitudeDecayExpOvertones> {
+    pub fn new(
+        sample_rate: SampleCalc,
+        overtone_count: usize,
+        amplitude: &[SampleCalc],
+        half_life: &[SampleCalc],
+    ) -> SoundResult<AmplitudeDecayExpOvertones> {
         let sample_time = get_sample_time(sample_rate)?;
         let mut amplitude_sum: SampleCalc = 0.0;
         for amplitude_check in amplitude.iter().take(overtone_count + 1) {
@@ -199,9 +200,9 @@ impl AmplitudeDecayExpOvertones {
         }
         Ok(AmplitudeDecayExpOvertones {
             timer: Timer::new(sample_rate)?,
-            sample_time: sample_time,
+            sample_time,
             amplitude_init: amplitude_new.clone(),
-            multiplier: multiplier,
+            multiplier,
             amplitude: RefCell::new(amplitude_new),
         })
     }
@@ -220,7 +221,7 @@ impl AmplitudeOvertonesProvider for AmplitudeDecayExpOvertones {
             }
             return Ok(());
         };
-        let mut amplitude_overtone = &mut amplitude[overtone];
+        let amplitude_overtone = &mut amplitude[overtone];
         for item in samples.iter_mut() {
             *amplitude_overtone *= self.multiplier[overtone];
             *item *= *amplitude_overtone;
@@ -242,10 +243,12 @@ impl HasTimer for AmplitudeDecayExpOvertones {
 
     fn restart(&self) {
         self.timer.restart();
-        for (amplitude, amplitude_init) in self.amplitude
+        for (amplitude, amplitude_init) in self
+            .amplitude
             .borrow_mut()
             .iter_mut()
-            .zip(self.amplitude_init.iter()) {
+            .zip(self.amplitude_init.iter())
+        {
             *amplitude = *amplitude_init;
         }
     }
@@ -305,7 +308,7 @@ impl AmplitudeOvertonesJoinable for AmplitudeDecayExpOvertones {
 #[derive(Clone)]
 pub struct AmplitudeOvertonesSequence {
     timer: Timer,
-    amplitudes: Vec<Rc<AmplitudeOvertonesJoinable>>,
+    amplitudes: Vec<Rc<dyn AmplitudeOvertonesJoinable>>,
     amplitude_index: Cell<usize>,
 }
 
@@ -366,11 +369,9 @@ impl AmplitudeOvertonesProvider for AmplitudeOvertonesSequence {
             return Err(Error::SequenceEmpty);
         }
 
-
         // TODO
         Ok(())
     }
-
 
     // fn restart(&self) {
     // self.amplitude_index.set(0);

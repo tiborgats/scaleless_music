@@ -9,21 +9,24 @@ license = "WTFPL"
 repository = "https://github.com/tiborgats/scaleless_music"
 documentation = "https://tiborgats.github.io/scaleless_music"
 
+edition = "2018"
+
 [features]
-default = []
 # Optional backends
 be-portaudio = ["portaudio"]
 be-rsoundio = ["rsoundio", "rb"]
 be-sdl2 = ["sdl2"]
+default = []
 
 [dependencies]
+num = "0.4.0"
 portaudio = { version = "0.7.0", optional = true }
+rb = { version = "0.3.2", optional = true }
 rsoundio = { version = "0.1.6", optional = true }
-rb = { version = "0.2.0", optional = true }
-sdl2 = { version = "0.25.0", optional = true }
-num = "0.1.36"
+sdl2 = { version = "0.34.5", optional = true }
+thiserror = "1.0.26"
 
 [dev-dependencies]
-piston_window = "0.57.0"
-piston = "0.26.0"
-conrod = "0.46.0"
+conrod = "0.62.1"
+piston = "0.53.0"
+piston_window = "0.120.0"

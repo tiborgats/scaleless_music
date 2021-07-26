@@ -20,30 +20,50 @@
 //! ```
 //!
 #![doc(html_root_url = "https://tiborgats.github.io/music/")]
-
-#![forbid(bad_style, exceeding_bitshifts, mutable_transmutes, no_mangle_const_items,
-    unknown_crate_types)]
-#![deny(deprecated, improper_ctypes, missing_docs,
-    non_shorthand_field_patterns, overflowing_literals, plugin_as_library,
-    private_no_mangle_fns, private_no_mangle_statics, stable_features, unconditional_recursion,
-    unknown_lints, unsafe_code, unused, unused_allocation, unused_attributes,
-    unused_comparisons, unused_features, unused_parens, while_true)]
-#![warn(trivial_casts, trivial_numeric_casts, unused_extern_crates, unused_import_braces,
-    unused_qualifications, unused_results)]
+#![forbid(
+    bad_style,
+    arithmetic_overflow,
+    mutable_transmutes,
+    no_mangle_const_items,
+    unknown_crate_types
+)]
+#![deny(
+    deprecated,
+    improper_ctypes,
+    missing_docs,
+    non_shorthand_field_patterns,
+    overflowing_literals,
+    stable_features,
+    unconditional_recursion,
+    unknown_lints,
+    unsafe_code,
+    unused,
+    unused_allocation,
+    unused_attributes,
+    unused_comparisons,
+    unused_features,
+    unused_parens,
+    while_true
+)]
+#![warn(
+    trivial_casts,
+    trivial_numeric_casts,
+    unused_extern_crates,
+    unused_import_braces,
+    unused_qualifications,
+    unused_results
+)]
 
 // #![feature(question_mark)]
 
 #[cfg(feature = "be-portaudio")]
-extern crate portaudio;
+use portaudio;
 #[cfg(feature = "be-rsoundio")]
-extern crate rsoundio;
+use rb;
 #[cfg(feature = "be-rsoundio")]
-extern crate rb;
+use rsoundio;
 #[cfg(feature = "be-sdl2")]
-extern crate sdl2;
-
-
-extern crate num;
+use sdl2;
 
 /// Basic sound synthesizer routines.
 pub mod sound;

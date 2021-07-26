@@ -1,5 +1,5 @@
+use crate::sound::*;
 use num::*;
-use sound::*;
 use std::fmt;
 use std::ops::{Div, Mul};
 
@@ -146,10 +146,11 @@ impl Interval {
     }
 
     /// Change a frequency according to the interval.
-    pub fn transpose(&self,
-                     base_frequency: &[SampleCalc],
-                     result: &mut [SampleCalc])
-                     -> SoundResult<()> {
+    pub fn transpose(
+        &self,
+        base_frequency: &[SampleCalc],
+        result: &mut [SampleCalc],
+    ) -> SoundResult<()> {
         if base_frequency.len() != result.len() {
             return Err(Error::BufferSize);
         }
@@ -170,9 +171,11 @@ impl Mul for Interval {
     type Output = Interval;
 
     fn mul(self, rhs: Interval) -> Interval {
-        let mut interval = Interval::default();
-        interval.numerator = self.numerator * rhs.numerator;
-        interval.denominator = self.denominator * rhs.denominator;
+        let mut interval = Interval {
+            numerator: self.numerator * rhs.numerator,
+            denominator: self.denominator * rhs.denominator,
+            ..Default::default()
+        };
         interval.reduce();
         interval.ratio = interval.numerator as SampleCalc / interval.denominator as SampleCalc;
         interval.reciprocal = interval.denominator as SampleCalc / interval.numerator as SampleCalc;
@@ -184,9 +187,11 @@ impl Div for Interval {
     type Output = Interval;
 
     fn div(self, rhs: Interval) -> Interval {
-        let mut interval = Interval::default();
-        interval.numerator = self.numerator * rhs.denominator;
-        interval.denominator = self.denominator * rhs.numerator;
+        let mut interval = Interval {
+            numerator: self.numerator * rhs.denominator,
+            denominator: self.denominator * rhs.numerator,
+            ..Default::default()
+        };
         interval.reduce();
         interval.ratio = interval.numerator as SampleCalc / interval.denominator as SampleCalc;
         interval.reciprocal = interval.denominator as SampleCalc / interval.numerator as SampleCalc;

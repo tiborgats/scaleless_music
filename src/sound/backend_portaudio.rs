@@ -1,8 +1,10 @@
-use portaudio as pa;
-use sound::*;
+use crate::portaudio as pa;
+use crate::sound::*;
 // use std::thread;
 // use std::sync::mpsc::channel;
 use std::sync::mpsc::Sender;
+
+use thiserror::Error;
 
 /// This is a wrapper around the sound output backend
 pub struct SoundInterface<T: 'static> {
@@ -15,18 +17,21 @@ pub struct SoundInterface<T: 'static> {
 impl<T> SoundInterface<T> {
     /// Creates a new backend for sound playback.
     /// At the moment all channels output the same sound.
-    pub fn new(sample_rate: u32,
-               buffer_size: usize,
-               channel_count: u16,
-               mut generator: Box<SoundGenerator<Command = T>>)
-               -> BackendResult<SoundInterface<T>> {
+    pub fn new(
+        sample_rate: u32,
+        buffer_size: usize,
+        channel_count: u16,
+        mut generator: Box<dyn SoundGenerator<Command = T>>,
+    ) -> BackendResult<SoundInterface<T>> {
         println!("PortAudio version : {}", pa::version());
         println!("PortAudio version text : {:?}", pa::version_text());
         let pa = pa::PortAudio::new()?;
         println!("host count: {}", pa.host_api_count()?);
-        let mut settings = pa.default_output_stream_settings(channel_count as i32,
-                                            sample_rate as f64,
-                                            buffer_size as u32)?;
+        let mut settings = pa.default_output_stream_settings(
+            channel_count as i32,
+            sample_rate as f64,
+            buffer_size as u32,
+        )?;
         // we won't output out of range samples so don't bother clipping them.
         settings.flags = pa::stream_flags::CLIP_OFF;
 
@@ -44,7 +49,7 @@ impl<T> SoundInterface<T> {
             let mut idx = 0;
             for item in generator_buffer.iter().take(frames) {
                 for _ in 0..(channel_count as usize) {
-                    buffer[idx] = *item;// as SampleOutput;
+                    buffer[idx] = *item; // as SampleOutput;
                     idx += 1;
                 }
             }
@@ -96,59 +101,27 @@ impl<T> SoundInterface<T> {
 
 impl<T> Drop for SoundInterface<T> {
     fn drop(&mut self) {
-        use std::error::Error;
         if self.stream.is_active() == Ok(true) {
             if let Err(err) = self.stream.stop() {
-                println!("PortAudio.stream.stop: {}", err.description());
+                println!("PortAudio.stream.stop: {}", &err.to_string());
             }
         }
         if let Err(err) = self.stream.close() {
-            println!("PortAudio.stream.close: {}", err.description());
+            println!("PortAudio.stream.close: {}", &err.to_string());
         }
-    }
-}
-
-/// Wrapper for the propagation of backend specific errors.
-#[derive(Debug, Copy, Clone)]
-pub enum BackendError {
-    /// Errors of the PortAudio backend.
-    PortAudio(pa::Error),
-    /// The SoundGenerator is disconnected, could not recieve the command
-    Disconnected,
-}
-
-use std::{error, fmt};
-
-impl fmt::Display for BackendError {
-    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-        use std::error::Error;
-        f.write_str(self.description())
-    }
-}
-
-impl error::Error for BackendError {
-    fn description(&self) -> &str {
-        use self::BackendError::*;
-        match *self {
-            PortAudio(ref err) => err.description(),
-            Disconnected => "SoundGenerator is disconnected",
-        }
-    }
-
-    fn cause(&self) -> Option<&error::Error> {
-        use self::BackendError::*;
-        match *self {
-            PortAudio(ref err) => Some(err),
-            _ => None,
-        }
-    }
-}
-
-impl From<pa::Error> for BackendError {
-    fn from(e: pa::Error) -> Self {
-        BackendError::PortAudio(e)
     }
 }
 
 /// Return type for the backend functions.
 pub type BackendResult<T> = Result<T, BackendError>;
+
+/// Wrapper for the propagation of backend specific errors.
+#[derive(Debug, Copy, Clone, Error)]
+pub enum BackendError {
+    /// Errors of the PortAudio backend.
+    #[error("PortAudio backend error: {0}")]
+    PortAudio(#[from] pa::Error),
+    /// The SoundGenerator is disconnected, could not recieve the command
+    #[error("SoundGenerator is disconnected")]
+    Disconnected,
+}

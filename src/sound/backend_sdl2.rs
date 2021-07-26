@@ -3,28 +3,33 @@
 // Installation instructions: https://github.com/AngryLawyer/rust-sdl2/blob/master/README.md
 //
 
+use crate::sound::*;
+
 use sdl2::audio::*;
-use sound::*;
-use std::sync::mpsc::{Sender, Receiver};
+use std::sync::mpsc::{Receiver, Sender};
+
+use thiserror::Error;
 
 /// Struct containing the settings of the callback routine for SDL2
 struct Player<T: 'static + Send> {
     channel_count: usize,
     frame_size: usize,
     generator_buffer: Vec<SampleCalc>,
-    generator: Box<SoundGenerator<Command = T>>,
+    generator: Box<dyn SoundGenerator<Command = T>>,
     receiver: Receiver<T>,
 }
 
 impl<T> Player<T>
-    where T: Send
+where
+    T: Send,
 {
     /// Custom constructor.
-    fn new(spec: AudioSpec,
-           buffer_size: usize,
-           generator: Box<SoundGenerator<Command = T>>,
-           receiver: Receiver<T>)
-           -> Player<T> {
+    fn new(
+        spec: AudioSpec,
+        buffer_size: usize,
+        generator: Box<dyn SoundGenerator<Command = T>>,
+        receiver: Receiver<T>,
+    ) -> Player<T> {
         Player {
             channel_count: spec.channels as usize,
             frame_size: buffer_size,
@@ -36,7 +41,8 @@ impl<T> Player<T>
 }
 
 impl<T> AudioCallback for Player<T>
-    where T: Send
+where
+    T: Send,
 {
     type Channel = f32;
     /// Callback routine for SDL2
@@ -44,11 +50,12 @@ impl<T> AudioCallback for Player<T>
         if let Ok(command) = self.receiver.try_recv() {
             self.generator.process_command(command);
         }
-        self.generator.get_samples(self.frame_size, &mut self.generator_buffer);
+        self.generator
+            .get_samples(self.frame_size, &mut self.generator_buffer);
         let mut idx = 0;
         for item in self.generator_buffer.iter().take(self.frame_size) {
             for _ in 0..(self.channel_count) {
-                out[idx] = *item;// as SampleOutput;
+                out[idx] = *item; // as SampleOutput;
                 idx += 1;
             }
         }
@@ -66,16 +73,17 @@ pub struct SoundInterface<T: 'static + Send> {
 }
 
 impl<T> SoundInterface<T>
-    where T: Send
+where
+    T: Send,
 {
     /// Creates a new backend for sound playback.
     /// At the moment all channels output the same sound.
-    pub fn new(sample_rate: u32,
-               buffer_size: usize,
-               channel_count: u16,
-               generator: Box<SoundGenerator<Command = T>>)
-               -> BackendResult<SoundInterface<T>> {
-
+    pub fn new(
+        sample_rate: u32,
+        buffer_size: usize,
+        channel_count: u16,
+        generator: Box<dyn SoundGenerator<Command = T>>,
+    ) -> BackendResult<SoundInterface<T>> {
         let sdl_context = ::sdl2::init()?;
         let sdl_audio_subsystem = sdl_context.audio()?;
 
@@ -87,9 +95,9 @@ impl<T> SoundInterface<T>
 
         let (sender, receiver) = ::std::sync::mpsc::channel();
 
-        let sdl_device = sdl_audio_subsystem.open_playback(None,
-                           &desired_spec,
-                           |spec| Player::new(spec, buffer_size, generator, receiver))?;
+        let sdl_device = sdl_audio_subsystem.open_playback(None, &desired_spec, |spec| {
+            Player::new(spec, buffer_size, generator, receiver)
+        })?;
 
         println!("Stream is created.");
 
@@ -130,44 +138,22 @@ impl<T> SoundInterface<T>
     }
 }
 
+/// Return type for the backend functions.
+pub type BackendResult<T> = Result<T, BackendError>;
 
 /// Wrapper for the propagation of backend specific errors.
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, Error)]
 pub enum BackendError {
     /// Errors of the Sdl backend.
+    #[error("SDL backend error: {0}")]
     Sdl(String),
     /// The SoundGenerator is disconnected, could not recieve the command
+    #[error("The SoundGenerator is disconnected")]
     Disconnected,
 }
 
-use std::{error, fmt};
-
-impl fmt::Display for BackendError {
-    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-        use std::error::Error;
-        f.write_str(self.description())
-    }
-}
-
-impl error::Error for BackendError {
-    fn description(&self) -> &str {
-        use self::BackendError::*;
-        match *self {
-            Sdl(ref err) => err.as_str(),
-            Disconnected => "SoundGenerator is disconnected",
-        }
-    }
-
-    fn cause(&self) -> Option<&error::Error> {
-        None
-    }
-}
-
 impl From<String> for BackendError {
-    fn from(e: String) -> Self {
-        BackendError::Sdl(e)
+    fn from(msg: String) -> Self {
+        Self::Sdl(msg.into())
     }
 }
-
-/// Return type for the backend functions.
-pub type BackendResult<T> = Result<T, BackendError>;
